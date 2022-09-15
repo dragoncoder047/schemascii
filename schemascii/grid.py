@@ -28,6 +28,7 @@ class Grid:
 
     def clrflag(self, x: int, y: int):
         self.setflag(x, y, 0)
+
     def clrall(self):
         self.flags = [[0 for x in range(self.width)] for y in range(self.height)]
 

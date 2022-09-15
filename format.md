@@ -42,4 +42,3 @@ Examples:
 * `D7:1N4001` -- again, part number
 * `U1:SN74LS08N,14,1,2,7,3` -- some components let you label pins with whatever you want (in this case just numbers). They start at the top and follow **counterclockwise**.
 * `R2:10,5` -- this is formatted as "10Ω 5W"
-
