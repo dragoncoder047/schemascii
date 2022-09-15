@@ -15,7 +15,7 @@ class Grid:
 
     @property
     def lines(self):
-        return [''.join(x) for x in self.data]
+        return [''.join(self.get(x, y) for x in range(self.width)) for y in range(self.height)]
 
     def set(self, x: int, y: int, value: str):
         self.data[y][x] = value
