@@ -53,7 +53,7 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                     raise SyntaxError(
                         '%s: Unfinished box starting at line %d, col %d' % (grid.filename, y1 + 1, x1 + 1))
                 if good:
-                    inside = Grid('\n'.join(inners))
+                    inside = Grid(grid.filename, '\n'.join(inners))
                     results, resb = findsmall(inside)
                     if len(results) == 0 and len(resb) == 0:
                         raise ValueError(
