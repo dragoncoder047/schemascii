@@ -8,8 +8,8 @@ smallcompbom = re.compile(r'([A-Z]+)(\d+)(:[^\s]+)?')
 
 
 def findsmall(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
-    components = []
-    boms = []
+    components: list[Cbox] = []
+    boms: list[BOMData] = []
     for i, line in enumerate(grid.lines):
         for m in smallcompbom.finditer(line):
             if m.group(3):
@@ -25,8 +25,8 @@ boxtop = re.compile('\.~+\.')
 
 
 def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
-    boxes = []
-    boms = []
+    boxes: list[Cbox] = []
+    boms: list[BOMData] = []
     while True:
         for i in range(len(grid.lines)):
             line = grid.lines[i]
@@ -60,7 +60,7 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                             'Box starting at line %d, col %d is missing reference designator' % (y1 + 1, x1 + 1))
                     elif len(results) != 1 and len(resb) != 1:
                         raise ValueError(
-                            'Box starting at line %d, col %d has too many reference designators' % (y1 + 1, x1 + 1))
+                            'Box starting at line %d, col %d has multiple reference designators' % (y1 + 1, x1 + 1))
                     if not results:
                         merd = resb[0]
                     else:
