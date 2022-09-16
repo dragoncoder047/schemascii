@@ -27,7 +27,6 @@ boxtop = re.compile('\.~+\.')
 def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
     boxes = []
     boms = []
-    grid.clrall()
     while True:
         for i in range(len(grid.lines)):
             line = grid.lines[i]
@@ -71,7 +70,7 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                     # mark everything
                     for i in range(x1, x2):
                         for j in range(y1, y2 + 1):
-                            grid.setflag(i, j, 1)
+                            grid.setflag(i, j)
                     break
                 else:
                     raise SyntaxError(
@@ -79,6 +78,12 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
         else:
             break
     return boxes, boms
+
+def findall(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
+    grid.clrall()
+    b1, l1 = findbig(grid)
+    b2, l2 = findsmall(grid)
+    return b1+b2, l1+l2
 
 
 if __name__ == '__main__':
