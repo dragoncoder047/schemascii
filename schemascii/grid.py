@@ -1,5 +1,6 @@
 class Grid:
-    def __init__(self, data: str):
+    def __init__(self, filename: str, data: str):
+        self.filename: str = filename
         self.raw: str = data
         lines: list[str] = data.split('\n')
         maxlen: int = max(len(line) for line in lines)

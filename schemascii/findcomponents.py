@@ -51,16 +51,16 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                     inners.append(cs[1:-1])
                 else:
                     raise SyntaxError(
-                        'Unfinished box starting at line %d, col %d' % (y1 + 1, x1 + 1))
+                        '%s: Unfinished box starting at line %d, col %d' % (grid.filename, y1 + 1, x1 + 1))
                 if good:
                     inside = Grid('\n'.join(inners))
                     results, resb = findsmall(inside)
                     if len(results) == 0 and len(resb) == 0:
                         raise ValueError(
-                            'Box starting at line %d, col %d is missing reference designator' % (y1 + 1, x1 + 1))
+                            '%s: Box starting at line %d, col %d is missing reference designator' % (grid.filename, y1 + 1, x1 + 1))
                     elif len(results) != 1 and len(resb) != 1:
                         raise ValueError(
-                            'Box starting at line %d, col %d has multiple reference designators' % (y1 + 1, x1 + 1))
+                            '%s: Box starting at line %d, col %d has multiple reference designators' % (grid.filename, y1 + 1, x1 + 1))
                     if not results:
                         merd = resb[0]
                     else:
@@ -74,7 +74,7 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                     break
                 else:
                     raise SyntaxError(
-                        'Fragmented box starting at line %d, col %d' % (y1 + 1, x1 + 1))
+                        '%s: Fragmented box starting at line %d, col %d' % (grid.filename, y1 + 1, x1 + 1))
         else:
             break
     return boxes, boms
