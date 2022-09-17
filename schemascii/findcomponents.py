@@ -79,6 +79,7 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
             break
     return boxes, boms
 
+
 def findall(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
     grid.clrall()
     b1, l1 = findbig(grid)
