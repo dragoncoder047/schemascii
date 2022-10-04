@@ -1,9 +1,7 @@
 from grid import Grid
 import re
-from collections import namedtuple
+from utils import Cbox, BOMData
 
-Cbox = namedtuple('Cbox', 'x1 y1 x2 y2 type id')
-BOMData = namedtuple('BOMData', 'type id data')
 smallcompbom = re.compile(r'([A-Z]+)(\d+)(:[^\s]+)?')
 
 
@@ -31,7 +29,6 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
         for i in range(len(grid.lines)):
             line = grid.lines[i]
             if m1 := boxtop.search(line):
-                good = True
                 tb = m1.group()
                 x1 = m1.start()
                 x2 = m1.end()
@@ -46,35 +43,31 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                         y2 = j
                         break
                     if not (cs[0] == cs[-1] == ':'):
-                        good = False
-                        break
+                        raise SyntaxError(
+                            '%s: Fragmented box starting at line %d, col %d' % (grid.filename, y1 + 1, x1 + 1))
                     inners.append(cs[1:-1])
                 else:
                     raise SyntaxError(
                         '%s: Unfinished box starting at line %d, col %d' % (grid.filename, y1 + 1, x1 + 1))
-                if good:
-                    inside = Grid(grid.filename, '\n'.join(inners))
-                    results, resb = findsmall(inside)
-                    if len(results) == 0 and len(resb) == 0:
-                        raise ValueError(
-                            '%s: Box starting at line %d, col %d is missing reference designator' % (grid.filename, y1 + 1, x1 + 1))
-                    elif len(results) != 1 and len(resb) != 1:
-                        raise ValueError(
-                            '%s: Box starting at line %d, col %d has multiple reference designators' % (grid.filename, y1 + 1, x1 + 1))
-                    if not results:
-                        merd = resb[0]
-                    else:
-                        merd = results[0]
-                    boxes.append(Cbox(x1, y1, x2, y2, merd.type, merd.id))
-                    boms.extend(resb)
-                    # mark everything
-                    for i in range(x1, x2):
-                        for j in range(y1, y2 + 1):
-                            grid.setflag(i, j)
-                    break
+                inside = Grid(grid.filename, '\n'.join(inners))
+                results, resb = findsmall(inside)
+                if len(results) == 0 and len(resb) == 0:
+                    raise ValueError(
+                        '%s: Box starting at line %d, col %d is missing reference designator' % (grid.filename, y1 + 1, x1 + 1))
+                elif len(results) != 1 and len(resb) != 1:
+                    raise ValueError(
+                        '%s: Box starting at line %d, col %d has multiple reference designators' % (grid.filename, y1 + 1, x1 + 1))
+                if not results:
+                    merd = resb[0]
                 else:
-                    raise SyntaxError(
-                        '%s: Fragmented box starting at line %d, col %d' % (grid.filename, y1 + 1, x1 + 1))
+                    merd = results[0]
+                boxes.append(Cbox(x1, y1, x2, y2, merd.type, merd.id))
+                boms.extend(resb)
+                # mark everything
+                for i in range(x1, x2):
+                    for j in range(y1, y2 + 1):
+                        grid.setflag(i, j)
+                break
         else:
             break
     return boxes, boms
