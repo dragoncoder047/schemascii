@@ -66,7 +66,7 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                 # mark everything
                 for i in range(x1, x2):
                     for j in range(y1, y2 + 1):
-                        grid.setflag(i, j)
+                        grid.setmask(i, j)
                 break
         else:
             break

@@ -5,33 +5,30 @@ class Grid:
         lines: list[str] = data.split('\n')
         maxlen: int = max(len(line) for line in lines)
         self.data: list[list[str]] = [list(line.ljust(maxlen, ' ')) for line in lines]
-        self.flags: list[list[int]] = [[0 for x in range(maxlen)] for y in range(len(lines))]
+        self.masks: list[list[bool | str]] = [[False for x in range(maxlen)] for y in range(len(lines))]
         self.width = maxlen
         self.height = len(self.data)
 
     def get(self, x: int, y: int) -> str:
-        if self.getflag(x, y) > 0:
-            return ' '
+        if self.getmask(x, y):
+            return self.getmask(x, y)
         return self.data[y][x]
 
     @property
     def lines(self):
         return [''.join(self.get(x, y) for x in range(self.width)) for y in range(self.height)]
 
-    def set(self, x: int, y: int, value: str):
-        self.data[y][x] = value
+    def getmask(self, x: int, y: int) -> str:
+        return self.masks[y][x]
 
-    def getflag(self, x: int, y: int) -> int:
-        return self.flags[y][x]
+    def setmask(self, x: int, y: int, mask: str | bool = ' '):
+        self.masks[y][x] = mask
 
-    def setflag(self, x: int, y: int, flag: int = 1):
-        self.flags[y][x] = flag
-
-    def clrflag(self, x: int, y: int):
-        self.setflag(x, y, 0)
+    def clrmask(self, x: int, y: int):
+        self.setmask(x, y, False)
 
     def clrall(self):
-        self.flags = [[0 for x in range(self.width)] for y in range(self.height)]
+        self.masks = [[False for x in range(self.width)] for y in range(self.height)]
 
     def __repr__(self):
         return "Grid(\n'''\n" + '\n'.join(self.lines) + "'''\n)"
