@@ -18,7 +18,14 @@ def getflags(grid: Grid, box: Cbox) -> list[Flag]:
             c = grid.get(x, y)
         except IndexError:
             continue
-        if c in '|-*o ':
+        if c in '*o':
+            raise ValueError(
+                "%s not allowed here (at line %d, col %d)" % (c, y + 1, x + 1))
+        if c == ' ':
             continue
+        if s in (Side.TOP, Side.BOTTOM):
+            grid.setmask(x, y, '|')
+        if s in (Side.LEFT, Side.RIGHT):
+            grid.setmask(x, y, '-')
         out.append(Flag(c, box, s))
     return out
