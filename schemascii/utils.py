@@ -1,7 +1,6 @@
 from collections import namedtuple
 from enum import IntEnum
 from cmath import phase
-from math import PI
 
 Cbox = namedtuple('Cbox', 'p1 p2 type id')
 BOMData = namedtuple('BOMData', 'type id data')
@@ -23,12 +22,12 @@ def colinear(points: list[complex]) -> bool:
     return len(set(phase(p-points[0]) for p in points[1:])) == 1
 
 def sharpness_score(points: list[complex]) -> float:
-    s = 0
+    score = 0
     prevPoint = points[1]
     prevPhase = phase(points[1] - points[0])
     for p in points[2:]:
         ph = phase(p - prevPoint)
-        score += abs((prevPhase + PI) - ph)
+        score += abs(prevPhase - ph)
         prevPoint = p
         prevPhas = ph
     return score
