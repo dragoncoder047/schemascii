@@ -9,23 +9,21 @@ class Grid:
         self.width = maxlen
         self.height = len(self.data)
 
-    def get(self, x: int, y: int) -> str:
-        if self.getmask(x, y):
-            return self.getmask(x, y)
-        return self.data[y][x]
+    def get(self, p: complex) -> str: 
+        return self.getmask(p) or self.data[p.imag][p.real]
 
     @property
     def lines(self):
-        return [''.join(self.get(x, y) for x in range(self.width)) for y in range(self.height)]
+        return [''.join(self.get(complex(x, y)) for x in range(self.width)) for y in range(self.height)]
 
-    def getmask(self, x: int, y: int) -> str:
-        return self.masks[y][x]
+    def getmask(self, p: complex) -> str:
+        return self.masks[p.imag][p.real]
 
-    def setmask(self, x: int, y: int, mask: str | bool = ' '):
-        self.masks[y][x] = mask
+    def setmask(self, p: complex, mask: str | bool = ' '):
+        self.masks[p.imag][p.real] = mask
 
-    def clrmask(self, x: int, y: int):
-        self.setmask(x, y, False)
+    def clrmask(self, p: complex):
+        self.setmask(p, False)
 
     def clrall(self):
         self.masks = [[False for x in range(self.width)] for y in range(self.height)]

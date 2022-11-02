@@ -11,11 +11,11 @@ def findsmall(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
     for i, line in enumerate(grid.lines):
         for m in smallcompbom.finditer(line):
             if m.group(3):
-                boms.append(BOMData(m.group(1), int(
-                    m.group(2)), m.group(3)[1:]))
+                boms.append(BOMData(m.group(1),
+                    int(m.group(2)), m.group(3)[1:]))
             else:
-                components.append(Cbox(m.start(), i, m.end(),
-                                  i, m.group(1), int(m.group(2))))
+                components.append(Cbox(complex(m.start(), i), complex(m.end(), i),
+                                       m.group(1), int(m.group(2))))
     return components, boms
 
 
@@ -61,12 +61,12 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                     merd = resb[0]
                 else:
                     merd = results[0]
-                boxes.append(Cbox(x1, y1, x2, y2, merd.type, merd.id))
+                boxes.append(Cbox(complex(x1, y1), complex(x2, y2), merd.type, merd.id))
                 boms.extend(resb)
                 # mark everything
                 for i in range(x1, x2):
                     for j in range(y1, y2 + 1):
-                        grid.setmask(i, j)
+                        grid.setmask(complex(i, j))
                 break
         else:
             break
@@ -78,9 +78,3 @@ def findall(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
     b1, l1 = findbig(grid)
     b2, l2 = findsmall(grid)
     return b1+b2, l1+l2
-
-
-if __name__ == '__main__':
-    with open('../examples/test1.txt') as f:
-        data = f.read()
-    print(findbig(Grid(data)))

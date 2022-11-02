@@ -15,7 +15,7 @@ def getflags(grid: Grid, box: Cbox) -> list[Flag]:
         ((box.x1 - 1, yy, Side.LEFT) for yy in range(box.y1, box.y2 + 1)),
     ):
         try:
-            c = grid.get(x, y)
+            c = grid.get(complex(x, y))
         except IndexError:
             continue
         if c in '*o':
@@ -24,8 +24,8 @@ def getflags(grid: Grid, box: Cbox) -> list[Flag]:
         if c == ' ':
             continue
         if s in (Side.TOP, Side.BOTTOM):
-            grid.setmask(x, y, '|')
+            grid.setmask(complex(x, y), '|')
         if s in (Side.LEFT, Side.RIGHT):
-            grid.setmask(x, y, '-')
+            grid.setmask(complex(x, y), '-')
         out.append(Flag(c, box, s))
     return out
