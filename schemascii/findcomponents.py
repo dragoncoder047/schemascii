@@ -1,6 +1,6 @@
-from grid import Grid
+from .grid import Grid
 import re
-from utils import Cbox, BOMData
+from .utils import Cbox, BOMData
 
 smallcompbom = re.compile(r'([A-Z]+)(\d+)(:[^\s]+)?')
 
@@ -26,8 +26,7 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
     boxes: list[Cbox] = []
     boms: list[BOMData] = []
     while True:
-        for i in range(len(grid.lines)):
-            line = grid.lines[i]
+        for i, line in enumerate(grid.lines):
             if m1 := boxtop.search(line):
                 tb = m1.group()
                 x1 = m1.start()
@@ -42,7 +41,7 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                     if cs == tb:
                         y2 = j
                         break
-                    if not (cs[0] == cs[-1] == ':'):
+                    if not cs[0] == cs[-1] == ':':
                         raise SyntaxError(
                             '%s: Fragmented box starting at line %d, col %d' % (grid.filename, y1 + 1, x1 + 1))
                     inners.append(cs[1:-1])
