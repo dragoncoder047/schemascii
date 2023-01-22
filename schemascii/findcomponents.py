@@ -1,5 +1,5 @@
-from .grid import Grid
 import re
+from .grid import Grid
 from .utils import Cbox, BOMData
 
 smallcompbom = re.compile(r'([A-Z]+)(\d+)(:[^\s]+)?')
@@ -12,14 +12,14 @@ def findsmall(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
         for m in smallcompbom.finditer(line):
             if m.group(3):
                 boms.append(BOMData(m.group(1),
-                    int(m.group(2)), m.group(3)[1:]))
+                                    int(m.group(2)), m.group(3)[1:]))
             else:
                 components.append(Cbox(complex(m.start(), i), complex(m.end(), i),
                                        m.group(1), int(m.group(2))))
     return components, boms
 
 
-boxtop = re.compile('\.~+\.')
+TOP_OF_BOX = re.compile(r'\.~+\.')
 
 
 def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
@@ -27,7 +27,7 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
     boms: list[BOMData] = []
     while True:
         for i, line in enumerate(grid.lines):
-            if m1 := boxtop.search(line):
+            if m1 := TOP_OF_BOX.search(line):
                 tb = m1.group()
                 x1 = m1.start()
                 x2 = m1.end()
@@ -60,7 +60,8 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                     merd = resb[0]
                 else:
                     merd = results[0]
-                boxes.append(Cbox(complex(x1, y1), complex(x2, y2), merd.type, merd.id))
+                boxes.append(
+                    Cbox(complex(x1, y1), complex(x2, y2), merd.type, merd.id))
                 boms.extend(resb)
                 # mark everything
                 for i in range(x1, x2):

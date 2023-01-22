@@ -16,7 +16,8 @@ class Grid:
 
     @property
     def lines(self):
-        return [''.join(self.get(complex(x, y)) for x in range(self.width)) for y in range(self.height)]
+        return [''.join(self.get(complex(x, y)) for x in range(self.width))
+                for y in range(self.height)]
 
     def getmask(self, p: complex) -> str:
         return self.masks[int(p.imag)][int(p.real)]

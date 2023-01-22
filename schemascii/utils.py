@@ -6,15 +6,18 @@ Cbox = namedtuple('Cbox', 'p1 p2 type id')
 BOMData = namedtuple('BOMData', 'type id data')
 Flag = namedtuple('Flag', 'char box side')
 
+
 class Side(IntEnum):
     TOP = 0
     RIGHT = 1
     BOTTOM = 2
     LEFT = 3
 
+
 class Wire:
     def __init__(self, points: list[complex]):
         self.points = points
+
     def render(self) -> str:
         # prev = self.points[0]
         # # copied from https://github.com/KenKundert/svg_schematic/blob/0abb5dc/svg_schematic.py#L284-L302
@@ -43,8 +46,10 @@ class Wire:
             + '"></polyline>'
         )
 
+
 def colinear(points: list[complex]) -> bool:
     return len(set(phase(p-points[0]) for p in points[1:])) == 1
+
 
 def sharpness_score(points: list[complex]) -> float:
     score = 0
@@ -54,5 +59,5 @@ def sharpness_score(points: list[complex]) -> float:
         ph = phase(p - prevPoint)
         score += abs(prevPhase - ph)
         prevPoint = p
-        prevPhas = ph
+        prevPhase = ph
     return score
