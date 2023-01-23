@@ -1,0 +1,13 @@
+svg {
+    background: black;
+}
+
+line {
+    stroke: var(--color, white);
+    stroke-width: 1;
+    stroke-linecap: square;
+}
+
+g.wire:hover {
+    --color: red;
+}

@@ -6,51 +6,66 @@ from utils import Wire, iterate_line
 DIRECTIONS = [1+0j, -1+0j, 0+1j, 0-1j]
 
 
-def next_in_dir(grid: Grid, point: complex, dydx: complex) -> complex | None:
+def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, str] | None:
+    old_point = point
     match grid.get(point):
-        case '|' | ')':
+        case '|' | ')' | '(':
             # extend up or down
             if dydx in (0+1j, 0-1j):
-                while grid.get(point) in '-|)':
+                while grid.get(point) in '-|()':
                     point += dydx
-                return point - (dydx if grid.get(point) not in '-|)*' else 0j)
-            return None  # The vertical wires do not connect horizontally
+                if grid.get(point) not in '-|()*':
+                    point -= dydx
+            else:
+                return None  # The vertical wires do not connect horizontally
         case '-':
             # extend sideways
             if dydx in (1+0j, -1+0j):
-                while grid.get(point) in '-|)':
+                while grid.get(point) in '-|()':
                     point += dydx
-                return point - (dydx if grid.get(point) not in '-|)*' else 0j)
-            return None  # The horizontal wires do not connect vertically
+                if grid.get(point) not in '-|()*':
+                    point -= dydx
+            else:
+                return None  # The horizontal wires do not connect vertically
         case '*':
             # extend any direction
-            if grid.get(point + dydx) in '-|)*':
-                return next_in_dir(grid, point + dydx, dydx)
+            if grid.get(point + dydx) in '-|()*':
+                point, s = next_in_dir(grid, point + dydx, dydx)
+                if point is None:
+                    return None
+                return point, s
             return None
+        case _:
+            return None
+    return point, f'<line x1="{old_point.real}" y1="{old_point.imag}" x2="{point.real}" y2="{point.imag}"></line>'
 
 
-def search_wire(grid: Grid, point: complex) -> list[list[complex]]:
+def search_wire(grid: Grid, point: complex) -> tuple[str, list[complex]]:
     seen = []
+    out = ''
     frontier = [point]
     # find all the points
     while frontier:
         here = frontier.pop(0)
         seen.append(here)
         for d in DIRECTIONS:
-            p = next_in_dir(grid, here, d)
-            if all((p is not None,
-                    p not in seen,
+            xx = next_in_dir(grid, here, d)
+            if xx is None:
+                continue
+            p, s = xx
+            if all((p not in seen,
                     p not in frontier,
                     p != here)):
                 frontier.append(p)
-    return seen
+                out += s
+    return seen, out
 
 
 def next_wire(grid: Grid) -> str | None:
     for i, line in enumerate(grid.lines):
-        indexes = [line.index(c) for c in '-|)*' if c in line]
+        indexes = [line.index(c) for c in '-|()*' if c in line]
         if len(indexes) > 0:
-            points = search_wire(grid, complex(i, min(indexes)))
+            points, lines = search_wire(grid, complex(i, min(indexes)))
             break
     else:
         return None
@@ -58,7 +73,7 @@ def next_wire(grid: Grid) -> str | None:
     # TODO
     # Mask out used wire
     # TODO
-    return f'<g class="wire">{pts}</g>'
+    return f'<g class="wire">{lines}</g>'
 
 
 def find_wires(grid: Grid) -> list[str]:

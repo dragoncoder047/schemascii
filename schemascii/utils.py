@@ -1,6 +1,7 @@
 from collections import namedtuple
 from enum import IntEnum
 from cmath import phase, polar
+from types import GeneratorType
 
 Cbox = namedtuple('Cbox', 'p1 p2 type id')
 BOMData = namedtuple('BOMData', 'type id data')
@@ -63,7 +64,7 @@ def sharpness_score(points: list[complex]) -> float:
     return score
 
 
-def iterate_line(p1: complex, p2: complex, step: float = 1.) -> iter[complex]:
+def iterate_line(p1: complex, p2: complex, step: float = 1.) -> GeneratorType:
     vec = p2 - p1
     point = p1
     while abs(vec) > abs(point - p1):
