@@ -5,11 +5,13 @@ from utils import Wire, iterate_line, extend
 
 # cSpell:ignore dydx
 
-DIRECTIONS = [1+0j, -1+0j, 0+1j, 0-1j]
+DIRECTIONS = [1, -1, 1j, -1j]
 
 
 def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, str] | None:
     old_point = point
+    print("next_in_dir at", point, "by", dydx)
+    print("which is a", grid.get(point))
     match grid.get(point):
         case '|' | ')' | '(':
             # extend up or down
@@ -43,6 +45,7 @@ def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, str
 
 
 def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
+    print("searching at", point)
     seen = [point]
     out = []
     frontier = [point]
@@ -51,6 +54,7 @@ def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
         here = frontier.pop(0)
         for d in DIRECTIONS:
             line = next_in_dir(grid, here, d)
+            print("next_in_dir(", here, d, ") returned", line)
             if line is None:
                 continue
             p = line[0]
@@ -61,19 +65,25 @@ def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
     return out
 
 
-def next_wire(grid: Grid) -> str | None:
-    print(grid, "finding wires")
+def next_wire(grid: Grid, scale: float) -> str | None:
+    print("barfoo")
     # Find the first wire or return None
     for i, line in enumerate(grid.lines):
         indexes = [line.index(c) for c in '-|()*' if c in line]
+        print("line", i + 1, indexes, end=' -> ')
         if len(indexes) > 0:
             line_pieces = search_wire(grid, complex(i, min(indexes)))
+            print('result:', line_pieces)
             if line_pieces:
                 break
+        else:
+            print()
     else:
+        print("nothing")
         return None
     # Blank out the used wire
     for p1, p2 in line_pieces:
+        # Crazy math!!
         way = int(phase(p1 - p2) / pi % 1.0 * 2)
         for px in iterate_line(p1, p2):
             old = grid.get(px)
@@ -82,22 +92,25 @@ def next_wire(grid: Grid) -> str | None:
                 grid.setmask(px)
     # Return a <g>
     lines_str = ''.join(
-        f'<line x1="{p1.real}" y1="{p1.imag}" ' +
-        f'x2="{extend(p1, p2).real}" y2="{extend(p1, p2).imag}"></line>' for p1, p2 in line_pieces)
+        f'<line x1="{p1.real * scale}" y1="{p1.imag * scale}" ' +
+        f'x2="{extend(p1, p2).real * scale}" ' +
+        f'y2="{extend(p1, p2).imag * scale}"></line>'
+        for p1, p2 in line_pieces)
     return f'<g class="wire">{lines_str}</g>'
 
 
-def find_wires(grid: Grid) -> list[str]:
+def find_wires(grid: Grid, scale: float) -> list[str]:
     out = ""
-    w = next_wire(grid)
+    w = next_wire(grid, scale)
     while w is not None:
         out += w
-        w = next_wire(grid)
+        w = next_wire(grid, scale)
     return out
 
 
 if __name__ == '__main__':
     with open('../test_data/wires_test.txt') as f:
         x = Grid('wires_test.txt', f.read())
-        print(find_wires(x))
+        print(x.get(6+0j))
+        print(find_wires(x, 1))
         print(x)
