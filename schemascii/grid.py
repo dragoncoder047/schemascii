@@ -42,5 +42,5 @@ class Grid:
                       for y in range(self.height)]
 
     def __repr__(self):
-        return "Grid(\n'''\n" + '\n'.join(self.lines) + "'''\n)"
+        return "Grid('''\n" + '\n'.join(self.lines) + "''')"
     __str__ = __repr__

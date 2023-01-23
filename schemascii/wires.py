@@ -1,3 +1,5 @@
+from cmath import phase
+from math import pi as PI
 from grid import Grid
 from utils import Wire, iterate_line
 
@@ -37,51 +39,68 @@ def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, str
             return None
         case _:
             return None
-    return point, f'<line x1="{old_point.real}" y1="{old_point.imag}" x2="{point.real}" y2="{point.imag}"></line>'
+    return point, old_point
 
 
-def search_wire(grid: Grid, point: complex) -> tuple[str, list[complex]]:
-    seen = []
-    out = ''
+def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
+    seen = [point]
+    out = []
     frontier = [point]
     # find all the points
     while frontier:
         here = frontier.pop(0)
-        seen.append(here)
         for d in DIRECTIONS:
-            xx = next_in_dir(grid, here, d)
-            if xx is None:
+            line = next_in_dir(grid, here, d)
+            if line is None:
                 continue
-            p, s = xx
-            if all((p not in seen,
-                    p not in frontier,
-                    p != here)):
+            p = line[0]
+            if p not in seen and p != here:
                 frontier.append(p)
-                out += s
-    return seen, out
+                seen.append(p)
+                out.append(line)
+    return out
+
+
+BLANKOUT = [
+    "|()",  # 0: Horizontal
+    "-",  # 1: Vertical
+]
 
 
 def next_wire(grid: Grid) -> str | None:
+    # Find the first wire or return None
     for i, line in enumerate(grid.lines):
         indexes = [line.index(c) for c in '-|()*' if c in line]
         if len(indexes) > 0:
-            points, lines = search_wire(grid, complex(i, min(indexes)))
-            break
+            line_pairs = search_wire(grid, complex(i, min(indexes)))
+            if line_pairs:
+                break
     else:
         return None
-    # Turn points into string
-    # TODO
-    # Mask out used wire
-    # TODO
-    return f'<g class="wire">{lines}</g>'
+    # Blank out the used wire
+    for p1, p2 in line_pairs:
+        way = int(phase(p1 - p2) / PI % 1.0 * 2)
+        for px in iterate_line(p1, p2):
+            old = grid.get(px)
+            if old not in BLANKOUT[way]:
+                grid.setmask(px)
+    # Return a <g>
+    lines_str = ''.join(
+        f'<line x1="{p1.real}" y1="{p1.imag}" x2="{p2.real}" y2="{p2.imag}"></line>' for p1, p2 in line_pairs)
+    return f'<g class="wire">{lines_str}</g>'
 
 
 def find_wires(grid: Grid) -> list[str]:
-    # find all cells that have loose ends
-    return next_wire(grid)
+    out = ""
+    w = next_wire(grid)
+    while w is not None:
+        out += w
+        w = next_wire(grid)
+    return out
 
 
 if __name__ == '__main__':
     with open('../examples/wires_test.txt') as f:
         x = Grid('wires_test.txt', f.read())
         print(find_wires(x))
+        print(x)

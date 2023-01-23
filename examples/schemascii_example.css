@@ -1,13 +1,13 @@
-svg {
+svg.schemascii {
     background: black;
 }
 
-line {
-    stroke: var(--color, white);
+svg.schemascii .wire line {
+    stroke: var(--sch-wirecolor, blue);
     stroke-width: 1;
     stroke-linecap: square;
 }
 
-g.wire:hover {
-    --color: red;
+svg.schemascii .wire:hover {
+    --sch-wirecolor: red;
 }

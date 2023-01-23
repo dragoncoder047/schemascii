@@ -1,6 +1,6 @@
 from collections import namedtuple
 from enum import IntEnum
-from cmath import phase, polar
+from cmath import phase, rect
 from types import GeneratorType
 
 Cbox = namedtuple('Cbox', 'p1 p2 type id')
@@ -69,4 +69,6 @@ def iterate_line(p1: complex, p2: complex, step: float = 1.) -> GeneratorType:
     point = p1
     while abs(vec) > abs(point - p1):
         yield point
-        point += polar(step, phase(vec))
+        point += rect(step, phase(vec))
+    yield point
+    # XXX These don't correctly iterate on wires length 2
