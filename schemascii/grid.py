@@ -11,7 +11,12 @@ class Grid:
         self.width = maxlen
         self.height = len(self.data)
 
+    def validbounds(self, p: complex) -> bool:
+        return 0 <= p.real < self.width and 0 <= p.imag < self.height
+
     def get(self, p: complex) -> str:
+        if not self.validbounds(p):
+            return ' '
         return self.getmask(p) or self.data[int(p.imag)][int(p.real)]
 
     @property
@@ -20,9 +25,13 @@ class Grid:
                 for y in range(self.height)]
 
     def getmask(self, p: complex) -> str:
+        if not self.validbounds(p):
+            return False
         return self.masks[int(p.imag)][int(p.real)]
 
     def setmask(self, p: complex, mask: str | bool = ' '):
+        if not self.validbounds(p):
+            return
         self.masks[int(p.imag)][int(p.real)] = mask
 
     def clrmask(self, p: complex):
