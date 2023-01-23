@@ -1,5 +1,5 @@
 from grid import Grid
-from utils import Wire, colinear
+from utils import Wire, iterate_line
 
 # cSpell:ignore dydx
 
@@ -56,6 +56,9 @@ def next_wire(grid: Grid) -> str | None:
         return None
     # Turn points into string
     # TODO
+    # Mask out used wire
+    # TODO
+    return f'<g class="wire">{pts}</g>'
 
 
 def find_wires(grid: Grid) -> list[str]:
