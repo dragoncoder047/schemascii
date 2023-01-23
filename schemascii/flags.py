@@ -1,9 +1,9 @@
 from itertools import chain
-from .utils import Cbox, Flag, Side
-from .grid import Grid
+from utils import Cbox, Flag, Side
+from grid import Grid
 
 
-def getflags(grid: Grid, box: Cbox) -> list[Flag]:
+def find_flags(grid: Grid, box: Cbox) -> list[Flag]:
     out = []
     for p, s in chain(
         # Top side

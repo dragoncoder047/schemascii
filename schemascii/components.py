@@ -1,15 +1,15 @@
 import re
-from .grid import Grid
-from .utils import Cbox, BOMData
+from grid import Grid
+from utils import Cbox, BOMData
 
-smallcompbom = re.compile(r'([A-Z]+)(\d+)(:[^\s]+)?')
+SMALL_COMPONENT_OR_BOM = re.compile(r'([A-Z]+)(\d+)(:[^\s]+)?')
 
 
-def findsmall(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
+def find_small(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
     components: list[Cbox] = []
     boms: list[BOMData] = []
     for i, line in enumerate(grid.lines):
-        for m in smallcompbom.finditer(line):
+        for m in SMALL_COMPONENT_OR_BOM.finditer(line):
             if m.group(3):
                 boms.append(BOMData(m.group(1),
                                     int(m.group(2)), m.group(3)[1:]))
@@ -22,7 +22,7 @@ def findsmall(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
 TOP_OF_BOX = re.compile(r'\.~+\.')
 
 
-def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
+def find_big(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
     boxes: list[Cbox] = []
     boms: list[BOMData] = []
     while True:
@@ -49,7 +49,7 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                     raise SyntaxError(
                         '%s: Unfinished box starting at line %d, col %d' % (grid.filename, y1 + 1, x1 + 1))
                 inside = Grid(grid.filename, '\n'.join(inners))
-                results, resb = findsmall(inside)
+                results, resb = find_small(inside)
                 if len(results) == 0 and len(resb) == 0:
                     raise ValueError(
                         '%s: Box starting at line %d, col %d is missing reference designator' % (grid.filename, y1 + 1, x1 + 1))
@@ -73,8 +73,7 @@ def findbig(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
     return boxes, boms
 
 
-def findall(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
-    grid.clrall()
-    b1, l1 = findbig(grid)
-    b2, l2 = findsmall(grid)
+def find_all(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
+    b1, l1 = find_big(grid)
+    b2, l2 = find_small(grid)
     return b1+b2, l1+l2
