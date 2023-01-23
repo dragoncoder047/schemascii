@@ -100,7 +100,7 @@ def find_wires(grid: Grid) -> list[str]:
 
 
 if __name__ == '__main__':
-    with open('../examples/wires_test.txt') as f:
+    with open('../test_data/wires_test.txt') as f:
         x = Grid('wires_test.txt', f.read())
         print(find_wires(x))
         print(x)
