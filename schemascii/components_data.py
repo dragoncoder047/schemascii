@@ -1,4 +1,5 @@
-
+# code for drawing
+# https://github.com/pfalstad/circuitjs1/tree/master/src/com/lushprojects/circuitjs1/client
 # https://yqnn.github.io/svg-path-editor/
 
 # These are SVG <path> strings for each component
