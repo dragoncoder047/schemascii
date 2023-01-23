@@ -1,7 +1,7 @@
 from cmath import phase
-from math import pi as PI
+from math import pi
 from grid import Grid
-from utils import Wire, iterate_line
+from utils import Wire, iterate_line, extend
 
 # cSpell:ignore dydx
 
@@ -61,32 +61,29 @@ def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
     return out
 
 
-BLANKOUT = [
-    "|()",  # 0: Horizontal
-    "-",  # 1: Vertical
-]
-
-
 def next_wire(grid: Grid) -> str | None:
+    print(grid, "finding wires")
     # Find the first wire or return None
     for i, line in enumerate(grid.lines):
         indexes = [line.index(c) for c in '-|()*' if c in line]
         if len(indexes) > 0:
-            line_pairs = search_wire(grid, complex(i, min(indexes)))
-            if line_pairs:
+            line_pieces = search_wire(grid, complex(i, min(indexes)))
+            if line_pieces:
                 break
     else:
         return None
     # Blank out the used wire
-    for p1, p2 in line_pairs:
-        way = int(phase(p1 - p2) / PI % 1.0 * 2)
+    for p1, p2 in line_pieces:
+        way = int(phase(p1 - p2) / pi % 1.0 * 2)
         for px in iterate_line(p1, p2):
             old = grid.get(px)
-            if old not in BLANKOUT[way]:
+            # 0: Horizontal, 1: Vertical
+            if old not in ["|()", "-"][way]:
                 grid.setmask(px)
     # Return a <g>
     lines_str = ''.join(
-        f'<line x1="{p1.real}" y1="{p1.imag}" x2="{p2.real}" y2="{p2.imag}"></line>' for p1, p2 in line_pairs)
+        f'<line x1="{p1.real}" y1="{p1.imag}" ' +
+        f'x2="{extend(p1, p2).real}" y2="{extend(p1, p2).imag}"></line>' for p1, p2 in line_pieces)
     return f'<g class="wire">{lines_str}</g>'
 
 

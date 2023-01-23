@@ -4,8 +4,8 @@ svg.schemascii {
 
 svg.schemascii .wire line {
     stroke: var(--sch-wirecolor, blue);
-    stroke-width: 1;
-    stroke-linecap: square;
+    stroke-width: 0.5;
+    stroke-linecap: round;
 }
 
 svg.schemascii .wire:hover {
