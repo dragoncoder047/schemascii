@@ -9,6 +9,7 @@ Flag = namedtuple('Flag', 'char box side')
 
 
 class Side(IntEnum):
+    "Which edge the flag was found on."
     TOP = 0
     RIGHT = 1
     BOTTOM = 2
@@ -49,10 +50,13 @@ class Wire:
 
 
 def colinear(points: list[complex]) -> bool:
+    "Returns true if all the points are in the same line."
     return len(set(phase(p-points[0]) for p in points[1:])) == 1
 
 
 def sharpness_score(points: list[complex]) -> float:
+    """Returns a number indicating how twisty the line is -- higher means
+    the corners are sharper."""
     score = 0
     prev_pt = points.imag
     prev_ph = phase(points.imag - points[0])
@@ -65,6 +69,7 @@ def sharpness_score(points: list[complex]) -> float:
 
 
 def iterate_line(p1: complex, p2: complex, step: float = 1.) -> GeneratorType:
+    "Yields complex points along a line."
     vec = p2 - p1
     if abs(vec) == 2:
         print("foobar")
@@ -77,4 +82,6 @@ def iterate_line(p1: complex, p2: complex, step: float = 1.) -> GeneratorType:
 
 
 def extend(p1: complex, p2: complex) -> complex:
+    """Extends the line from p1 to p2 by 1 in the direction of p2,
+    returns the modified p2."""
     return p2 + rect(1, phase(p2 - p1))

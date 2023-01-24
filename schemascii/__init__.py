@@ -4,6 +4,7 @@ from flags import find_flags
 
 
 def render(filename: str, text: str = None, options: dict = None) -> str:
+    "Render the Schemascii diagram to an SVG string."
     if text is None:
         with open(filename) as f:
             text = f.read()

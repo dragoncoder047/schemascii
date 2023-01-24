@@ -4,6 +4,8 @@ from grid import Grid
 
 
 def find_flags(grid: Grid, box: Cbox) -> list[Flag]:
+    """Runs around the edges of the component box, collects
+    the flags, and masks them off to wires."""
     out = []
     for p, s in chain(
         # Top side

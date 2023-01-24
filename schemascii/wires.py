@@ -8,7 +8,10 @@ from utils import Wire, iterate_line, extend
 DIRECTIONS = [1, -1, 1j, -1j]
 
 
-def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, str] | None:
+def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, complex] | None:
+    """Follows the wire starting at the point in the specified direction,
+    until some interesting change (a corner, junction, or end). Returns the tuple
+    (new, old)."""
     old_point = point
     print("next_in_dir at", point, "by", dydx)
     print("which is a", grid.get(point))
@@ -45,6 +48,8 @@ def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, str
 
 
 def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
+    """Flood-fills the grid starting at the point, and returns
+    the list of all the straight pieces of wire encountered."""
     print("searching at", point)
     seen = [point]
     out = []
@@ -66,6 +71,8 @@ def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
 
 
 def next_wire(grid: Grid, scale: float) -> str | None:
+    """Returns a SVG string of the next line in the grid,
+    or None if there are no more. The line is masked off."""
     print("barfoo")
     # Find the first wire or return None
     for i, line in enumerate(grid.lines):
@@ -87,9 +94,9 @@ def next_wire(grid: Grid, scale: float) -> str | None:
         way = int(phase(p1 - p2) / pi % 1.0 * 2)
         for px in iterate_line(p1, p2):
             old = grid.get(px)
-            # 0: Horizontal, 1: Vertical
+            # way: 0: Horizontal, 1: Vertical
             if old not in ["|()", "-"][way]:
-                grid.setmask(px)
+                grid.setmask(px)  # Don't mask out wire crosses
     # Return a <g>
     lines_str = ''.join(
         f'<line x1="{p1.real * scale}" y1="{p1.imag * scale}" ' +
@@ -99,7 +106,8 @@ def next_wire(grid: Grid, scale: float) -> str | None:
     return f'<g class="wire">{lines_str}</g>'
 
 
-def find_wires(grid: Grid, scale: float) -> list[str]:
+def find_wires(grid: Grid, scale: float) -> str:
+    "Finds all the wires and masks them out, returns an SVG string."
     out = ""
     w = next_wire(grid, scale)
     while w is not None:
