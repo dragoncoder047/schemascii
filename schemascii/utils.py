@@ -72,7 +72,7 @@ def iterate_line(p1: complex, p2: complex, step: float = 1.) -> GeneratorType:
     "Yields complex points along a line."
     vec = p2 - p1
     if abs(vec) == 2:
-        print("foobar")
+        print("foobar two")
     point = p1
     while abs(vec) > abs(point - p1):
         yield point

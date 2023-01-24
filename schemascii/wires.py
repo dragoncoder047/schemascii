@@ -10,11 +10,9 @@ DIRECTIONS = [1, -1, 1j, -1j]
 
 def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, complex] | None:
     """Follows the wire starting at the point in the specified direction,
-    until some interesting change (a corner, junction, or end). Returns the tuple
-    (new, old)."""
+    until some interesting change (a corner, junction, or end). Returns the
+    tuple (new, old)."""
     old_point = point
-    print("next_in_dir at", point, "by", dydx)
-    print("which is a", grid.get(point))
     match grid.get(point):
         case '|' | ')' | '(':
             # extend up or down
@@ -50,7 +48,6 @@ def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, com
 def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
     """Flood-fills the grid starting at the point, and returns
     the list of all the straight pieces of wire encountered."""
-    print("searching at", point)
     seen = [point]
     out = []
     frontier = [point]
@@ -59,7 +56,6 @@ def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
         here = frontier.pop(0)
         for d in DIRECTIONS:
             line = next_in_dir(grid, here, d)
-            print("next_in_dir(", here, d, ") returned", line)
             if line is None:
                 continue
             p = line[0]
@@ -73,20 +69,14 @@ def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
 def next_wire(grid: Grid, scale: float) -> str | None:
     """Returns a SVG string of the next line in the grid,
     or None if there are no more. The line is masked off."""
-    print("barfoo")
     # Find the first wire or return None
     for i, line in enumerate(grid.lines):
         indexes = [line.index(c) for c in '-|()*' if c in line]
-        print("line", i + 1, indexes, end=' -> ')
         if len(indexes) > 0:
-            line_pieces = search_wire(grid, complex(i, min(indexes)))
-            print('result:', line_pieces)
+            line_pieces = search_wire(grid, complex(min(indexes), i))
             if line_pieces:
                 break
-        else:
-            print()
     else:
-        print("nothing")
         return None
     # Blank out the used wire
     for p1, p2 in line_pieces:
