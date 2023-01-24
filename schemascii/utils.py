@@ -16,39 +16,6 @@ class Side(IntEnum):
     LEFT = 3
 
 
-class Wire:
-    def __init__(self, points: list[complex]):
-        self.points = points
-
-    def render(self) -> str:
-        # prev = self.points[0]
-        # # copied from https://github.com/KenKundert/svg_schematic/blob/0abb5dc/svg_schematic.py#L284-L302
-        # new_points = [prev]
-        # for p in  self.points[1:]:
-        #     if p != prev: # TODO: remove colinear
-        #         candidates = []
-        #         candidates.append([complex(prev.real, p.imag)])
-        #         candidates.append([complex(p.real, prev.imag)])
-        #         ymid = (p.imag + prev.imag)/2
-        #         candidates.append([complex(prev.real, ymid), complex(p.real, ymid)])
-        #         xmid = (p.real + prev.real)/2
-        #         candidates.append([complex(xmid, prev.imag), complex(xmid, p.imag)])
-        #         best = None
-        #         bestscore = float('inf')
-        #         for c in candidates:
-        #             if (s := sharpness_score(new_points + c)) < bestscore:
-        #                 bestscore = s
-        #                 best = c
-        #         new_points.extend(c)
-        #     new_points.append(p)
-        #     prev = p
-        return (
-            '<polyline class="wire" points="'
-            + ' '.join(f'{p.real},{p.imag}' for p in self.points)
-            + '"></polyline>'
-        )
-
-
 def colinear(points: list[complex]) -> bool:
     "Returns true if all the points are in the same line."
     return len(set(phase(p-points[0]) for p in points[1:])) == 1
@@ -66,6 +33,35 @@ def sharpness_score(points: list[complex]) -> float:
         prev_pt = p
         prev_ph = ph
     return score
+
+
+def intersecting(a, b, p, q):
+    """Return true if colinear line segments AB and PQ intersect."""
+    a, b, p, q = a.real, b.real, p.real, q.real
+    sort_a, sort_b = min(a, b), max(a, b)
+    sort_p, sort_q = min(p, q), max(p, q)
+    return sort_a <= sort_p <= sort_b or sort_p <= sort_b <= sort_q
+
+
+# UNUSED as of yet
+def merge_colinear(points: list[tuple[complex, complex]]) -> list[tuple[complex, complex]]:
+    "Merges line segments that are colinear."
+    points = list(set(points))
+    out = []
+    a, b = points[0]
+    while points:
+        print(points)
+        for pq in points[1:]:
+            p, q = pq
+            if not (colinear((a, b, p, q)) and intersecting(a, b, p, q)):
+                continue
+            points.remove(pq)
+            a, b = sorted((a, b, p, q), key=lambda x: x.real)[::3]
+            break
+        else:
+            out.append((a, b))
+            (a, b), points = points[0], points[1:]
+    return out
 
 
 def iterate_line(p1: complex, p2: complex, step: float = 1.) -> GeneratorType:

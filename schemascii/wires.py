@@ -1,7 +1,7 @@
 from cmath import phase
 from math import pi
 from grid import Grid
-from utils import Wire, iterate_line, extend
+from utils import iterate_line, extend, merge_colinear
 
 # cSpell:ignore dydx
 
@@ -34,12 +34,15 @@ def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, com
                 return None  # The horizontal wires do not connect vertically
         case '*':
             # extend any direction
-            if grid.get(point + dydx) in '-|()*':
+            if grid.get(point + dydx) in '-|()':
                 point, s = next_in_dir(grid, point + dydx, dydx)
                 if point is None:
                     return None
                 return point, s
-            return None
+            if grid.get(point + dydx) == '*':
+                point += dydx
+            else:
+                return None
         case _:
             return None
     return point, old_point
@@ -92,7 +95,7 @@ def next_wire(grid: Grid, scale: float) -> str | None:
         f'<line x1="{p1.real * scale}" y1="{p1.imag * scale}" ' +
         f'x2="{extend(p1, p2).real * scale}" ' +
         f'y2="{extend(p1, p2).imag * scale}"></line>'
-        for p1, p2 in line_pieces)
+        for p1, p2 in line_pieces)  # merge_colinear(line_pieces))
     return f'<g class="wire">{lines_str}</g>'
 
 

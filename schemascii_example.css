@@ -6,8 +6,11 @@ svg.schemascii .wire line {
     stroke: var(--sch-wirecolor, blue);
     stroke-width: 0.5;
     stroke-linecap: round;
+    filter: drop-shadow(0 0 0.5px var(--sch-wireshadow, yellow));
+    transition-duration: 0.1s;
 }
 
 svg.schemascii .wire:hover {
     --sch-wirecolor: red;
+    --sch-wireshadow: lime;
 }
