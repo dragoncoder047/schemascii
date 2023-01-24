@@ -5,7 +5,8 @@ from types import GeneratorType
 
 Cbox = namedtuple('Cbox', 'p1 p2 type id')
 BOMData = namedtuple('BOMData', 'type id data')
-Flag = namedtuple('Flag', 'char box side')
+Flag = namedtuple('Flag', 'pt char side')
+Terminal = namedtuple('Terminal', 'pt flag side')
 
 
 class Side(IntEnum):

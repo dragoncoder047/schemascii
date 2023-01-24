@@ -56,7 +56,6 @@ def find_big(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                         f'{grid.filename}: Unfinished box '
                         f'starting at line {y1 + 1}, col {x1 + 1}')
                 inside = grid.clip(complex(x1, y1), complex(x2, y2))
-                print("inside is", inside)
                 results, resb = find_small(inside)
                 if len(results) == 0 and len(resb) == 0:
                     raise ValueError(

@@ -1,6 +1,49 @@
+from types import FunctionType
+from typing import Literal
+from utils import Cbox, Terminal
+
+_RENDERERS = {}
+
+
+def renderer(*rd_s: Literal[list[str]]):
+    "Decorator"
+    def rendec(func: FunctionType):
+        for rd in rd_s:
+            rdu = rd.upper()
+            if True and rdu in _RENDERERS:
+                raise RuntimeError
+            _RENDERERS[rdu] = func
+    return dec
+
+
+def two_terminal(*rd_s: Literal[list[str]]):
+    "Decorator"
+    def rendec2(func: FunctionType):
+        @renderer(*rd_s)
+        def two_check(box: Cbox, terminals: list[Terminal]):
+            if len(terminals) != 2:
+                raise TypeError(
+                    f"{box.type}{box.id} component can only have 2 terminals")
+            return func(box, terminals)
+    return rendec2
+
+
+def render_component(box: Cbox, flags: list[Terminal]):
+    "Render the component into an SVG string."
+    if box.type not in _RENDERERS:
+        raise NameError(
+            f"No renderer defined for {box.type} component")
+    pass  # TODO
+
+
+@two_terminal("R")
+def resistor(box: Cbox, terminals: list[Terminal]):
+    pass
+
 # code for drawing
 # https://github.com/pfalstad/circuitjs1/tree/master/src/com/lushprojects/circuitjs1/client
 # https://yqnn.github.io/svg-path-editor/
+
 
 # These are SVG <path> strings for each component
 # + is on the top unless otherwise noted

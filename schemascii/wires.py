@@ -14,7 +14,7 @@ def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, com
     tuple (new, old)."""
     old_point = point
     match grid.get(point):
-        case '|' | ')' | '(':
+        case '|' | '(' | ')':
             # extend up or down
             if dydx in (0+1j, 0-1j):
                 while grid.get(point) in '-|()':

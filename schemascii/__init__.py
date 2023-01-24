@@ -1,6 +1,7 @@
+# import pprint
 from grid import Grid
 from components import find_all
-from flags import find_flags
+from edgemarks import find_edge_marks
 
 
 def render(filename: str, text: str = None, options: dict = None) -> str:
@@ -13,7 +14,8 @@ def render(filename: str, text: str = None, options: dict = None) -> str:
     # get everything
     grid = Grid(filename, text)
     components, bomdata = find_all(grid)
-    allflags = [f for c in components for f in find_flags(grid, c)]
+    terminals = {c: find_edge_marks(grid, c) for c in components}
+    # pprint.pprint(terminals, indent=4, width=-1)
     # get some options
     padding = options.get('padding', 1)
     scale = options.get('scale', 1)
