@@ -2,13 +2,13 @@
 
 The diagram is made of 3 components: wires, 1-, 2-, and 3-terminal components, and larger components (IC's, etc.) drawn as boxes.
 
-Wires are simply lines drawn using dashes or pipe symbols. A corner or wire join (drawn as a dot) is notated by an asterisk (`*`), and crossed wires (not joined) are notated with a `)` or simply Examples:
+Wires are simply lines drawn using dashes or pipe symbols. A corner or wire join (drawn as a dot) is notated by an asterisk (`*`), and crossed wires (not joined) are notated with a `)` or simply broken to allow the other wire to pass. Examples:
 
 ```txt
-Crossed:         Joined:       Corner:      Crossed:      Crossed:     Joined:
-    |               |            |              |             |           |
- ---)---         ---*---         *---        -------       ---|---     ---*---
-    |               |                           |             |           |
+Crossed:         Joined:       Corner:      Corner:      Crossed:      Crossed:
+    |               |            |            |              |             |
+ ---)---         ---*---         *---         |---        -------       ---|---
+    |               |                                        |             |
 ```
 
 Small components are notated with their reference designator: one or more uppercase letters followed by an ID number. They are always written horizontally even if the terminals are on the top and bottom. IDs are allowed to be duplicated and result in the same component values.

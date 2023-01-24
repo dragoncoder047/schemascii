@@ -19,7 +19,7 @@ def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, com
             if dydx in (0+1j, 0-1j):
                 while grid.get(point) in '-|()':
                     point += dydx
-                if grid.get(point) not in '-|()*':
+                if grid.get(point) != '*':
                     point -= dydx
             else:
                 return None  # The vertical wires do not connect horizontally
@@ -28,7 +28,7 @@ def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, com
             if dydx in (1+0j, -1+0j):
                 while grid.get(point) in '-|()':
                     point += dydx
-                if grid.get(point) not in '-|()*':
+                if grid.get(point) != '*':
                     point -= dydx
             else:
                 return None  # The horizontal wires do not connect vertically
