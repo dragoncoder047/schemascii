@@ -6,10 +6,12 @@ The algorithm first starts by finding all the "large component" boxes in the gri
 
 Once it has all the components picked out, it runs around the bounding boxes of each component and collects the flags, which are characters adjacent to the component but not the usual `|` and `-` for wires (these are masked out with normal wires.)
 
+Next, wires are mapped out with a flood fill algorithm and drawn, one `<g>` per wire.
+
+Then for each designator, the terminals are dispatched to the function to generate the SVG path of the component, returning its own `<g>` that can be styled.
+
 ***--- IMPLEMENTATION LIMIT OF CURRENT CODE... more coming soon ---***
 
-Next, wires are mapped out with a flood fill algorithm. The straight lines coming out of each component is followed until it comes to a join or corner, and those "end" terminals are saved. The rest of the wires are drawn, one `<g>` per wire.
-
-Then for each designator, the "end" terminals are dispatched to the function to generate the SVG path of the component, returning its own `<g>` that can be styled.
+All of the `<g>`'s are concatenated together and wrapped in an enclosing `<svg>` element.
 
 That's pretty much it.
