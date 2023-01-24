@@ -41,6 +41,12 @@ class Grid:
         self.masks = [[False for x in range(self.width)]
                       for y in range(self.height)]
 
+    def clip(self, p1: complex, p2: complex):
+        ls = slice(int(p1.real), int(p2.real))
+        cs = slice(int(p1.imag), int(p2.imag) + 1)
+        d = '\n'.join(''.join(ln[ls]) for ln in self.data[cs])
+        return Grid(self.filename, d)
+
     def __repr__(self):
         return f"Grid({self.filename!r}, '''\n{chr(10).join(self.lines)}''')"
     __str__ = __repr__

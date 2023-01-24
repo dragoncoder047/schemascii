@@ -14,7 +14,8 @@ def find_small(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                 boms.append(BOMData(m.group(1),
                                     int(m.group(2)), m.group(3)[1:]))
             else:
-                components.append(Cbox(complex(m.start(), i), complex(m.end(), i),
+                components.append(Cbox(complex(m.start(), i), complex(m.end(),
+                                                                      i),
                                        m.group(1), int(m.group(2))))
     return components, boms
 
@@ -33,7 +34,6 @@ def find_big(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                 x2 = m1.end()
                 y1 = i
                 y2 = None
-                inners = []
                 for j, l in enumerate(grid.lines):
                     if j <= y1:
                         continue
@@ -43,25 +43,34 @@ def find_big(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                         break
                     if not cs[0] == cs[-1] == ':':
                         raise SyntaxError(
-                            '%s: Fragmented box starting at line %d, col %d' % (grid.filename, y1 + 1, x1 + 1))
-                    inners.append(cs[1:-1])
+                            f'{grid.filename}: Fragmented box '
+                            f'starting at line {y1 + 1}, col {x1 + 1}')
                 else:
                     raise SyntaxError(
-                        '%s: Unfinished box starting at line %d, col %d' % (grid.filename, y1 + 1, x1 + 1))
-                inside = Grid(grid.filename, '\n'.join(inners))
+                        f'{grid.filename}: Unfinished box '
+                        f'starting at line {y1 + 1}, col {x1 + 1}')
+                inside = grid.clip(complex(x1, y1), complex(x2, y2))
+                print("inside is", inside)
                 results, resb = find_small(inside)
                 if len(results) == 0 and len(resb) == 0:
                     raise ValueError(
-                        '%s: Box starting at line %d, col %d is missing reference designator' % (grid.filename, y1 + 1, x1 + 1))
-                elif len(results) != 1 and len(resb) != 1:
+                        f'{grid.filename}: Box starting at '
+                        f'line {y1 + 1}, col {x1 + 1} is '
+                        f'missing reference designator')
+                if len(results) != 1 and len(resb) != 1:
                     raise ValueError(
-                        '%s: Box starting at line %d, col %d has multiple reference designators' % (grid.filename, y1 + 1, x1 + 1))
+                        f'{grid.filename}: Box starting at '
+                        f'line {y1 + 1}, col {x1 + 1} has '
+                        f'multiple reference designators')
                 if not results:
                     merd = resb[0]
                 else:
                     merd = results[0]
                 boxes.append(
-                    Cbox(complex(x1, y1), complex(x2, y2), merd.type, merd.id))
+                    Cbox(complex(x1, y1),
+                         complex(x2, y2),
+                         merd.type,
+                         merd.id))
                 boms.extend(resb)
                 # mark everything
                 for i in range(x1, x2):
