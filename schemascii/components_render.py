@@ -13,7 +13,7 @@ def renderer(*rd_s: Literal[list[str]]):
             if True and rdu in _RENDERERS:
                 raise RuntimeError
             _RENDERERS[rdu] = func
-    return dec
+    return rendec
 
 
 def two_terminal(*rd_s: Literal[list[str]]):
