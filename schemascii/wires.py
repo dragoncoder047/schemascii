@@ -35,10 +35,7 @@ def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, com
         case '*':
             # extend any direction
             if grid.get(point + dydx) in '-|()':
-                point, s = next_in_dir(grid, point + dydx, dydx)
-                if point is None:
-                    return None
-                return point, s
+                return next_in_dir(grid, point + dydx, dydx)
             if grid.get(point + dydx) == '*':
                 point += dydx
             else:
@@ -110,8 +107,7 @@ def find_wires(grid: Grid, scale: float) -> str:
 
 
 if __name__ == '__main__':
-    with open('../test_data/wires_test.txt') as f:
-        x = Grid('wires_test.txt', f.read())
-        print(x.get(6+0j))
+    with open('../test_data/test1.txt') as f:
+        x = Grid('test1.txt', f.read())
         print(find_wires(x, 1))
         print(x)

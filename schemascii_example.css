@@ -2,11 +2,14 @@ svg.schemascii {
     background: black;
 }
 
+svg.schemascii .wire {
+    filter: drop-shadow(0 0 0.5px var(--sch-wireshadow, yellow));
+}
+
 svg.schemascii .wire line {
     stroke: var(--sch-wirecolor, blue);
-    stroke-width: 0.5;
+    stroke-width: 0.7;
     stroke-linecap: round;
-    filter: drop-shadow(0 0 0.5px var(--sch-wireshadow, yellow));
     transition-duration: 0.2s;
 }
 
