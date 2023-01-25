@@ -1,7 +1,7 @@
 from typing import Callable
 from cmath import phase, rect
 from math import degrees, pi
-from utils import Cbox, Terminal, BOMData, XML
+from utils import Cbox, Terminal, BOMData, XML, Side
 
 _RENDERERS = {}
 
@@ -65,7 +65,11 @@ def resistor(box: Cbox, terminals: list[Terminal], bd: BOMData, **kwargs):
             " ",
             XML.tspan(bd.data + '&ohm;', class_="cmp-value"),
             x=text_pt.real,
-            y=text_pt.imag
+            y=text_pt.imag,
+            text__anchor="start" if (
+                any(Side.BOTTOM == t.side for t in terminals)
+                or any(Side.TOP == t.side for t in terminals)
+            ) else "middle"
         ) +
         XML.polyline(points=' '.join(f'{x.real * scale},{x.imag * scale}'
                                      for x in points))
