@@ -6,7 +6,7 @@ svg.schemascii {
 
 svg.schemascii .wire line {
     stroke: var(--sch-color, blue);
-    stroke-width: 2;
+    stroke-width: calc(0.15 * var(--sch-scale, 1));
     stroke-linecap: round;
     transition-duration: 0.2s;
 }
@@ -17,7 +17,7 @@ svg.schemascii .wire:hover {
 
 svg.schemascii .component polyline {
     stroke: var(--sch-color, red);
-    stroke-width: 1;
+    stroke-width: calc(0.15 * var(--sch-scale, 1));
     stroke-linecap: round;
     transition-duration: 0.2s;
     fill: none;
@@ -33,7 +33,7 @@ svg.schemascii .component text {
 }
 
 svg.schemascii .component:hover text {
-    font-size: larger;
+    font-weight: bold;
 }
 
 svg.schemascii .component tspan.cmp-value {
