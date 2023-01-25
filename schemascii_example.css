@@ -1,19 +1,42 @@
 svg.schemascii {
     background: black;
-}
 
-svg.schemascii .wire {
-    filter: drop-shadow(0 0 0.5px var(--sch-wireshadow, yellow));
+    --sch-scale: attr(data-scale);
 }
 
 svg.schemascii .wire line {
-    stroke: var(--sch-wirecolor, blue);
-    stroke-width: 0.7;
+    stroke: var(--sch-color, blue);
+    stroke-width: 2;
     stroke-linecap: round;
+    filter: drop-shadow(0 0 0.5px var(--sch-shadow, yellow));
     transition-duration: 0.2s;
 }
 
 svg.schemascii .wire:hover {
-    --sch-wirecolor: red;
-    --sch-wireshadow: lime;
+    --sch-color: lime;
+    --sch-shadow: orange;
+}
+
+svg.schemascii .component polyline {
+    stroke: var(--sch-color, red);
+    stroke-width: 2;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 0.5px var(--sch-shadow, lime));
+    transition-duration: 0.2s;
+    fill: none;
+}
+
+svg.schemascii .component:hover {
+    --sch-color: lime;
+    --sch-shadow: skyblue;
+}
+
+svg.schemascii .component text {
+    fill: white;
+    transition-duration: 0.2s;
+    font-size: var(--sch-font-size, 6px);
+}
+
+svg.schemascii .component:hover text {
+    --sch-font-size: 8px;
 }

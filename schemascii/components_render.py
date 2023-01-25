@@ -1,47 +1,75 @@
-from types import FunctionType
-from typing import Literal
-from utils import Cbox, Terminal
+from typing import Callable
+from cmath import phase, rect
+from math import degrees, pi
+from utils import Cbox, Terminal, BOMData, XML
 
 _RENDERERS = {}
 
+# cSpell:ignore rendec
 
-def renderer(*rd_s: Literal[list[str]]):
-    "Decorator"
-    def rendec(func: FunctionType):
+
+def component(*rd_s: list[str]) -> Callable:
+    "Registers the component under a set of reference designators."
+    def rendec(func: Callable):
         for rd in rd_s:
             rdu = rd.upper()
             if True and rdu in _RENDERERS:
                 raise RuntimeError
             _RENDERERS[rdu] = func
+        return func
     return rendec
 
 
-def two_terminal(*rd_s: Literal[list[str]]):
-    "Decorator"
-    def rendec2(func: FunctionType):
-        @renderer(*rd_s)
-        def two_check(box: Cbox, terminals: list[Terminal]):
-            if len(terminals) != 2:
-                raise TypeError(
-                    f"{box.type}{box.id} component can only have 2 terminals")
-            return func(box, terminals)
-    return rendec2
+def two_terminal(func: Callable) -> Callable:
+    "Ensures the component has 2 terminals."
+    def two_check(box: Cbox, terminals: list[Terminal], bd: list[BOMData], **kwargs):
+        if len(terminals) != 2:
+            raise TypeError(
+                f"{box.type}{box.id} component can only have 2 terminals")
+        return func(box, terminals, bd, **kwargs)
+    return two_check
 
 
-def render_component(box: Cbox, flags: list[Terminal]):
-    "Render the component into an SVG string."
-    if box.type not in _RENDERERS:
-        raise NameError(
-            f"No renderer defined for {box.type} component")
-    pass  # TODO
+def no_ambiguous(func: Callable) -> Callable:
+    "Ensures the component has exactly one BOM data marker."
+    def ch_ambig(box: Cbox, terminals: list[Terminal], bd: list[BOMData], **kwargs):
+        if len(bd) != 1:
+            raise ValueError(
+                f"Ambiguous BOM data for {box.type}{box.id}: {bd!r}")
+        return func(box, terminals, bd[0], **kwargs)
+    return ch_ambig
 
 
-@two_terminal("R")
-def resistor(box: Cbox, terminals: list[Terminal]):
-    pass
+@component("R")
+@two_terminal
+@no_ambiguous
+def resistor(box: Cbox, terminals: list[Terminal], bd: BOMData, **kwargs):
+    scale = kwargs.get('scale', 1)
+    t1, t2 = terminals[0].pt, terminals[1].pt
+    vec = t1 - t2
+    length = abs(vec)
+    angle = phase(vec)
+    # TODO: Use box and bd
+    undulations = 2 + int(length) // 2
+    points = [t1]
+    for i in range(undulations):
+        points.append(rect(2 * i, angle) + rect(1, angle + pi / 2))
+        points.append(rect(2 * i + 1, angle) - rect(1, angle - pi / 2))
+    points.append(t2)
+    text_pt = ((t1 + t2) / 2 + rect(1, angle)) * scale
+    return (
+        XML.text(
+            f"{box.type}{box.id}",
+            x=text_pt.real,
+            y=text_pt.imag
+        ) +
+        XML.polyline(points=' '.join(f'{x.real * scale},{x.imag * scale}'
+                                     for x in points))
+    )
 
 # code for drawing
 # https://github.com/pfalstad/circuitjs1/tree/master/src/com/lushprojects/circuitjs1/client
+# https://github.com/KenKundert/svg_schematic/blob/0abb5dc/svg_schematic.py
 # https://yqnn.github.io/svg-path-editor/
 
 
@@ -70,6 +98,15 @@ twoterminals = {
     'LS': 'M0-1V-.5H-.25V.5H.25V-.5H0M0 1V.5ZM1-1 .25-.5V.5L1 1Z',
     # electret mic
     'MIC': 'M1 0A1 1 0 00-1 0 1 1 0 001 0V-1 1Z',
-    # resistor
-    'R': 'M0-1 1-.8-1-.4 1 0-1 .4 1 .8 0 1 1 .8-1 .4 1 0-1-.4 1-.8 0-1Z',
 }
+
+
+def render_component(box: Cbox, terminals: list[Terminal], bd: list[BOMData], **kwargs):
+    "Render the component into an SVG string."
+    if box.type not in _RENDERERS:
+        raise NameError(
+            f"No renderer defined for {box.type} component")
+    return XML.g(
+        _RENDERERS[box.type](box, terminals, bd, **kwargs),
+        class_=f"component {box.type}"
+    )

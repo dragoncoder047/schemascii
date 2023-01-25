@@ -1,7 +1,7 @@
 from cmath import phase
 from math import pi
 from grid import Grid
-from utils import iterate_line, extend, merge_colinear
+from utils import iterate_line, extend, merge_colinear, XML
 
 # cSpell:ignore dydx
 
@@ -87,16 +87,20 @@ def next_wire(grid: Grid, scale: float) -> str | None:
             # way: 0: Horizontal, 1: Vertical
             if old not in ["|()", "-"][way]:
                 grid.setmask(px)  # Don't mask out wire crosses
-    # Return a <g>
-    lines_str = ''.join(
-        f'<line x1="{p1.real * scale}" y1="{p1.imag * scale}" ' +
-        f'x2="{extend(p1, p2).real * scale}" ' +
-        f'y2="{extend(p1, p2).imag * scale}"></line>'
-        for p1, p2 in line_pieces)  # merge_colinear(line_pieces))
-    return f'<g class="wire">{lines_str}</g>'
+    return XML.g(
+        *(
+            XML.line(
+                x1=p1.real * scale,
+                y1=p1.imag * scale,
+                x2=extend(p1, p2).real * scale,
+                y2=extend(p1, p2).imag * scale,
+            )
+            for p1, p2 in line_pieces
+        ),
+        class_="wire")
 
 
-def find_wires(grid: Grid, scale: float) -> str:
+def get_wires(grid: Grid, scale: float) -> str:
     "Finds all the wires and masks them out, returns an SVG string."
     out = ""
     w = next_wire(grid, scale)
@@ -107,7 +111,7 @@ def find_wires(grid: Grid, scale: float) -> str:
 
 
 if __name__ == '__main__':
-    with open('../test_data/test1.txt') as f:
-        x = Grid('test1.txt', f.read())
+    with open('../test_data/test_resistors.txt') as f:
+        x = Grid('test_resistors.txt', f.read())
         print(find_wires(x, 1))
         print(x)

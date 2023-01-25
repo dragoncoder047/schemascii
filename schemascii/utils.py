@@ -2,6 +2,7 @@ from collections import namedtuple
 from enum import IntEnum
 from cmath import phase, rect
 from types import GeneratorType
+from typing import Callable
 
 Cbox = namedtuple('Cbox', 'p1 p2 type id')
 BOMData = namedtuple('BOMData', 'type id data')
@@ -82,3 +83,17 @@ def extend(p1: complex, p2: complex) -> complex:
     """Extends the line from p1 to p2 by 1 in the direction of p2,
     returns the modified p2."""
     return p2 + rect(1, phase(p2 - p1))
+
+
+class XML_Class:
+    def __getattr__(self, tag) -> Callable:
+        def mk_tag(*contents, **attrs) -> str:
+            out = f'<{tag} '
+            for k, v in attrs.items():
+                out += f'{k.removesuffix("_")}="{v}" '
+            out = out.rstrip() + '>' + ''.join(contents)
+            return out + f'</{tag}>'
+        return mk_tag
+
+
+XML = XML_Class()
