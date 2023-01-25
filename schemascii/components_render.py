@@ -2,6 +2,7 @@ from typing import Callable
 from cmath import phase, rect
 from math import degrees, pi
 from utils import Cbox, Terminal, BOMData, XML, Side
+from metric import normalize_metric
 
 _RENDERERS = {}
 
@@ -58,18 +59,18 @@ def resistor(box: Cbox, terminals: list[Terminal], bd: BOMData, **kwargs):
     text_pt = (t1 + t2) * scale / 2
     offset = rect(scale / 2, quad_angle)
     text_pt += complex(abs(offset.real), -abs(offset.imag))
-    # TODO: component value
     return (
         XML.text(
             XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
             " ",
-            XML.tspan(bd.data + '&ohm;', class_="cmp-value"),
+            XML.tspan(normalize_metric(bd.data) + '&ohm;', class_="cmp-value"),
             x=text_pt.real,
             y=text_pt.imag,
             text__anchor="start" if (
                 any(Side.BOTTOM == t.side for t in terminals)
                 or any(Side.TOP == t.side for t in terminals)
-            ) else "middle"
+            ) else "middle",
+            font__size=scale,
         ) +
         XML.polyline(points=' '.join(f'{x.real * scale},{x.imag * scale}'
                                      for x in points))
