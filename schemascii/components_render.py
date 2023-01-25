@@ -49,17 +49,21 @@ def resistor(box: Cbox, terminals: list[Terminal], bd: BOMData, **kwargs):
     vec = t1 - t2
     length = abs(vec)
     angle = phase(vec)
-    # TODO: Use box and bd
-    undulations = 2 + int(length) // 2
+    quad_angle = angle + pi / 2
     points = [t1]
-    for i in range(undulations):
-        points.append(rect(2 * i, angle) + rect(1, angle + pi / 2))
-        points.append(rect(2 * i + 1, angle) - rect(1, angle - pi / 2))
+    for i in range(1, 4 * int(length)):
+        points.append(t1 - rect(i / 4, angle) +
+                      pow(-1, i) * rect(1, quad_angle) / 4)
     points.append(t2)
-    text_pt = ((t1 + t2) / 2 + rect(1, angle)) * scale
+    text_pt = (t1 + t2) * scale / 2
+    offset = rect(scale / 2, quad_angle)
+    text_pt += complex(abs(offset.real), -abs(offset.imag))
+    # TODO: component value
     return (
         XML.text(
-            f"{box.type}{box.id}",
+            XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
+            " ",
+            XML.tspan(bd.data + '&ohm;', class_="cmp-value"),
             x=text_pt.real,
             y=text_pt.imag
         ) +

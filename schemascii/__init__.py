@@ -35,7 +35,7 @@ def render(filename: str, text: str = None, **options) -> str:
         f'{grid.height * scale + padding * 2}',
         xmlns="http://www.w3.org/2000/svg",
         class_="schemascii",
-        **{'data-scale': scale}
+        data__scale=scale,
     )
 
 
