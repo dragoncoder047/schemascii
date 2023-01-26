@@ -2,13 +2,11 @@
 
 | Designator | Component type | Implemented? |
 |:--:|:--|:--:|
-| A | Separable assembly or sub-assembly (e.g. printed circuit assembly) ||
+| A, ASSY | Separable assembly or sub-assembly ||
 | AE | Aerial, antenna ||
-| ASSY | Separable assembly ||
 | AT | Attenuator or isolator ||
-| B | Battery ||
+| B, BT | Battery ||
 | BR | Bridge rectifier ||
-| BT | Battery ||
 | C | Capacitor | Yes |
 | CN | Connector ||
 | CRT | Cathode ray tube ||
@@ -28,7 +26,7 @@
 | HY | Circulator or directional coupler ||
 | IC | Integrated circuit ||
 | IR | Infrared Diode ||
-| J | Jack (least-movable connector of a connector pair), Jack connector (connector may have "male" pin contacts and/or "female" socket contacts) ||
+| J | Jack (least-movable connector of a connector pair) ||
 | J, JW | Wire link ("jumper") ||
 | JFET | Junction gate field-effect transistor ||
 | JP | Jumper (Link) ||
@@ -46,7 +44,7 @@
 | MP | Mechanical part (including screws and fasteners) ||
 | NE | Neon lamp ||
 | OP | Opto-isolator ||
-| P | Plug (most-movable connector of a connector pair), Plug connector (connector may have "male" pin contacts and/or "female" socket contacts) ||
+| P | Plug (most-movable connector of a connector pair) ||
 | PCB | Printed circuit board ||
 | PLC | Programmable logic controller ||
 | PS | Power supply ||
@@ -56,10 +54,9 @@
 | RN | Resistor network ||
 | RT | Thermistor ||
 | RV | Varistor, Variable resistor ||
-| S | Switch (all types, including buttons) ||
+| S, SW | Switch (all types, including buttons) ||
 | SCR | Silicon-controlled rectifier ||
 | SUS | Silicon unilateral switch ||
-| SW | Switch ||
 | T | Transformer ||
 | TC | Thermocouple ||
 | TFT | Thin-film transistor (display) ||
@@ -74,5 +71,4 @@
 | VR | Voltage regulator (voltage reference), Variable resistor (potentiometer or rheostat) ||
 | VT | Voltage transformer ||
 | W | Wire ||
-| X | Crystal, ceramic resonator ||
-| X, XTAL, Y | Crystal oscillator ||
+| X, XTAL, Y | Crystal oscillator, ceramic resonator ||
