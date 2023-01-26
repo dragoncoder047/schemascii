@@ -2,12 +2,12 @@ from typing import Callable
 from cmath import phase, rect
 from math import pi
 from utils import (Cbox, Terminal, BOMData, XML, Side,
-                   polyline, id_text, make_text_point,
+                   polylinegon, id_text, make_text_point,
                    bunch_o_lines, deep_transform, make_plus)
 from metric import format_metric_unit
 
 RENDERERS = {}
-# cSpell:ignore rendec Cbox
+# cSpell:ignore rendec Cbox polylinegon
 
 
 def component(*rd_s: list[str]) -> Callable:
@@ -101,7 +101,7 @@ def resistor(
     points.append(t2)
     text_pt = make_text_point(t1, t2, **kwargs)
     return (id_text(box, bom_data, terminals, "&ohm;", text_pt, **kwargs)
-            + polyline(points, **kwargs))
+            + polylinegon(points, **kwargs))
 
 
 @component("C")
@@ -127,6 +127,29 @@ def capacitor(
             + bunch_o_lines(lines, **kwargs)
             + make_plus(terminals, mid, angle, **kwargs))
 
+
+@component("D", "LED", "CR")
+@polarized
+@no_ambiguous
+def diode(
+        box: Cbox,
+        terminals: list[Terminal],
+        bom_data: BOMData | None,
+        **kwargs):
+    "Draw a diode or LED"
+    t1, t2 = terminals[0].pt, terminals[1].pt
+    mid = (t1 + t2) / 2
+    angle = phase(t1 - t2)
+    lines = [
+        (t2, mid + rect(.3, angle)),
+        (t1, mid + rect(-.3, angle)),
+        deep_transform((-.3-.3j, .3-.3j), mid, angle)]
+    triangle = deep_transform((-.3j, .3+.3j, -.3+.3j), mid, angle)
+    text_pt = make_text_point(t1, t2, **kwargs)
+    return (id_text(box, bom_data, terminals, None, text_pt, **kwargs)
+            + bunch_o_lines(lines, **kwargs)
+            + polylinegon(triangle, True, **kwargs))
+
 # code for drawing
 # https://github.com/pfalstad/circuitjs1/tree/master/src/com/lushprojects/circuitjs1/client
 # https://github.com/KenKundert/svg_schematic/blob/0abb5dc/svg_schematic.py
@@ -140,10 +163,6 @@ def capacitor(
 twoterminals = {
     # battery
     'B': 'M.5 1H-.5ZM1 .6H-1ZM.5.2H-.5ZM1-.2H-1ZM.5-.6H-.5ZM1-1H-1Z',
-    # polarized capacitor
-    'Cp': 'M-1-.3333H1M1 .3333Q0-.3333-1 .3333 0-.3333 1 .3333ZM0-1V-.3333ZM0 0V1ZM.75-1V-.5ZM1-.75H.5Z',
-    # nonpolarized capacitor
-    'Cn': 'M-1-.3333H1M1 .3333H-1ZM0-1V-.3333ZM0 .3333V1Z',
     # diode
     'D': 'M1 1H-1 0L-1-1H1L0 1Z',
     # fuse

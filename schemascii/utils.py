@@ -11,6 +11,8 @@ BOMData = namedtuple('BOMData', 'type id data')
 Flag = namedtuple('Flag', 'pt char side')
 Terminal = namedtuple('Terminal', 'pt flag side')
 
+# cSpell:ignore Cbox polylinegon tspan
+
 
 class Side(IntEnum):
     "Which edge the flag was found on."
@@ -117,11 +119,13 @@ class XMLClass:
 XML = XMLClass()
 
 
-def polyline(points: list[complex], **options):
-    "Turn the list of points into a <polyline>."
+def polylinegon(points: list[complex], is_polygon: bool = False, **options):
+    "Turn the list of points into a <polyline> or <polygon>."
     scale = options.get("scale", 1)
-    return XML.polyline(points=' '.join(f'{x.real * scale},{x.imag * scale}'
-                        for x in points))
+    return getattr(XML,
+                   "polygon" if is_polygon else "polyline")(points=' '.join(
+                       f'{x.real * scale},{x.imag * scale}'
+                       for x in points))
 
 
 def bunch_o_lines(points: list[tuple[complex, complex]], **options):
@@ -141,18 +145,25 @@ def id_text(
         box: Cbox,
         bom_data: BOMData,
         terminals: list[Terminal],
-        unit: str,
+        unit: str | None,
         point: complex | None = None,
         **o):
     "Format the component ID and value around the point"
     if point is None:
         point = sum(t.pt for t in terminals) / len(terminals)
+    dat = ""
+    if bom_data is not None:
+        dat = XML.tspan(bom_data.data
+                        if unit is None
+                        else format_metric_unit(bom_data.data, unit),
+                        class_=(
+                            "cmp-value"
+                            if unit is not None
+                            else "part-num"))
     return XML.text(
         XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
-        " " * bool(bom_data),
-        (XML.tspan(format_metric_unit(bom_data.data, unit),
-                   class_="cmp-value")
-            if bom_data is not None else ""),
+        " " * bool(dat),
+        dat,
         x=point.real,
         y=point.imag,
         text__anchor="start" if (

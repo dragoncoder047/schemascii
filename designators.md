@@ -12,7 +12,7 @@
 | C | Capacitor | Yes |
 | CN | Connector ||
 | CRT | Cathode ray tube ||
-| D, CR | Diode (all types, including LED), thyristor ||
+| D, LED, CR | Diode (all types, including LED), thyristor | Yes |
 | DL | Delay line ||
 | DS | Display, general light source, lamp, signal light ||
 | DSP | Digital signal processor ||
@@ -37,7 +37,6 @@
 | LA | Lightning arrester ||
 | LCD | Liquid crystal display ||
 | LDR | Light-dependent resistor ||
-| LED | Light-emitting diode ||
 | LS | Loudspeaker or buzzer ||
 | M | Motor ||
 | MCB | Miniature circuit breaker ||

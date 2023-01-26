@@ -15,7 +15,7 @@ svg.schemascii :is(.wire, .component):hover {
     --sch-color: lime;
 }
 
-svg.schemascii .component :is(polyline, path, line) {
+svg.schemascii .component :is(polyline, path, line, polygon) {
     stroke: var(--sch-color, red);
     stroke-width: calc(0.15 * var(--sch-scale, 1));
     stroke-linecap: round;
@@ -27,6 +27,10 @@ svg.schemascii .component .plus :is(polyline, path, line) {
     stroke-width: calc(0.075 * var(--sch-scale, 1));
 }
 
+svg.schemascii .component polygon {
+    fill: var(--sch-color, red);
+}
+
 svg.schemascii .component text {
     fill: white;
     transition-duration: 0.2s;
@@ -36,6 +40,6 @@ svg.schemascii .component:hover text {
     font-weight: bold;
 }
 
-svg.schemascii .component tspan.cmp-value {
+svg.schemascii .component tspan:is(.cmp-value, .part-num) {
     fill: gray;
 }
