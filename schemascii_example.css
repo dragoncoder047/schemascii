@@ -11,20 +11,16 @@ svg.schemascii .wire line {
     transition-duration: 0.2s;
 }
 
-svg.schemascii .wire:hover {
+svg.schemascii :is(.wire, .component):hover {
     --sch-color: lime;
 }
 
-svg.schemascii .component polyline {
+svg.schemascii .component :is(polyline, path) {
     stroke: var(--sch-color, red);
     stroke-width: calc(0.15 * var(--sch-scale, 1));
     stroke-linecap: round;
     transition-duration: 0.2s;
     fill: none;
-}
-
-svg.schemascii .component:hover {
-    --sch-color: lime;
 }
 
 svg.schemascii .component text {
