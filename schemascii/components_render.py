@@ -1,12 +1,12 @@
 from typing import Callable
 from cmath import phase, rect
-from math import degrees, pi
-from utils import Cbox, Terminal, BOMData, XML, Side
-from metric import normalize_metric
+from math import pi
+from utils import (Cbox, Terminal, BOMData, XML, Side,
+                   polyline, id_text, make_text_point)
+from metric import format_metric_unit
 
-_RENDERERS = {}
-
-# cSpell:ignore rendec
+RENDERERS = {}
+# cSpell:ignore rendec Cbox
 
 
 def component(*rd_s: list[str]) -> Callable:
@@ -14,40 +14,58 @@ def component(*rd_s: list[str]) -> Callable:
     def rendec(func: Callable):
         for rd in rd_s:
             rdu = rd.upper()
-            if True and rdu in _RENDERERS:
-                raise RuntimeError
-            _RENDERERS[rdu] = func
+            if rdu in RENDERERS:
+                raise RuntimeError(
+                    f"{rdu} reference designator already taken")
+            RENDERERS[rdu] = func
         return func
     return rendec
 
 
 def n_terminal(n_terminals: int):
+    "Ensures the component has N terminals."
     def n_inner(func: Callable) -> Callable:
-        "Ensures the component has 2 terminals."
-        def n_chk(box: Cbox, terminals: list[Terminal], bd: list[BOMData], **kwargs):
+        def n_check(
+                box: Cbox,
+                terminals: list[Terminal],
+                bom_data: list[BOMData],
+                **kwargs):
             if len(terminals) != n_terminals:
                 raise TypeError(
                     f"{box.type}{box.id} component can only "
                     f"have {n_terminals} terminals")
-            return func(box, terminals, bd, **kwargs)
-        return n_chk
+            return func(box, terminals, bom_data, **kwargs)
+        return n_check
     return n_inner
 
 
 def no_ambiguous(func: Callable) -> Callable:
     "Ensures the component has exactly one BOM data marker, and unwraps it."
-    def de_am(box: Cbox, terminals: list[Terminal], bd: list[BOMData], **kwargs):
-        if len(bd) > 1:
+    def de_ambiguous(
+            box: Cbox,
+            terminals: list[Terminal],
+            bom_data: list[BOMData],
+            **kwargs):
+        if len(bom_data) > 1:
             raise ValueError(
-                f"Ambiguous BOM data for {box.type}{box.id}: {bd!r}")
-        return func(box, terminals, bd[0] if bd else None, **kwargs)
-    return de_am
+                f"Ambiguous BOM data for {box.type}{box.id}: {bom_data!r}")
+        return func(
+            box,
+            terminals,
+            bom_data[0] if bom_data else None,
+            **kwargs)
+    return de_ambiguous
 
 
 @component("R")
 @n_terminal(2)
 @no_ambiguous
-def resistor(box: Cbox, terminals: list[Terminal], bd: BOMData, **kwargs):
+def resistor(
+        box: Cbox,
+        terminals: list[Terminal],
+        bom_data: BOMData | None,
+        **kwargs):
+    "Draw a resistor"
     scale = kwargs.get('scale', 1)
     t1, t2 = terminals[0].pt, terminals[1].pt
     vec = t1 - t2
@@ -59,29 +77,9 @@ def resistor(box: Cbox, terminals: list[Terminal], bd: BOMData, **kwargs):
         points.append(t1 - rect(i / 4, angle) +
                       pow(-1, i) * rect(1, quad_angle) / 4)
     points.append(t2)
-    text_pt = (t1 + t2) * scale / 2
-    offset = rect(scale / 2, quad_angle)
-    text_pt += complex(abs(offset.real), -abs(offset.imag))
-    return (
-        XML.text(
-            XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
-            " ",
-            (
-                XML.tspan(normalize_metric(bd.data) + '&ohm;',
-                          class_="cmp-value")
-                if bd is not None else ""
-            ),
-            x=text_pt.real,
-            y=text_pt.imag,
-            text__anchor="start" if (
-                any(Side.BOTTOM == t.side for t in terminals)
-                or any(Side.TOP == t.side for t in terminals)
-            ) else "middle",
-            font__size=scale,
-        ) +
-        XML.polyline(points=' '.join(f'{x.real * scale},{x.imag * scale}'
-                                     for x in points))
-    )
+    text_pt = make_text_point(t1, t2, **kwargs)
+    return (id_text(box, bom_data, terminals, "&ohm;", text_pt, **kwargs)
+            + polyline(points, **kwargs))
 
 # code for drawing
 # https://github.com/pfalstad/circuitjs1/tree/master/src/com/lushprojects/circuitjs1/client
@@ -117,12 +115,16 @@ twoterminals = {
 }
 
 
-def render_component(box: Cbox, terminals: list[Terminal], bd: list[BOMData], **kwargs):
+def render_component(
+        box: Cbox,
+        terminals: list[Terminal],
+        bom_data: list[BOMData],
+        **kwargs):
     "Render the component into an SVG string."
-    if box.type not in _RENDERERS:
+    if box.type not in RENDERERS:
         raise NameError(
             f"No renderer defined for {box.type} component")
     return XML.g(
-        _RENDERERS[box.type](box, terminals, bd, **kwargs),
+        RENDERERS[box.type](box, terminals, bom_data, **kwargs),
         class_=f"component {box.type}"
     )

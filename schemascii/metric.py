@@ -47,14 +47,10 @@ def format_metric_unit(num: str, unit: str = '') -> str:
         exp += 3
     exp += prefix_to_exponent(prefix)
     digits_str = ''.join(map(str, digits))
-    if exp < 0:
-        if digits_str.endswith('00') and exp < 0:
-            digits_str = digits_str[:-3] + '.' + digits_str[-3]
-            exp += 3
-    elif digits_str.endswith('00'):
+    if digits_str.endswith('00') and exp < 0:
         digits_str = digits_str[:-3] + '.' + digits_str[-3]
         exp += 3
-    return digits_str + " " + exponent_to_prefix(exp) + unit
+    return digits_str + " " * bool(unit) + exponent_to_prefix(exp) + unit
 
 
 if __name__ == '__main__':
