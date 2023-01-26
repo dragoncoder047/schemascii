@@ -11,9 +11,9 @@ RENDERERS = {}
 
 def component(*rd_s: list[str]) -> Callable:
     "Registers the component under a set of reference designators."
-    def rendec(func: Callable):
-        for rd in rd_s:
-            rdu = rd.upper()
+    def rendec(func: Callable[[Cbox, list[Terminal], list[BOMData]], str]):
+        for r_d in rd_s:
+            rdu = r_d.upper()
             if rdu in RENDERERS:
                 raise RuntimeError(
                     f"{rdu} reference designator already taken")
@@ -22,7 +22,7 @@ def component(*rd_s: list[str]) -> Callable:
     return rendec
 
 
-def n_terminal(n_terminals: int):
+def n_terminal(n_terminals: int) -> Callable:
     "Ensures the component has N terminals."
     def n_inner(func: Callable) -> Callable:
         def n_check(
@@ -66,7 +66,6 @@ def resistor(
         bom_data: BOMData | None,
         **kwargs):
     "Draw a resistor"
-    scale = kwargs.get('scale', 1)
     t1, t2 = terminals[0].pt, terminals[1].pt
     vec = t1 - t2
     length = abs(vec)
