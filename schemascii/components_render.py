@@ -21,28 +21,31 @@ def component(*rd_s: list[str]) -> Callable:
     return rendec
 
 
-def two_terminal(func: Callable) -> Callable:
-    "Ensures the component has 2 terminals."
-    def two_check(box: Cbox, terminals: list[Terminal], bd: list[BOMData], **kwargs):
-        if len(terminals) != 2:
-            raise TypeError(
-                f"{box.type}{box.id} component can only have 2 terminals")
-        return func(box, terminals, bd, **kwargs)
-    return two_check
+def n_terminal(n_terminals: int):
+    def n_inner(func: Callable) -> Callable:
+        "Ensures the component has 2 terminals."
+        def n_chk(box: Cbox, terminals: list[Terminal], bd: list[BOMData], **kwargs):
+            if len(terminals) != n_terminals:
+                raise TypeError(
+                    f"{box.type}{box.id} component can only "
+                    f"have {n_terminals} terminals")
+            return func(box, terminals, bd, **kwargs)
+        return n_chk
+    return n_inner
 
 
 def no_ambiguous(func: Callable) -> Callable:
-    "Ensures the component has exactly one BOM data marker."
-    def ch_ambig(box: Cbox, terminals: list[Terminal], bd: list[BOMData], **kwargs):
+    "Ensures the component has exactly one BOM data marker, and unwraps it"
+    def de_am(box: Cbox, terminals: list[Terminal], bd: list[BOMData], **kwargs):
         if len(bd) != 1:
             raise ValueError(
                 f"Ambiguous BOM data for {box.type}{box.id}: {bd!r}")
         return func(box, terminals, bd[0], **kwargs)
-    return ch_ambig
+    return de_am
 
 
 @component("R")
-@two_terminal
+@n_terminal(2)
 @no_ambiguous
 def resistor(box: Cbox, terminals: list[Terminal], bd: BOMData, **kwargs):
     scale = kwargs.get('scale', 1)
