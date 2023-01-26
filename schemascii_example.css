@@ -23,6 +23,10 @@ svg.schemascii .component :is(polyline, path, line) {
     fill: none;
 }
 
+svg.schemascii .component .plus :is(polyline, path, line) {
+    stroke-width: calc(0.075 * var(--sch-scale, 1));
+}
+
 svg.schemascii .component text {
     fill: white;
     transition-duration: 0.2s;

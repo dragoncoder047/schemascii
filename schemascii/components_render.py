@@ -3,7 +3,7 @@ from cmath import phase, rect
 from math import pi
 from utils import (Cbox, Terminal, BOMData, XML, Side,
                    polyline, id_text, make_text_point,
-                   bunch_o_lines, deep_transform)
+                   bunch_o_lines, deep_transform, make_plus)
 from metric import format_metric_unit
 
 RENDERERS = {}
@@ -122,13 +122,10 @@ def capacitor(
             (complex(.4,  .25), complex(-.4,  .25)),
             (complex(.4, -.25), complex(-.4, -.25)),
         ], mid, angle)
-    if terminals[0].flag == '+':
-        lines.extend(deep_transform(deep_transform(
-            [(.125, -.125), (.125j, -.125j)], 0, angle),
-            mid + deep_transform(.33+.66j, 0, angle), 0))
     text_pt = make_text_point(t1, t2, **kwargs)
     return (id_text(box, bom_data, terminals, "F", text_pt, **kwargs)
-            + bunch_o_lines(lines, **kwargs))
+            + bunch_o_lines(lines, **kwargs)
+            + make_plus(terminals, mid, angle, **kwargs))
 
 # code for drawing
 # https://github.com/pfalstad/circuitjs1/tree/master/src/com/lushprojects/circuitjs1/client

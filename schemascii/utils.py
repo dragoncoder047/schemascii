@@ -133,8 +133,7 @@ def bunch_o_lines(points: list[tuple[complex, complex]], **options):
             x1=p1.real * scale,
             y1=p1.imag * scale,
             x2=p2.real * scale,
-            y2=p2.imag * scale,
-        )
+            y2=p2.imag * scale)
     return out
 
 
@@ -151,22 +150,19 @@ def id_text(
     return XML.text(
         XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
         " " * bool(bom_data),
-        (
-            XML.tspan(format_metric_unit(bom_data.data, unit),
-                      class_="cmp-value")
-            if bom_data is not None else ""
-        ),
+        (XML.tspan(format_metric_unit(bom_data.data, unit),
+                   class_="cmp-value")
+            if bom_data is not None else ""),
         x=point.real,
         y=point.imag,
         text__anchor="start" if (
             any(Side.BOTTOM == t.side for t in terminals)
             or any(Side.TOP == t.side for t in terminals)
         ) else "middle",
-        font__size=o.get("scale", 1),
-    )
+        font__size=o.get("scale", 1))
 
 
-def make_text_point(t1: complex, t2: complex, **options):
+def make_text_point(t1: complex, t2: complex, **options) -> complex:
     "Compute the scaled coordinates of the text anchor point."
     quad_angle = phase(t1 - t2) + pi / 2
     scale = options.get("scale", 1)
@@ -174,3 +170,18 @@ def make_text_point(t1: complex, t2: complex, **options):
     offset = rect(scale / 2, quad_angle)
     text_pt += complex(abs(offset.real), -abs(offset.imag))
     return text_pt
+
+
+def make_plus(
+        terminals: list[Terminal],
+        center: complex,
+        theta: float,
+        **kwargs) -> str:
+    "Make a + sign if the terminals indicate the component is polarized."
+    if all(t.flag != "+" for t in terminals):
+        return ""
+    return XML.g(
+        bunch_o_lines(deep_transform(deep_transform(
+            [(.125, -.125), (.125j, -.125j)], 0, theta),
+            center + deep_transform(.33+.66j, 0, theta), 0), **kwargs),
+        class_="plus")
