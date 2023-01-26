@@ -2,7 +2,8 @@ from typing import Callable
 from cmath import phase, rect
 from math import pi
 from utils import (Cbox, Terminal, BOMData, XML, Side,
-                   polyline, id_text, make_text_point)
+                   polyline, id_text, make_text_point,
+                   bunch_o_lines, deep_transform)
 from metric import format_metric_unit
 
 RENDERERS = {}
@@ -57,6 +58,28 @@ def no_ambiguous(func: Callable) -> Callable:
     return de_ambiguous
 
 
+def polarized(func: Callable) -> Callable:
+    """Ensures the component has 2 terminals,
+    and then sorts them so the + terminal is first."""
+    def sort_terminals(
+            box: Cbox,
+            terminals: list[Terminal],
+            bom_data: list[BOMData],
+            **kwargs):
+        if len(terminals) != 2:
+            raise TypeError(
+                f"{box.type}{box.id} component can only "
+                f"have 2 terminals")
+        if terminals[1].flag == '+':
+            terminals[0], terminals[1] = terminals[1], terminals[0]
+        return func(
+            box,
+            terminals,
+            bom_data,
+            **kwargs)
+    return sort_terminals
+
+
 @component("R")
 @n_terminal(2)
 @no_ambiguous
@@ -79,6 +102,33 @@ def resistor(
     text_pt = make_text_point(t1, t2, **kwargs)
     return (id_text(box, bom_data, terminals, "&ohm;", text_pt, **kwargs)
             + polyline(points, **kwargs))
+
+
+@component("C")
+@polarized
+@no_ambiguous
+def capacitor(
+        box: Cbox,
+        terminals: list[Terminal],
+        bom_data: BOMData | None,
+        **kwargs):
+    "Draw a capacitor"
+    t1, t2 = terminals[0].pt, terminals[1].pt
+    mid = (t1 + t2) / 2
+    angle = phase(t1 - t2)
+    lines = [
+        (t1, mid + rect(.25, angle)),
+        (t2, mid + rect(-.25, angle))] + deep_transform([
+            (complex(.4,  .25), complex(-.4,  .25)),
+            (complex(.4, -.25), complex(-.4, -.25)),
+        ], mid, angle)
+    if terminals[0].flag == '+':
+        lines.extend(deep_transform(deep_transform(
+            [(.125, -.125), (.125j, -.125j)], 0, angle),
+            mid + deep_transform(.33+.66j, 0, angle), 0))
+    text_pt = make_text_point(t1, t2, **kwargs)
+    return (id_text(box, bom_data, terminals, "F", text_pt, **kwargs)
+            + bunch_o_lines(lines, **kwargs))
 
 # code for drawing
 # https://github.com/pfalstad/circuitjs1/tree/master/src/com/lushprojects/circuitjs1/client
@@ -127,3 +177,6 @@ def render_component(
         RENDERERS[box.type](box, terminals, bom_data, **kwargs),
         class_=f"component {box.type}"
     )
+
+
+__all__ = ['render_component']

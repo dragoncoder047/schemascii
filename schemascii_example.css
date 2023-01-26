@@ -15,7 +15,7 @@ svg.schemascii :is(.wire, .component):hover {
     --sch-color: lime;
 }
 
-svg.schemascii .component :is(polyline, path) {
+svg.schemascii .component :is(polyline, path, line) {
     stroke: var(--sch-color, red);
     stroke-width: calc(0.15 * var(--sch-scale, 1));
     stroke-linecap: round;

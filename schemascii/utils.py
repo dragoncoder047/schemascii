@@ -71,8 +71,8 @@ def merge_colinear(points: list[tuple[complex, complex]]) -> list[tuple[complex,
 def iterate_line(p1: complex, p2: complex, step: float = 1.) -> GeneratorType:
     "Yields complex points along a line."
     vec = p2 - p1
-    if abs(vec) == 2:
-        print("foobar two")
+    if abs(vec) in (2, 3):
+        print("foobar! two or three", abs(vec))
     point = p1
     while abs(vec) > abs(point - p1):
         yield point
@@ -85,6 +85,22 @@ def extend(p1: complex, p2: complex) -> complex:
     """Extends the line from p1 to p2 by 1 in the direction of p2,
     returns the modified p2."""
     return p2 + rect(1, phase(p2 - p1))
+
+
+def deep_transform(data, origin: complex, theta: float):
+    """Transform the point first by translating by origin,
+    then rotating by theta."""
+    if isinstance(data, list | tuple):
+        return [deep_transform(d, origin, theta) for d in data]
+    if isinstance(data, complex):
+        return (origin
+                + rect(data.real, theta + pi / 2)
+                + rect(data.imag, theta))
+    try:
+        return deep_transform(complex(data), origin, theta)
+    except TypeError as err:
+        raise TypeError(
+            "bad type to deep_transform(): " + type(data).__name__) from err
 
 
 class XMLClass:
@@ -106,6 +122,20 @@ def polyline(points: list[complex], **options):
     scale = options.get("scale", 1)
     return XML.polyline(points=' '.join(f'{x.real * scale},{x.imag * scale}'
                         for x in points))
+
+
+def bunch_o_lines(points: list[tuple[complex, complex]], **options):
+    "Return a <line> for each pair of points."
+    out = ''
+    scale = options.get('scale', 1)
+    for p1, p2 in points:
+        out += XML.line(
+            x1=p1.real * scale,
+            y1=p1.imag * scale,
+            x2=p2.real * scale,
+            y2=p2.imag * scale,
+        )
+    return out
 
 
 def id_text(
