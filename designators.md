@@ -9,7 +9,7 @@
 | B | Battery ||
 | BR | Bridge rectifier ||
 | BT | Battery ||
-| C | Capacitor ||
+| C | Capacitor | Yes |
 | CN | Connector ||
 | CRT | Cathode ray tube ||
 | D, CR | Diode (all types, including LED), thyristor ||
