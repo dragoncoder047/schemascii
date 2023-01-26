@@ -35,12 +35,12 @@ def n_terminal(n_terminals: int):
 
 
 def no_ambiguous(func: Callable) -> Callable:
-    "Ensures the component has exactly one BOM data marker, and unwraps it"
+    "Ensures the component has exactly one BOM data marker, and unwraps it."
     def de_am(box: Cbox, terminals: list[Terminal], bd: list[BOMData], **kwargs):
-        if len(bd) != 1:
+        if len(bd) > 1:
             raise ValueError(
                 f"Ambiguous BOM data for {box.type}{box.id}: {bd!r}")
-        return func(box, terminals, bd[0], **kwargs)
+        return func(box, terminals, bd[0] if bd else None, **kwargs)
     return de_am
 
 
@@ -66,7 +66,11 @@ def resistor(box: Cbox, terminals: list[Terminal], bd: BOMData, **kwargs):
         XML.text(
             XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
             " ",
-            XML.tspan(normalize_metric(bd.data) + '&ohm;', class_="cmp-value"),
+            (
+                XML.tspan(normalize_metric(bd.data) + '&ohm;',
+                          class_="cmp-value")
+                if bd is not None else ""
+            ),
             x=text_pt.real,
             y=text_pt.imag,
             text__anchor="start" if (

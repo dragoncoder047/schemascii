@@ -31,8 +31,8 @@ def prefix_to_exponent(prefix: int) -> str:
 
 def normalize_metric(num: str) -> str:
     num = num.strip()
-    match = METRIC_NUMBER.search(num)
-    if not match:
+    match = METRIC_NUMBER.match(num)
+    if not match or not match.group(1):
         return num
     digits_str, prefix = match.group(1), match.group(2)
     digits_decimal = Decimal(digits_str)
@@ -58,4 +58,4 @@ if __name__ == '__main__':
     print(normalize_metric("0.05"))
     print(normalize_metric("1234"))
     print(normalize_metric("0.47u"))
-    print(normalize_metric("10000p"))
+    print(normalize_metric("Gain"))
