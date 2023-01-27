@@ -30,6 +30,7 @@ def prefix_to_exponent(prefix: int) -> str:
 
 
 def format_metric_unit(num: str, unit: str = '') -> str:
+    "Normalizes the Metric unit on the number."
     num = num.strip()
     match = METRIC_NUMBER.match(num)
     if not match or not match.group(1):
