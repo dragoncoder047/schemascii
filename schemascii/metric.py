@@ -1,7 +1,7 @@
 import re
-from decimal import Decimal, localcontext
+from decimal import Decimal
 
-METRIC_NUMBER = re.compile(r"(\d*\.?\d*)([pnumKkMG]?)")  # cSpell:ignore pnum
+METRIC_NUMBER = re.compile(r"^(\d*\.?\d*)([pnumKkMG]?)$")  # cSpell:ignore pnum
 
 
 def exponent_to_prefix(exponent: int) -> str | None:
