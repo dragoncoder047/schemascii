@@ -1,7 +1,7 @@
 import re
 from decimal import Decimal
 
-METRIC_NUMBER = re.compile(r"^(\d*\.?\d*)([pnumKkMG]?)$")  # cSpell:ignore pnum
+METRIC_NUMBER = re.compile(r"^(\d*\.?\d+)([pnumKkMG]?)$")  # cSpell:ignore pnum
 
 
 def exponent_to_prefix(exponent: int) -> str | None:
@@ -33,7 +33,7 @@ def format_metric_unit(num: str, unit: str = '') -> str:
     "Normalizes the Metric unit on the number."
     num = num.strip()
     match = METRIC_NUMBER.match(num)
-    if not match or not match.group(1):
+    if not match:
         return num
     digits_str, prefix = match.group(1), match.group(2)
     digits_decimal = Decimal(digits_str)
