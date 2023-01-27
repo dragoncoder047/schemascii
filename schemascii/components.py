@@ -2,7 +2,7 @@ import re
 from grid import Grid
 from utils import Cbox, BOMData
 
-SMALL_COMPONENT_OR_BOM = re.compile(r'([A-Z]+)(\d+)(:[^\s]+)?')
+SMALL_COMPONENT_OR_BOM = re.compile(r'#*([A-Z]+)(\d+)(:[^\s]+)?#*')
 
 
 def find_small(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
