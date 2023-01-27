@@ -145,25 +145,30 @@ def id_text(
         box: Cbox,
         bom_data: BOMData,
         terminals: list[Terminal],
-        unit: str | None,
+        unit: str | list[str] | None,
         point: complex | None = None,
         **o):
     "Format the component ID and value around the point"
     if point is None:
         point = sum(t.pt for t in terminals) / len(terminals)
-    dat = ""
+    data = ""
     if bom_data is not None:
-        dat = XML.tspan(bom_data.data
-                        if unit is None
-                        else format_metric_unit(bom_data.data, unit),
-                        class_=(
-                            "cmp-value"
-                            if unit is not None
-                            else "part-num"))
+        text = bom_data.data
+        classy = "part-num"
+        if unit is None:
+            pass
+        elif isinstance(unit, str):
+            text = format_metric_unit(text, unit)
+            classy = "cmp-value"
+        else:
+            text = " ".join(format_metric_unit(x, y)
+                            for x, y in zip(text.split(","), unit))
+            classy = "cmp-value"
+        data = XML.tspan(text, class_=classy)
     return XML.text(
         XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
-        " " * bool(dat),
-        dat,
+        " " * bool(data),
+        data,
         x=point.real,
         y=point.imag,
         text__anchor="start" if (

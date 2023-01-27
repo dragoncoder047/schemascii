@@ -100,7 +100,7 @@ def resistor(
                       pow(-1, i) * rect(1, quad_angle) / 4)
     points.append(t2)
     text_pt = make_text_point(t1, t2, **kwargs)
-    return (id_text(box, bom_data, terminals, "&ohm;", text_pt, **kwargs)
+    return (id_text(box, bom_data, terminals, ("&ohm;", "W"), text_pt, **kwargs)
             + polylinegon(points, **kwargs))
 
 
@@ -123,7 +123,7 @@ def capacitor(
             (complex(.4, -.25), complex(-.4, -.25)),
         ], mid, angle)
     text_pt = make_text_point(t1, t2, **kwargs)
-    return (id_text(box, bom_data, terminals, "F", text_pt, **kwargs)
+    return (id_text(box, bom_data, terminals, ("F", "V"), text_pt, **kwargs)
             + bunch_o_lines(lines, **kwargs)
             + make_plus(terminals, mid, angle, **kwargs))
 
