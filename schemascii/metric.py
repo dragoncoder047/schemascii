@@ -38,6 +38,7 @@ def format_metric_unit(num: str, unit: str = '', six: bool = False) -> str:
     digits_str, prefix = match.group(1), match.group(2)
     digits_decimal = Decimal(digits_str)
     _, digits, exp = digits_decimal.as_tuple()
+    sig_figs = len(digits)
     three_six = 6 if six else 3
     two_five = 5 if six else 2
     while digits[-three_six:] == (0,) * three_six:
@@ -57,13 +58,17 @@ def format_metric_unit(num: str, unit: str = '', six: bool = False) -> str:
     if digits_str.endswith('0' * two_five) and exp < 0:
         digits_str = digits_str[:-three_six] + '.' + digits_str[-three_six:]
         exp += three_six
+        sig_figs += 1
+        if len(digits_str) > sig_figs:
+            digits_str = digits_str.removesuffix('0' * (len(digits_str)
+                                                        - sig_figs))
     out = digits_str + " " + exponent_to_prefix(exp) + unit
     return out.replace(" u", " &micro;")
 
 
 if __name__ == '__main__':
-    print(format_metric_unit("2500m", "V", False))
-    print(format_metric_unit("0.005", "F", True))
+    print(format_metric_unit("2.5", "V"))
+    print(format_metric_unit("0.05", "F", True))
     print(format_metric_unit("1234", "&ohm;"))
     print(format_metric_unit("0.47u", "F", True))
     print(format_metric_unit("Gain", "&ohm;"))
