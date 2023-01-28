@@ -22,7 +22,7 @@ def render(filename: str, text: str = None, **options) -> str:
     padding = options.get('padding', 1)
     scale = options.get('scale', 1)
 
-    wires = get_wires(grid, scale)
+    wires = get_wires(grid, **options)
     components_strs = (render_component(
         c, terminals[c], fixed_bom_data[c], **options)
         for c in components)
@@ -40,4 +40,7 @@ def render(filename: str, text: str = None, **options) -> str:
 
 
 if __name__ == '__main__':
-    print(render("../test_data/test_resistors.txt", scale=20, padding=20))
+    print(render(
+        "../test_data/test_resistors.txt",
+        scale=20, padding=20, stroke_width=2,
+        stroke="black"))

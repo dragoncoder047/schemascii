@@ -8,7 +8,10 @@ from utils import iterate_line, extend, merge_colinear, XML
 DIRECTIONS = [1, -1, 1j, -1j]
 
 
-def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, complex] | None:
+def next_in_dir(
+        grid: Grid,
+        point: complex,
+        dydx: complex) -> tuple[complex, complex] | None:
     """Follows the wire starting at the point in the specified direction,
     until some interesting change (a corner, junction, or end). Returns the
     tuple (new, old)."""
@@ -16,7 +19,7 @@ def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, com
     match grid.get(point):
         case '|' | '(' | ')':
             # extend up or down
-            if dydx in (0+1j, 0-1j):
+            if dydx in (1j, -1j):
                 while grid.get(point) in '-|()':
                     point += dydx
                 if grid.get(point) != '*':
@@ -25,7 +28,7 @@ def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, com
                 return None  # The vertical wires do not connect horizontally
         case '-':
             # extend sideways
-            if dydx in (1+0j, -1+0j):
+            if dydx in (1, -1):
                 while grid.get(point) in '-|()':
                     point += dydx
                 if grid.get(point) != '*':
@@ -66,9 +69,12 @@ def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
     return out
 
 
-def next_wire(grid: Grid, scale: float) -> str | None:
+def next_wire(grid: Grid, **options) -> str | None:
     """Returns a SVG string of the next line in the grid,
     or None if there are no more. The line is masked off."""
+    scale = options.get("scale", 1)
+    stroke_width = options.get("stroke_width", 1)
+    color = options.get("stroke", "black")
     # Find the first wire or return None
     for i, line in enumerate(grid.lines):
         indexes = [line.index(c) for c in '-|()*' if c in line]
@@ -94,24 +100,26 @@ def next_wire(grid: Grid, scale: float) -> str | None:
                 y1=p1.imag * scale,
                 x2=extend(p1, p2).real * scale,
                 y2=extend(p1, p2).imag * scale,
+                stroke__width=stroke_width,
+                stroke=color,
             )
             for p1, p2 in line_pieces
         ),
         class_="wire")
 
 
-def get_wires(grid: Grid, scale: float) -> str:
+def get_wires(grid: Grid, **options) -> str:
     "Finds all the wires and masks them out, returns an SVG string."
     out = ""
-    w = next_wire(grid, scale)
+    w = next_wire(grid, **options)
     while w is not None:
         out += w
-        w = next_wire(grid, scale)
+        w = next_wire(grid, **options)
     return out
 
 
 if __name__ == '__main__':
     with open('../test_data/test_resistors.txt') as f:
         x = Grid('test_resistors.txt', f.read())
-        print(find_wires(x, 1))
+        print(get_wires(x, 1))
         print(x)

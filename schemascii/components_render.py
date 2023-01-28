@@ -7,7 +7,6 @@ from utils import (Cbox, Terminal, BOMData, XML, Side,
 from metric import format_metric_unit
 
 RENDERERS = {}
-# cSpell:ignore rendec Cbox polylinegon
 
 
 def component(*rd_s: list[str]) -> Callable:
@@ -100,8 +99,10 @@ def resistor(
                       pow(-1, i) * rect(1, quad_angle) / 4)
     points.append(t2)
     text_pt = make_text_point(t1, t2, **kwargs)
-    return (id_text(box, bom_data, terminals, ("&ohm;", "W"), text_pt, **kwargs)
-            + polylinegon(points, **kwargs))
+    return (id_text(
+        box, bom_data, terminals, ("&ohm;", "W"),
+        text_pt, **kwargs)
+        + polylinegon(points, **kwargs))
 
 
 @component("C")
@@ -123,9 +124,11 @@ def capacitor(
             (complex(.4, -.25), complex(-.4, -.25)),
         ], mid, angle)
     text_pt = make_text_point(t1, t2, **kwargs)
-    return (id_text(box, bom_data, terminals, ("F", "V"), text_pt, **kwargs)
-            + bunch_o_lines(lines, **kwargs)
-            + make_plus(terminals, mid, angle, **kwargs))
+    return (id_text(
+        box, bom_data, terminals, ("F", "V"),
+        text_pt, True, **kwargs)
+        + bunch_o_lines(lines, **kwargs)
+        + make_plus(terminals, mid, angle, **kwargs))
 
 
 @component("D", "LED", "CR")
@@ -163,8 +166,6 @@ def diode(
 twoterminals = {
     # battery
     'B': 'M.5 1H-.5ZM1 .6H-1ZM.5.2H-.5ZM1-.2H-1ZM.5-.6H-.5ZM1-1H-1Z',
-    # diode
-    'D': 'M1 1H-1 0L-1-1H1L0 1Z',
     # fuse
     'F': 'M0-.9A.1.1 0 000-1.1.1.1 0 000-.9ZM0-1Q.5-.5 0 0T0 1Q-.5.5 0 0T0-1ZM0 1.1A.1.1 0 000 .9.1.1 0 000 1.1Z',
     # jumper pads

@@ -29,7 +29,7 @@ def prefix_to_exponent(prefix: int) -> str:
     return (i - 4) * 3
 
 
-def format_metric_unit(num: str, unit: str = '') -> str:
+def format_metric_unit(num: str, unit: str = '', six: bool = False) -> str:
     "Normalizes the Metric unit on the number."
     num = num.strip()
     match = METRIC_NUMBER.match(num)
@@ -38,26 +38,27 @@ def format_metric_unit(num: str, unit: str = '') -> str:
     digits_str, prefix = match.group(1), match.group(2)
     digits_decimal = Decimal(digits_str)
     _, digits, exp = digits_decimal.as_tuple()
-    while digits[-3:] == (0, 0, 0):
-        digits = digits[:-3]
+    three_six = 6 if six else 3
+    while digits[-three_six:] == (0,) * three_six:
+        digits = digits[:-three_six]
         exp += 3
-    digits += (0,) * (exp % 3)
-    exp -= exp % 3
-    while digits[-3:] == (0, 0, 0):
-        digits = digits[:-3]
+    digits += (0,) * (exp % three_six)
+    exp -= exp % three_six
+    while digits[-three_six:] == (0,) * three_six:
+        digits = digits[:-three_six]
         exp += 3
     exp += prefix_to_exponent(prefix)
     digits_str = ''.join(map(str, digits))
-    if digits_str.endswith('00') and exp < 0:
-        digits_str = digits_str[:-3] + '.' + digits_str[-3]
-        exp += 3
+    if digits_str.endswith('0' * three_six) and exp < 0:
+        digits_str = digits_str[:-three_six] + '.' + digits_str[-three_six]
+        exp += three_six
     out = digits_str + " " + exponent_to_prefix(exp) + unit
     return out.replace(" u", " &micro;")
 
 
 if __name__ == '__main__':
-    print(format_metric_unit("1500", "A"))
-    print(format_metric_unit("0.00005", "F"))
+    print(format_metric_unit("15000", "A"))
+    print(format_metric_unit("0.005", "F", True))
     print(format_metric_unit("1234", "&ohm;"))
     print(format_metric_unit("0.47u", "F"))
     print(format_metric_unit("Gain", "&ohm;"))

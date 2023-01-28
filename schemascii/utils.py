@@ -122,22 +122,30 @@ XML = XMLClass()
 def polylinegon(points: list[complex], is_polygon: bool = False, **options):
     "Turn the list of points into a <polyline> or <polygon>."
     scale = options.get("scale", 1)
-    return getattr(XML,
-                   "polygon" if is_polygon else "polyline")(points=' '.join(
-                       f'{x.real * scale},{x.imag * scale}'
-                       for x in points))
+    w = options.get("stroke_width", 0.15)
+    c = options.get("stroke", "black")
+    pts = ' '.join(
+        f'{x.real * scale},{x.imag * scale}'
+        for x in points)
+    if is_polygon:
+        return XML.polygon(points=pts, fill=c)
+    return XML.polyline(points=pts, fill="none", stroke__width=w, stroke=c)
 
 
 def bunch_o_lines(points: list[tuple[complex, complex]], **options):
     "Return a <line> for each pair of points."
     out = ''
     scale = options.get('scale', 1)
+    w = options.get("stroke_width", 0.15)
+    c = options.get("stroke", "black")
     for p1, p2 in points:
         out += XML.line(
             x1=p1.real * scale,
             y1=p1.imag * scale,
             x2=p2.real * scale,
-            y2=p2.imag * scale)
+            y2=p2.imag * scale,
+            stroke=c,
+            stroke__width=w)
     return out
 
 
@@ -147,7 +155,8 @@ def id_text(
         terminals: list[Terminal],
         unit: str | list[str] | None,
         point: complex | None = None,
-        **o):
+        six: bool = False,
+        **options):
     "Format the component ID and value around the point"
     if point is None:
         point = sum(t.pt for t in terminals) / len(terminals)
@@ -158,10 +167,10 @@ def id_text(
         if unit is None:
             pass
         elif isinstance(unit, str):
-            text = format_metric_unit(text, unit)
+            text = format_metric_unit(text, unit, six)
             classy = "cmp-value"
         else:
-            text = " ".join(format_metric_unit(x, y)
+            text = " ".join(format_metric_unit(x, y, six)
                             for x, y in zip(text.split(","), unit))
             classy = "cmp-value"
         data = XML.tspan(text, class_=classy)
@@ -175,7 +184,8 @@ def id_text(
             any(Side.BOTTOM == t.side for t in terminals)
             or any(Side.TOP == t.side for t in terminals)
         ) else "middle",
-        font__size=o.get("scale", 1))
+        font__size=options.get("scale", 1),
+        fill=options.get("stroke", "black"))
 
 
 def make_text_point(t1: complex, t2: complex, **options) -> complex:
