@@ -39,6 +39,7 @@ def format_metric_unit(num: str, unit: str = '', six: bool = False) -> str:
     digits_decimal = Decimal(digits_str)
     _, digits, exp = digits_decimal.as_tuple()
     three_six = 6 if six else 3
+    two_five = 5 if six else 2
     while digits[-three_six:] == (0,) * three_six:
         digits = digits[:-three_six]
         exp += three_six
@@ -51,8 +52,9 @@ def format_metric_unit(num: str, unit: str = '', six: bool = False) -> str:
         digits += (0, 0, 0)
         exp -= 3
     exp += prefix_to_exponent(prefix)
+    print(digits, exp)
     digits_str = ''.join(map(str, digits))
-    if digits_str.endswith('0' * three_six) and exp < 0:
+    if digits_str.endswith('0' * two_five) and exp < 0:
         digits_str = digits_str[:-three_six] + '.' + digits_str[-three_six:]
         exp += three_six
     out = digits_str + " " + exponent_to_prefix(exp) + unit
@@ -60,7 +62,7 @@ def format_metric_unit(num: str, unit: str = '', six: bool = False) -> str:
 
 
 if __name__ == '__main__':
-    print(format_metric_unit("15000", "A", False))
+    print(format_metric_unit("2500m", "V", False))
     print(format_metric_unit("0.005", "F", True))
     print(format_metric_unit("1234", "&ohm;"))
     print(format_metric_unit("0.47u", "F", True))
