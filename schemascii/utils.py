@@ -110,7 +110,8 @@ class XMLClass:
         def mk_tag(*contents, **attrs) -> str:
             out = f'<{tag} '
             for k, v in attrs.items():
-                out += f'{k.removesuffix("_").replace("__", "-")}="{v}" '
+                if v is not False:
+                    out += f'{k.removesuffix("_").replace("__", "-")}="{v}" '
             out = out.rstrip() + '>' + ''.join(contents)
             return out + f'</{tag}>'
         return mk_tag
