@@ -41,24 +41,27 @@ def format_metric_unit(num: str, unit: str = '', six: bool = False) -> str:
     three_six = 6 if six else 3
     while digits[-three_six:] == (0,) * three_six:
         digits = digits[:-three_six]
-        exp += 3
-    digits += (0,) * (exp % three_six)
-    exp -= exp % three_six
+        exp += three_six
+    digits += (0,) * (exp % 3)
+    exp -= exp % 3
     while digits[-three_six:] == (0,) * three_six:
         digits = digits[:-three_six]
-        exp += 3
+        exp += three_six
+    if six and exp % 6 != 0 and exp < 0:
+        digits += (0, 0, 0)
+        exp -= 3
     exp += prefix_to_exponent(prefix)
     digits_str = ''.join(map(str, digits))
     if digits_str.endswith('0' * three_six) and exp < 0:
-        digits_str = digits_str[:-three_six] + '.' + digits_str[-three_six]
+        digits_str = digits_str[:-three_six] + '.' + digits_str[-three_six:]
         exp += three_six
     out = digits_str + " " + exponent_to_prefix(exp) + unit
     return out.replace(" u", " &micro;")
 
 
 if __name__ == '__main__':
-    print(format_metric_unit("15000", "A"))
+    print(format_metric_unit("15000", "A", False))
     print(format_metric_unit("0.005", "F", True))
     print(format_metric_unit("1234", "&ohm;"))
-    print(format_metric_unit("0.47u", "F"))
+    print(format_metric_unit("0.47u", "F", True))
     print(format_metric_unit("Gain", "&ohm;"))

@@ -155,7 +155,6 @@ def id_text(
         terminals: list[Terminal],
         unit: str | list[str] | None,
         point: complex | None = None,
-        six: bool = False,
         **options):
     "Format the component ID and value around the point"
     if point is None:
@@ -167,11 +166,11 @@ def id_text(
         if unit is None:
             pass
         elif isinstance(unit, str):
-            text = format_metric_unit(text, unit, six)
+            text = format_metric_unit(text, unit)
             classy = "cmp-value"
         else:
             text = " ".join(format_metric_unit(x, y, six)
-                            for x, y in zip(text.split(","), unit))
+                            for x, (y, six) in zip(text.split(","), unit))
             classy = "cmp-value"
         data = XML.tspan(text, class_=classy)
     return XML.text(
