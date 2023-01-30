@@ -1,5 +1,6 @@
 from cmath import phase
 from math import pi
+from cmath import rect
 from grid import Grid
 from utils import iterate_line, extend, merge_colinear, XML
 
@@ -39,7 +40,6 @@ def next_in_dir(
             # can extend any direction
             if grid.get(point + dydx) in "|()-*":
                 point += dydx
-                print("recursing")
                 res = next_in_dir(grid, point + dydx, dydx)
                 if res is None:
                     return None
@@ -48,9 +48,6 @@ def next_in_dir(
             return None
     if point == old_point:
         return None
-    print(old_point, dydx)
-    grid.spark(point, old_point)
-    #input()
     return point, old_point
 
 
@@ -65,14 +62,32 @@ def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
         here = frontier.pop(0)
         for d in DIRECTIONS:
             line = next_in_dir(grid, here, d)
-            if line is None:
+            if line is None or abs(line[1] - line[0]) == 0:
                 continue
             p = line[0]
             if p not in seen and p != here:
                 frontier.append(p)
                 seen.append(p)
                 out.append(line)
+    print("Searched at", point, "and got a wire!")
+    grid.spark(*seen)
+    input()
     return out
+
+
+def blank_wire(grid: Grid, p1: complex, p2: complex):
+    "Blank out the wire from p1 to p2."
+    # Crazy math!!
+    way = int(phase(p1 - p2) / pi % 1.0 * 2)
+    side = rect(1, phase(p1 - p2) + pi / 2)
+    for px in iterate_line(p1, p2):
+        old = grid.get(px)
+        # way: 0: Horizontal, 1: Vertical
+        # Don't mask out wire crosses
+        cs = ["|()*", "*-"][way]
+        if (old not in cs and grid.get(px + side) not in cs and
+                grid.get(px - side) not in cs):
+            grid.setmask(px)
 
 
 def next_wire(grid: Grid, **options) -> str | None:
@@ -92,20 +107,14 @@ def next_wire(grid: Grid, **options) -> str | None:
         return None
     # Blank out the used wire
     for p1, p2 in line_pieces:
-        # Crazy math!!
-        way = int(phase(p1 - p2) / pi % 1.0 * 2)
-        for px in iterate_line(p1, p2):
-            old = grid.get(px)
-            # way: 0: Horizontal, 1: Vertical
-            if old not in ["|()", "-"][way]:
-                grid.setmask(px)  # Don't mask out wire crosses
+        blank_wire(grid, p1, p2)
     return XML.g(
         *(
             XML.line(
                 x1=p1.real * scale,
                 y1=p1.imag * scale,
-                x2=extend(p1, p2).real * scale,
-                y2=extend(p1, p2).imag * scale,
+                x2=p2.real * scale,
+                y2=p2.imag * scale,
                 stroke__width=stroke_width,
                 stroke=color,
             )
@@ -125,7 +134,7 @@ def get_wires(grid: Grid, **options) -> str:
 
 
 if __name__ == '__main__':
-    with open('../test_data/wires_test.txt') as f:
-        xg = Grid('wires_test.txt', f.read())
+    with open('../test_data/test_resistors.txt') as f:
+        xg = Grid('foo.txt', f.read())
         print(get_wires(xg, scale=20))
         print(xg)
