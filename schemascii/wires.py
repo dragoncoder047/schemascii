@@ -59,7 +59,7 @@ def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
     frontier = [point]
     # find all the points
     while frontier:
-        here = frontier.pop(0)
+        here = frontier.pop()
         for d in DIRECTIONS:
             line = next_in_dir(grid, here, d)
             if line is None or abs(line[1] - line[0]) == 0:
@@ -69,9 +69,9 @@ def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
                 frontier.append(p)
                 seen.append(p)
                 out.append(line)
-    print("Searched at", point, "and got a wire!")
-    grid.spark(*seen)
-    input()
+    # print("Searched at", point, "and got a wire!")
+    # grid.spark(*seen)
+    # input()
     return out
 
 
@@ -84,10 +84,14 @@ def blank_wire(grid: Grid, p1: complex, p2: complex):
         old = grid.get(px)
         # way: 0: Horizontal, 1: Vertical
         # Don't mask out wire crosses
-        cs = ["|()*", "*-"][way]
-        if (old not in cs and grid.get(px + side) not in cs and
-                grid.get(px - side) not in cs):
-            grid.setmask(px)
+        keep = ["|()", "-"][way]
+        swap = "|-"[way]
+        if old not in keep:
+            if (grid.get(px + side) in keep and
+                    grid.get(px - side) in keep):
+                grid.setmask(px, swap)
+            else:
+                grid.setmask(px)
 
 
 def next_wire(grid: Grid, **options) -> str | None:
@@ -108,6 +112,8 @@ def next_wire(grid: Grid, **options) -> str | None:
     # Blank out the used wire
     for p1, p2 in line_pieces:
         blank_wire(grid, p1, p2)
+        if p1 == p2:
+            raise RuntimeError("0-length wire")
     return XML.g(
         *(
             XML.line(
