@@ -2,7 +2,10 @@ class Grid:
     """Helper class for manmaging a 2-D
     grid of ASCII art."""
 
-    def __init__(self, filename: str, data: str):
+    def __init__(self, filename: str, data: str = None):
+        if data is None:
+            with open(filename, encoding="ascii") as f:
+                data = f.read()
         self.filename: str = filename
         self.raw: str = data
         lines: list[str] = data.split('\n')
