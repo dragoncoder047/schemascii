@@ -42,23 +42,30 @@ def format_metric_unit(num: str, unit: str = '', six: bool = False) -> str:
     digits_decimal *= Decimal('10') ** Decimal(prefix_to_exponent(prefix))
     res = ENG_NUMBER.match(digits_decimal.to_eng_string())
     if not res:
-        print('foobar!')
-        return None
-    digits, exp = res.group(1), int(res.group(2) or '0')
+        raise RuntimeError
+    digits, exp = Decimal(res.group(1)), int(res.group(2) or '0')
     assert exp % 3 == 0, 'failed to make engineering notation'
-    if six and exp % 6:
-        digits = Decimal(digits)
-        nd_1, nd_2, = str(digits * 1000), str(digits / 1000)
-        exp_1, exp_2 = exp - 3, exp + 3
-        digits = nd_1 if len(nd_1) < len(nd_2) else nd_2
-        exp = exp_1 if len(nd_1) < len(nd_2) else exp_2
+    possibilities = []
+    for d_e in range(-6, 9, 3):
+        if (exp + d_e) % 6 == 0 or not six:
+            new_exp = exp - d_e
+            new_digits = str(digits * (Decimal('10') ** Decimal(d_e)))
+            if 'e' in new_digits.lower():
+                continue
+            if '.' in new_digits:
+                new_digits = new_digits.rstrip('0').removesuffix('.')
+            possibilities.append((new_exp, new_digits))
+    # heuristic: shorter is better, prefer no decimal point
+    print(possibilities)
+    exp, digits = sorted(possibilities, key=lambda x: len(
+        x[1]) + (0.5 * ('.' in x[1])))[0]
     out = digits + " " + exponent_to_prefix(exp) + unit
     return out.replace(" u", " &micro;")
 
 
 if __name__ == '__main__':
-    print(format_metric_unit("2.5", "V"))
-    print(format_metric_unit("50n", "F", True))
-    print(format_metric_unit("1234", "&ohm;"))
-    print(format_metric_unit("0.47u", "F", True))
-    print(format_metric_unit("Gain", "&ohm;"))
+    print(">>", format_metric_unit("2.5", "V"))
+    print(">>", format_metric_unit("50n", "F", True))
+    print(">>", format_metric_unit("1234", "&ohm;"))
+    print(">>", format_metric_unit("2200u", "F", True))
+    print(">>", format_metric_unit("Gain", "&ohm;"))
