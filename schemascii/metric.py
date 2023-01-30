@@ -53,7 +53,6 @@ def format_metric_unit(num: str, unit: str = '', six: bool = False) -> str:
         digits += (0, 0, 0)
         exp -= 3
     exp += prefix_to_exponent(prefix)
-    print(digits, exp)
     digits_str = ''.join(map(str, digits))
     if digits_str.endswith('0' * two_five) and exp < 0:
         digits_str = digits_str[:-three_six] + '.' + digits_str[-three_six:]
