@@ -16,8 +16,8 @@ def find_small(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                 boms.append(BOMData(m.group(1),
                                     m.group(2), m.group(3)[1:]))
             else:
-                components.append(Cbox(complex(m.start(), i), complex(m.end(),
-                                                                      i),
+                components.append(Cbox(complex(m.start(), i),
+                                       complex(m.end() - 1, i),
                                        m.group(1), m.group(2)))
             for z in range(*m.span(0)):
                 grid.setmask(complex(z, i))
