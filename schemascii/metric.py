@@ -56,7 +56,6 @@ def format_metric_unit(num: str, unit: str = '', six: bool = False) -> str:
                 new_digits = new_digits.rstrip('0').removesuffix('.')
             possibilities.append((new_exp, new_digits))
     # heuristic: shorter is better, prefer no decimal point
-    print(possibilities)
     exp, digits = sorted(possibilities, key=lambda x: len(
         x[1]) + (0.5 * ('.' in x[1])))[0]
     out = digits + " " + exponent_to_prefix(exp) + unit
