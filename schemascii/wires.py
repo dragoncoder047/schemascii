@@ -8,6 +8,33 @@ from utils import iterate_line, extend, merge_colinear, XML
 DIRECTIONS = [1, -1, 1j, -1j]
 
 
+def is_end(grid: Grid, point: complex) -> bool:
+    """Returns if the point contains a "loose end" wire."""
+    char = grid.get(point)
+    if char not in "|()-*":
+        return False
+    if char in "|()":
+        diffs = [1j, -1j]
+        conn = "|()*"
+        cross = "-"
+    elif char == "-":
+        diffs = [1, -1]
+        conn = "-*"
+        cross = "|()"
+    elif char == '*':
+        diffs = [1, -1, 1j, -1j]
+        conn = "|()-*"
+        cross = ""
+    count_conn = 0
+    for d in diffs:
+        c = grid.get(point + d)
+        while (c := grid.get(point + d)) in cross:
+            point += d
+        if c in conn:
+            count_conn += 1
+    return count_conn < 2
+
+
 def next_in_dir(
         grid: Grid,
         point: complex,
@@ -45,6 +72,8 @@ def next_in_dir(
                 return None
         case _:
             return None
+    if point == old_point:
+        return None  # suppress length=0 wires
     return point, old_point
 
 
@@ -56,9 +85,10 @@ def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
     frontier = [point]
     # find all the points
     while frontier:
-        here = frontier.pop(0)
+        here = frontier.pop()
         for d in DIRECTIONS:
             line = next_in_dir(grid, here, d)
+            print(here, line)
             if line is None:
                 continue
             p = line[0]
@@ -69,21 +99,30 @@ def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
     return out
 
 
+def first_end(grid: Grid) -> complex | None:
+    """Returns the first "loose end" of a wire in the grid."""
+    indexes = [complex(x, y) for y in range(grid.height)
+               for x in range(grid.width) if is_end(grid, complex(x, y))]
+    if len(indexes) > 0:
+        return indexes[0]
+    return None
+
+
 def next_wire(grid: Grid, **options) -> str | None:
     """Returns a SVG string of the next line in the grid,
     or None if there are no more. The line is masked off."""
     scale = options.get("scale", 1)
     stroke_width = options.get("stroke_width", 1)
     color = options.get("stroke", "black")
-    # Find the first wire or return None
-    for i, line in enumerate(grid.lines):
-        indexes = [line.index(c) for c in '-|()*' if c in line]
-        if len(indexes) > 0:
-            line_pieces = search_wire(grid, complex(min(indexes), i))
-            if line_pieces:
-                break
-    else:
+    # Find the first loose end or return None
+    end = first_end(grid)
+    if end is None:
         return None
+    line_pieces = search_wire(grid, end)
+    if not line_pieces:
+        # got a length 0 wire
+        grid.setmask(end)
+        return ""
     # Blank out the used wire
     for p1, p2 in line_pieces:
         # Crazy math!!
