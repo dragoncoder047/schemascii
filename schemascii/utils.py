@@ -78,7 +78,6 @@ def iterate_line(p1: complex, p2: complex, step: float = 1.) -> GeneratorType:
         yield point
         point += rect(step, phase(vec))
     yield point
-    # XXX These don't correctly iterate on wires length 2
 
 
 def extend(p1: complex, p2: complex) -> complex:
