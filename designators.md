@@ -5,7 +5,7 @@
 | A, ASSY | Separable assembly or sub-assembly ||
 | AE | Aerial, antenna ||
 | AT | Attenuator or isolator ||
-| B, BT | Battery ||
+| B, BT, BAT | Battery | Yes |
 | BR | Bridge rectifier ||
 | C | Capacitor | Yes |
 | CN | Connector ||

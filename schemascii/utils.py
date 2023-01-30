@@ -16,10 +16,10 @@ Terminal = namedtuple('Terminal', 'pt flag side')
 
 class Side(IntEnum):
     "Which edge the flag was found on."
-    TOP = 0
-    RIGHT = 1
-    BOTTOM = 2
-    LEFT = 3
+    RIGHT = 0
+    TOP = 1
+    LEFT = 2
+    BOTTOM = 3
 
 
 def colinear(points: list[complex]) -> bool:
@@ -78,12 +78,6 @@ def iterate_line(p1: complex, p2: complex, step: float = 1.) -> GeneratorType:
         yield point
         point += rect(step, phase(vec))
     yield point
-
-
-def extend(p1: complex, p2: complex) -> complex:
-    """Extends the line from p1 to p2 by 1 in the direction of p2,
-    returns the modified p2."""
-    return p2 + rect(1, phase(p2 - p1))
 
 
 def deep_transform(data, origin: complex, theta: float):
@@ -206,5 +200,5 @@ def make_plus(
     return XML.g(
         bunch_o_lines(deep_transform(deep_transform(
             [(.125, -.125), (.125j, -.125j)], 0, theta),
-            center + deep_transform(.33+.66j, 0, theta), 0), **kwargs),
+            center + deep_transform(.33+.75j, 0, theta), 0), **kwargs),
         class_="plus")

@@ -131,6 +131,33 @@ def capacitor(
         + make_plus(terminals, mid, angle, **kwargs))
 
 
+@component("B", "BT", "BAT")
+@polarized
+@no_ambiguous
+def battery(
+        box: Cbox,
+        terminals: list[Terminal],
+        bom_data: BOMData | None,
+        **kwargs):
+    "Draw a battery cell"
+    t1, t2 = terminals[0].pt, terminals[1].pt
+    mid = (t1 + t2) / 2
+    angle = phase(t1 - t2)
+    lines = [
+        (t1, mid + rect(.5, angle)),
+        (t2, mid + rect(-.5, angle))] + deep_transform([
+            (complex(.5,  .5), complex(-.5,  .5)),
+            (complex(.25, .16), complex(-.25, .16)),
+            (complex(.5, -.16), complex(-.5,  -.16)),
+            (complex(.25, -.5), complex(-.25, -.5)),
+        ], mid, angle)
+    text_pt = make_text_point(t1, t2, **kwargs)
+    return (id_text(
+        box, bom_data, terminals, (("V", False), ("Ah", False)),
+        text_pt, **kwargs)
+        + bunch_o_lines(lines, **kwargs))
+
+
 @component("D", "LED", "CR")
 @polarized
 @no_ambiguous
@@ -152,6 +179,42 @@ def diode(
     return (id_text(box, bom_data, terminals, None, text_pt, **kwargs)
             + bunch_o_lines(lines, **kwargs)
             + polylinegon(triangle, True, **kwargs))
+
+
+@component("U", "IC")
+@no_ambiguous
+def integrated_circuit(
+        box: Cbox,
+        terminals: list[Terminal],
+        bom_data: BOMData | None,
+        **kwargs):
+    "Draw an IC"
+    scale = kwargs.get("scale", 1)
+    sz = (box.p2 - box.p1 + 2) * scale
+    mid = (box.p2 + box.p1) * scale / 2
+    out = XML.rect(
+        x=box.p1.real * scale - scale,
+        y=box.p1.imag * scale,
+        width=sz.real,
+        height=sz.imag,
+        stroke__width=kwargs.get("stroke_width", 1),
+        stroke=kwargs.get("stroke", "black"))
+    for term in terminals:
+        out += bunch_o_lines([(
+            term.pt,
+            term.pt + rect(1, term.side * pi / 2)
+        )], **kwargs)
+    out += XML.text(
+        XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
+        " " * bool(bom_data.data),
+        XML.tspan(bom_data.data, class_="part-num"),
+        x=mid.real,
+        y=mid.imag,
+        text__anchor="middle",
+        font__size=kwargs.get("scale", 1),
+        fill=kwargs.get("stroke", "black"))
+    print("IC's in progress...")
+    return out
 
 # code for drawing
 # https://github.com/pfalstad/circuitjs1/tree/master/src/com/lushprojects/circuitjs1/client

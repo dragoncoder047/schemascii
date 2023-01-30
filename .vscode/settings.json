@@ -3,6 +3,7 @@
         "Cbox",
         "polylinegon",
         "rendec",
-        "schemascii"
+        "schemascii",
+        "tspan"
     ]
 }

@@ -2,7 +2,7 @@ from cmath import phase
 from math import pi
 from cmath import rect
 from grid import Grid
-from utils import iterate_line, extend, merge_colinear, XML
+from utils import iterate_line, merge_colinear, XML
 
 # cSpell:ignore dydx
 
@@ -137,7 +137,6 @@ def get_wires(grid: Grid, **options) -> str:
 
 
 if __name__ == '__main__':
-    with open('../test_data/test_resistors.txt') as f:
-        xg = Grid('foo.txt', f.read())
-        print(get_wires(xg, scale=20))
-        print(xg)
+    xg = Grid('../test_data/test_resistors.txt')
+    print(get_wires(xg, scale=20))
+    print(xg)

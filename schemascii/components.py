@@ -2,7 +2,7 @@ import re
 from grid import Grid
 from utils import Cbox, BOMData
 
-SMALL_COMPONENT_OR_BOM = re.compile(r'#*([A-Z]+)(\d+)(:[^\s]+)?#*')
+SMALL_COMPONENT_OR_BOM = re.compile(r'#*([A-Z]+)(\d+|\.\w+)(:[^\s]+)?#*')
 
 
 def find_small(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
@@ -14,11 +14,11 @@ def find_small(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
         for m in SMALL_COMPONENT_OR_BOM.finditer(line):
             if m.group(3):
                 boms.append(BOMData(m.group(1),
-                                    int(m.group(2)), m.group(3)[1:]))
+                                    m.group(2), m.group(3)[1:]))
             else:
                 components.append(Cbox(complex(m.start(), i), complex(m.end(),
                                                                       i),
-                                       m.group(1), int(m.group(2))))
+                                       m.group(1), m.group(2)))
             for z in range(*m.span(0)):
                 grid.setmask(complex(z, i))
     return components, boms
@@ -36,8 +36,7 @@ def find_big(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
         for i, line in enumerate(grid.lines):
             if m1 := TOP_OF_BOX.search(line):
                 tb = m1.group()
-                x1 = m1.start()
-                x2 = m1.end()
+                x1, x2 = m1.span()
                 y1 = i
                 y2 = None
                 for j, l in enumerate(grid.lines):
@@ -73,7 +72,7 @@ def find_big(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                     merd = results[0]
                 boxes.append(
                     Cbox(complex(x1, y1),
-                         complex(x2, y2),
+                         complex(x2 - 1, y2),
                          merd.type,
                          merd.id))
                 boms.extend(resb)
@@ -93,3 +92,12 @@ def find_all(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
     b1, l1 = find_big(grid)
     b2, l2 = find_small(grid)
     return b1+b2, l1+l2
+
+
+if __name__ == '__main__':
+    grid = Grid("../test_data/test_resistors.txt")
+    bbb, _ = find_all(grid)
+    all_pts = []
+    for box in bbb:
+        all_pts.extend([box.p1, box.p2])
+    grid.spark(*all_pts)
