@@ -119,7 +119,7 @@ def get_wires(grid: Grid, **options) -> str:
 
 
 if __name__ == '__main__':
-    with open('../test_data/test_resistors.txt') as f:
-        x = Grid('test_resistors.txt', f.read())
-        print(get_wires(x))
-        print(x)
+    with open('../test_data/wires_test.txt') as f:
+        xg = Grid('wires_test.txt', f.read())
+        print(get_wires(xg, scale=20))
+        print(xg)
