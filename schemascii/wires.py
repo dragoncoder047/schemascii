@@ -40,7 +40,7 @@ def next_in_dir(
             # can extend any direction
             if grid.get(point + dydx) in "|()-*":
                 point += dydx
-                res = next_in_dir(grid, point + dydx, dydx)
+                res = next_in_dir(grid, point, dydx)
                 if res is None:
                     return None
                 point = res[0]
@@ -69,9 +69,6 @@ def search_wire(grid: Grid, point: complex) -> list[tuple[complex, complex]]:
                 frontier.append(p)
                 seen.append(p)
                 out.append(line)
-    # print("Searched at", point, "and got a wire!")
-    # grid.spark(*seen)
-    # input()
     return out
 
 
