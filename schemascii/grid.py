@@ -66,3 +66,19 @@ class Grid:
     def __repr__(self):
         return f"Grid({self.filename!r}, '''\n{chr(10).join(self.lines)}''')"
     __str__ = __repr__
+
+    def spark(self, *points):
+        "print the grid highliting the specified points"
+        for y in range(self.height):
+            for x in range(self.width):
+                point = complex(x, y)
+                char = self.get(point)
+                if point in points:
+                    print("\x1B[7m" + char + "\x1B[27m", end="")
+                else:
+                    print(char, end="")
+            print()
+
+if __name__ == '__main__':
+    x = Grid('', '   \n   \n   ')
+    x.spark(0, 1, 2, 1j, 2j, 1+2j, 2+2j, 2+1j)

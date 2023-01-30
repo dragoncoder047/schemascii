@@ -36,15 +36,21 @@ def next_in_dir(
             else:
                 return None  # The horizontal wires do not connect vertically
         case '*':
-            # extend any direction
-            if grid.get(point + dydx) in '-|()':
-                return next_in_dir(grid, point + dydx, dydx)
-            if grid.get(point + dydx) == '*':
+            # can extend any direction
+            if grid.get(point + dydx) in "|()-*":
                 point += dydx
-            else:
-                return None
+                print("recursing")
+                res = next_in_dir(grid, point + dydx, dydx)
+                if res is None:
+                    return None
+                point = res[0]
         case _:
             return None
+    if point == old_point:
+        return None
+    print(old_point, dydx)
+    grid.spark(point, old_point)
+    #input()
     return point, old_point
 
 
