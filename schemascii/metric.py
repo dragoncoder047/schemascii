@@ -2,7 +2,7 @@ import re
 from decimal import Decimal
 
 METRIC_NUMBER = re.compile(r"^(\d*\.?\d+)([pnumKkMG]?)$")  # cSpell:ignore pnum
-ENG_NUMBER = re.compile(r"^(\d*\.?\d+)[Ee]?([+-]?\d*)$")  # cSpell:ignore pnum
+ENG_NUMBER = re.compile(r"^(\d*\.?\d+)[Ee]?([+-]?\d*)$")
 
 
 def exponent_to_prefix(exponent: int) -> str | None:
@@ -14,6 +14,7 @@ def exponent_to_prefix(exponent: int) -> str | None:
     if exponent % 3 != 0:
         return None
     index = (exponent // 3) + 4  # pico is -12 --> 0
+    # cSpell:ignore pico
     return "pnum kMG"[index].strip()
 
 
@@ -51,7 +52,8 @@ def format_metric_unit(num: str, unit: str = '', six: bool = False) -> str:
         exp_1, exp_2 = exp - 3, exp + 3
         digits = nd_1 if len(nd_1) < len(nd_2) else nd_2
         exp = exp_1 if len(nd_1) < len(nd_2) else exp_2
-    return digits + " " + exponent_to_prefix(exp) + unit
+    out = digits + " " + exponent_to_prefix(exp) + unit
+    return out.replace(" u", " &micro;")
 
 
 if __name__ == '__main__':
