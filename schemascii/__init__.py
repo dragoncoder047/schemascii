@@ -11,7 +11,7 @@ __version__ = "0.1.0"
 def render(filename: str, text: str = None, **options) -> str:
     "Render the Schemascii diagram to an SVG string."
     if text is None:
-        with open(filename) as f:
+        with open(filename, encoding="ascii") as f:
             text = f.read()
     # get everything
     grid = Grid(filename, text)
