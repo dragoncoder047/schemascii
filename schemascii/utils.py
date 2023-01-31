@@ -79,8 +79,9 @@ def iterate_line(p1: complex, p2: complex, step: float = 1.) -> GeneratorType:
 
 
 def deep_transform(data, origin: complex, theta: float):
-    """Transform the point first by translating by origin,
-    then rotating by theta."""
+    """Transform the point or points first by translating by origin,
+    then rotating by theta. Returns an identical data structure,
+    but with the transformed points substituted."""
     if isinstance(data, list | tuple):
         return [deep_transform(d, origin, theta) for d in data]
     if isinstance(data, complex):
