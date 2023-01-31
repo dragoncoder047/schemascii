@@ -200,3 +200,19 @@ def make_plus(
             [(.125, -.125), (.125j, -.125j)], 0, theta),
             center + deep_transform(.33+.75j, 0, theta), 0), **kwargs),
         class_="plus")
+
+
+def make_variable(
+        center: complex,
+        theta: float,
+        is_variable: bool = True,
+        **options) -> str:
+    "Draw a 'variable' arrow across the component."
+    if not is_variable:
+        return ""
+    theta = theta % pi
+    return bunch_o_lines(deep_transform([
+        (-.75+.5j, .75-.5j),
+        (.75-.5j, .5-.55j),
+        (.75-.5j, .7-.25j),
+    ], center, theta), **options)

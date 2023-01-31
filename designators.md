@@ -1,4 +1,4 @@
-(copied from <https://en.wikipedia.org/wiki/Reference_designator>)
+(copied from <https://en.wikipedia.org/wiki/Reference_designator> and edited lightly)
 
 | Designator | Component type | Implemented? |
 |:--:|:--|:--:|
@@ -8,6 +8,7 @@
 | B, BT, BAT | Battery | Yes |
 | BR | Bridge rectifier ||
 | C | Capacitor | Yes |
+| CV, VC | Variable capacitor | Yes |
 | CN | Connector ||
 | CRT | Cathode ray tube ||
 | D, LED, CR | Diode (all types, including LED), thyristor | Yes |
@@ -40,7 +41,6 @@
 | MCB | Miniature circuit breaker ||
 | MIC, MK | Microphone ||
 | MOSFET | Metal-oxide-semiconductor field-effect transistor ||
-| MOV | Metal-oxide varistor ||
 | MP | Mechanical part (including screws and fasteners) ||
 | NE | Neon lamp ||
 | OP | Opto-isolator ||
@@ -51,9 +51,9 @@
 | PU | Pickup ||
 | Q | Transistor (all types) ||
 | R | Resistor | Yes |
+| RV, VR | Variable resistor (potentiometer or rheostat) | Yes |
 | RN | Resistor network ||
 | RT | Thermistor ||
-| RV | Varistor, Variable resistor ||
 | S, SW | Switch (all types, including buttons) ||
 | SCR | Silicon-controlled rectifier ||
 | SUS | Silicon unilateral switch ||
@@ -64,10 +64,8 @@
 | TP | Test point ||
 | TUN | Tuner ||
 | V | Vacuum tube ||
-| VC | Variable capacitor ||
-| VDR | Voltage-dependent resistor ||
+| VDR, MOV | Voltage-dependent resistor (varistor) ||
 | VFD | Vacuum fluorescent display ||
-| VR | Voltage regulator (voltage reference), Variable resistor (potentiometer or rheostat) ||
 | VT | Voltage transformer ||
-| W | Wire ||
+| W | Wire | (implicit) |
 | X, XTAL, Y | Crystal oscillator, ceramic resonator ||

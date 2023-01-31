@@ -3,7 +3,7 @@ from cmath import phase, rect
 from math import pi
 from utils import (Cbox, Terminal, BOMData, XML, Side,
                    polylinegon, id_text, make_text_point,
-                   bunch_o_lines, deep_transform, make_plus)
+                   bunch_o_lines, deep_transform, make_plus, make_variable)
 from metric import format_metric_unit
 
 RENDERERS = {}
@@ -79,7 +79,7 @@ def polarized(func: Callable) -> Callable:
     return sort_terminals
 
 
-@component("R")
+@component("R", "RV", "VR")
 @n_terminal(2)
 @no_ambiguous
 def resistor(
@@ -90,6 +90,7 @@ def resistor(
     "Draw a resistor"
     t1, t2 = terminals[0].pt, terminals[1].pt
     vec = t1 - t2
+    mid = (t1 + t2) / 2
     length = abs(vec)
     angle = phase(vec)
     quad_angle = angle + pi / 2
@@ -99,13 +100,14 @@ def resistor(
                       pow(-1, i) * rect(1, quad_angle) / 4)
     points.append(t2)
     text_pt = make_text_point(t1, t2, **kwargs)
-    return (id_text(
+    return (polylinegon(points, **kwargs)
+            + make_variable(mid, angle, "V" in box.type, **kwargs)
+            + id_text(
         box, bom_data, terminals, (("&ohm;", False), ("W", False)),
-        text_pt, **kwargs)
-        + polylinegon(points, **kwargs))
+        text_pt, **kwargs))
 
 
-@component("C")
+@component("C", "CV", "VC")
 @polarized
 @no_ambiguous
 def capacitor(
@@ -124,11 +126,12 @@ def capacitor(
             (complex(.4, -.25), complex(-.4, -.25)),
         ], mid, angle)
     text_pt = make_text_point(t1, t2, **kwargs)
-    return (id_text(
+    return (bunch_o_lines(lines, **kwargs)
+            + make_plus(terminals, mid, angle, **kwargs)
+            + make_variable(mid, angle, "V" in box.type, **kwargs)
+            + id_text(
         box, bom_data, terminals, (("F", True), ("V", False)),
-        text_pt, **kwargs)
-        + bunch_o_lines(lines, **kwargs)
-        + make_plus(terminals, mid, angle, **kwargs))
+        text_pt, **kwargs))
 
 
 @component("B", "BT", "BAT")
@@ -185,7 +188,7 @@ SIDE_TO_ANGLE_MAP = {
     Side.RIGHT: pi,
     Side.TOP:  pi / 2,
     Side.LEFT: 0,
-    Side.RIGHT: 3 * pi / 2,
+    Side.BOTTOM: 3 * pi / 2,
 }
 
 
