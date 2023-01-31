@@ -11,8 +11,6 @@ BOMData = namedtuple('BOMData', 'type id data')
 Flag = namedtuple('Flag', 'pt char side')
 Terminal = namedtuple('Terminal', 'pt flag side')
 
-# cSpell:ignore Cbox polylinegon tspan
-
 
 class Side(IntEnum):
     "Which edge the flag was found on."
