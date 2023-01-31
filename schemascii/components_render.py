@@ -209,7 +209,8 @@ def integrated_circuit(
         width=sz.real,
         height=sz.imag,
         stroke__width=kwargs.get("stroke_width", 1),
-        stroke=kwargs.get("stroke", "black"))
+        stroke=kwargs.get("stroke", "black"),
+        fill="none")
     for term in terminals:
         out += bunch_o_lines([(
             term.pt,
