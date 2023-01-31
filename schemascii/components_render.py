@@ -181,6 +181,14 @@ def diode(
             + polylinegon(triangle, True, **kwargs))
 
 
+SIDE_TO_ANGLE_MAP = {
+    Side.RIGHT: pi,
+    Side.TOP:  pi / 2,
+    Side.LEFT: 0,
+    Side.RIGHT: 3 * pi / 2,
+}
+
+
 @component("U", "IC")
 @no_ambiguous
 def integrated_circuit(
@@ -190,10 +198,10 @@ def integrated_circuit(
         **kwargs):
     "Draw an IC"
     scale = kwargs.get("scale", 1)
-    sz = (box.p2 - box.p1 + 2) * scale
+    sz = (box.p2 - box.p1) * scale
     mid = (box.p2 + box.p1) * scale / 2
     out = XML.rect(
-        x=box.p1.real * scale - scale,
+        x=box.p1.real * scale,
         y=box.p1.imag * scale,
         width=sz.real,
         height=sz.imag,
@@ -202,7 +210,7 @@ def integrated_circuit(
     for term in terminals:
         out += bunch_o_lines([(
             term.pt,
-            term.pt + rect(1, term.side * pi / 2)
+            term.pt + rect(1, SIDE_TO_ANGLE_MAP[term.side])
         )], **kwargs)
     out += XML.text(
         XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
