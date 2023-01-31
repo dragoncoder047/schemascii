@@ -1,8 +1,7 @@
-from cmath import phase
+from cmath import phase, rect
 from math import pi
-from cmath import rect
-from grid import Grid
-from utils import iterate_line, merge_colinear, XML
+from .grid import Grid
+from .utils import iterate_line, merge_colinear, XML
 
 # cSpell:ignore dydx
 

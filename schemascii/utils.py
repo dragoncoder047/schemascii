@@ -4,7 +4,7 @@ from math import pi
 from cmath import phase, rect
 from types import GeneratorType
 from typing import Callable
-from metric import format_metric_unit
+from .metric import format_metric_unit
 
 Cbox = namedtuple('Cbox', 'p1 p2 type id')
 BOMData = namedtuple('BOMData', 'type id data')

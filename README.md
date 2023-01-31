@@ -9,3 +9,5 @@
 A command-line tool and library for converting ASCII-art diagrams into beautiful SVG circuit schematics.
 
 Works with Python 3.10+. It uses the new `match` feature in a few places. If you need to run Schemascii on an older version of Python, feel free to fork it and send me a pull request.
+
+<!-- https://realpython.com/pypi-publish-python-package/ -->

@@ -1,7 +1,7 @@
 from itertools import chain
 from types import FunctionType
-from utils import Cbox, Flag, Side, Terminal
-from grid import Grid
+from .utils import Cbox, Flag, Side, Terminal
+from .grid import Grid
 
 
 def over_edges(box: Cbox) -> list:

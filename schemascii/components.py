@@ -1,6 +1,6 @@
 import re
-from grid import Grid
-from utils import Cbox, BOMData
+from .grid import Grid
+from .utils import Cbox, BOMData
 
 SMALL_COMPONENT_OR_BOM = re.compile(r'#*([A-Z]+)(\d+|\.\w+)(:[^\s]+)?#*')
 

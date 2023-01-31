@@ -1,10 +1,10 @@
 from typing import Callable
 from cmath import phase, rect
 from math import pi
-from utils import (Cbox, Terminal, BOMData, XML, Side,
+from .utils import (Cbox, Terminal, BOMData, XML, Side,
                    polylinegon, id_text, make_text_point,
                    bunch_o_lines, deep_transform, make_plus, make_variable)
-from metric import format_metric_unit
+from .metric import format_metric_unit
 
 RENDERERS = {}
 

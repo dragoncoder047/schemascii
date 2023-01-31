@@ -1,9 +1,11 @@
-from grid import Grid
-from components import find_all
-from edgemarks import find_edge_marks
-from components_render import render_component
-from wires import get_wires
-from utils import XML
+from .grid import Grid
+from .components import find_all
+from .edgemarks import find_edge_marks
+from .components_render import render_component
+from .wires import get_wires
+from .utils import XML
+
+__version__ = "0.1.0"
 
 
 def render(filename: str, text: str = None, **options) -> str:

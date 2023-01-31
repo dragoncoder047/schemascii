@@ -1,0 +1,29 @@
+[build-system]
+requires      = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "schemascii"
+version = "0.1.0"
+description = "Render ASCII-art schematics to SVG"
+readme = "README.md"
+authors = [{ name = "dragoncoder047", email = "101021094+dragoncoder047@users.noreply.github.com" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+    "Topic :: Scientific/Engineering",
+]
+keywords = ["schematic", "electronics", "circuit", "diagram"]
+requires-python = ">=3.10"
+
+[project.urls]
+Homepage = "https://github.com/dragoncoder047/schemascii"
+
+# [project.scripts]
+# schemascii = "schemascii.__init__:cli_main"
