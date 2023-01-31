@@ -41,9 +41,10 @@ def next_in_dir(
             if grid.get(point + dydx) in "|()-*":
                 point += dydx
                 res = next_in_dir(grid, point, dydx)
-                if res is None:
-                    return None
-                point = res[0]
+                if res is not None:
+                    point = res[0]
+            else:
+                return None
         case _:
             return None
     if point == old_point:
