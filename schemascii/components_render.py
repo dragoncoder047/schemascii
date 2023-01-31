@@ -262,7 +262,7 @@ def render_component(
     "Render the component into an SVG string."
     if box.type not in RENDERERS:
         raise NameError(
-            f"No renderer defined for {box.type} component")
+            f"Unsupported component type: {box.type}")
     return XML.g(
         RENDERERS[box.type](box, terminals, bom_data, **kwargs),
         class_=f"component {box.type}"

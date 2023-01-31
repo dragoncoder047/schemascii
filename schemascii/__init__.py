@@ -43,6 +43,6 @@ def render(filename: str, text: str = None, **options) -> str:
 
 if __name__ == '__main__':
     print(render(
-        "../test_data/test_resistors.txt",
+        "test_data/test_resistors.txt",
         scale=20, padding=20, stroke_width=2,
         stroke="black"))

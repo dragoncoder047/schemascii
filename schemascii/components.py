@@ -95,7 +95,7 @@ def find_all(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
 
 
 if __name__ == '__main__':
-    grid = Grid("../test_data/test_resistors.txt")
+    grid = Grid("test_data/test_resistors.txt")
     bbb, _ = find_all(grid)
     all_pts = []
     for box in bbb:

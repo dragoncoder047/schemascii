@@ -25,5 +25,5 @@ requires-python = ">=3.10"
 [project.urls]
 Homepage = "https://github.com/dragoncoder047/schemascii"
 
-# [project.scripts]
-# schemascii = "schemascii.__init__:cli_main"
+[project.scripts]
+schemascii = "schemascii.__main__:cli_main"

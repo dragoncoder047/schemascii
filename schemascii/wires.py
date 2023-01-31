@@ -137,6 +137,6 @@ def get_wires(grid: Grid, **options) -> str:
 
 
 if __name__ == '__main__':
-    xg = Grid('../test_data/test_resistors.txt')
+    xg = Grid('test_data/test_resistors.txt')
     print(get_wires(xg, scale=20))
     print(xg)
