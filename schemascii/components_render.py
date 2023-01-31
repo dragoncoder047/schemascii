@@ -158,7 +158,7 @@ def battery(
         + bunch_o_lines(lines, **kwargs))
 
 
-@component("D", "LED", "CR")
+@component("D", "LED", "CR", "IR")
 @polarized
 @no_ambiguous
 def diode(
@@ -235,8 +235,6 @@ def integrated_circuit(
 # terminals will be connected at (0, -1) and (0, 1) relative to the paths here
 # if they aren't the path will be transformed
 twoterminals = {
-    # battery
-    'B': 'M.5 1H-.5ZM1 .6H-1ZM.5.2H-.5ZM1-.2H-1ZM.5-.6H-.5ZM1-1H-1Z',
     # fuse
     'F': 'M0-.9A.1.1 0 000-1.1.1.1 0 000-.9ZM0-1Q.5-.5 0 0T0 1Q-.5.5 0 0T0-1ZM0 1.1A.1.1 0 000 .9.1.1 0 000 1.1Z',
     # jumper pads

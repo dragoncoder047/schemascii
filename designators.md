@@ -24,8 +24,8 @@
 | GN | General network ||
 | H | Pin header ||
 | HY | Circulator or directional coupler ||
-| IC | Integrated circuit ||
-| IR | Infrared Diode ||
+| IC, U | Integrated circuit | Partial |
+| IR | Infrared Diode | Yes |
 | J | Jack (least-movable connector of a connector pair) ||
 | J, JW | Wire link ("jumper") ||
 | JFET | Junction gate field-effect transistor ||
@@ -63,7 +63,6 @@
 | TH | Thermistor ||
 | TP | Test point ||
 | TUN | Tuner ||
-| U | Integrated circuit (IC) ||
 | V | Vacuum tube ||
 | VC | Variable capacitor ||
 | VDR | Voltage-dependent resistor ||
