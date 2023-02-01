@@ -215,7 +215,7 @@ def integrated_circuit(
         height=sz.imag,
         stroke__width=options["stroke_width"],
         stroke=options["stroke"],
-        fill="none")
+        fill="transparent")
     for term in terminals:
         out += bunch_o_lines([(
             term.pt,
@@ -269,7 +269,7 @@ def jack(
             r=scale / 4,
             stroke__width=options["stroke_width"],
             stroke=options["stroke"],
-            fill="none")
+            fill="transparent")
         + id_text(box, bom_data, terminals, None, sc_text_pt, **options))
 
 

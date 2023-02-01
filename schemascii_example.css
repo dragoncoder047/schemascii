@@ -20,7 +20,7 @@ svg.schemascii .component :is(polyline, path, line, polygon, rect, circle) {
     stroke-width: calc(0.15 * var(--sch-scale, 1));
     stroke-linecap: round;
     transition-duration: 0.2s;
-    fill: none;
+    fill: transparent;
 }
 
 svg.schemascii .component .plus :is(polyline, path, line) {

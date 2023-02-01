@@ -120,7 +120,7 @@ def polylinegon(points: list[complex], is_polygon: bool = False, **options):
         for x in points)
     if is_polygon:
         return XML.polygon(points=pts, fill=c)
-    return XML.polyline(points=pts, fill="none", stroke__width=w, stroke=c)
+    return XML.polyline(points=pts, fill="transparent", stroke__width=w, stroke=c)
 
 
 def bunch_o_lines(points: list[tuple[complex, complex]], **options):
@@ -217,7 +217,7 @@ def make_variable(
         return ""
     theta = theta % pi
     return bunch_o_lines(deep_transform([
-        (-.75+.5j, .75-.5j),
+        (-.6+.5j, .75-.5j),
         (.75-.5j, .5-.55j),
         (.75-.5j, .7-.25j),
     ], center, theta), **options)
