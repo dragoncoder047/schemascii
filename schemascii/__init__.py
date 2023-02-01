@@ -34,7 +34,7 @@ def render(filename: str, text: str = None, **options) -> str:
             text = f.read()
     # default options
     options = default_options | options
-    for oname, otypeufn in option_types.items():
+    for oname, otypefun in option_types.items():
         options[oname] = otypefun(option[oname])
     # get everything
     grid = Grid(filename, text)
