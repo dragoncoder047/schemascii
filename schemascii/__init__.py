@@ -17,6 +17,15 @@ default_options = {
     'nolabels': False,
 }
 
+option_types = {
+    'padding': float,
+    'scale': float,
+    'stroke_width': float,
+    'stroke': str,
+    'label': str,
+    'nolabels': bool,
+}
+
 
 def render(filename: str, text: str = None, **options) -> str:
     "Render the Schemascii diagram to an SVG string."
@@ -25,6 +34,8 @@ def render(filename: str, text: str = None, **options) -> str:
             text = f.read()
     # default options
     options = default_options | options
+    for oname, otypeufn in option_types.items():
+        options[oname] = otypefun(option[oname])
     # get everything
     grid = Grid(filename, text)
     components, bom_data = find_all(grid)
