@@ -35,7 +35,7 @@ def render(filename: str, text: str = None, **options) -> str:
     # default options
     options = default_options | options
     for oname, otypefun in option_types.items():
-        options[oname] = otypefun(option[oname])
+        options[oname] = otypefun(options[oname])
     # get everything
     grid = Grid(filename, text)
     components, bom_data = find_all(grid)
