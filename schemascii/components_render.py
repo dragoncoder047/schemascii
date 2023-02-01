@@ -1,6 +1,7 @@
 from typing import Callable
 from cmath import phase, rect
 from math import pi
+from warnings import warn
 from .utils import (Cbox, Terminal, BOMData, XML, Side,
                     polylinegon, id_text, make_text_point,
                     bunch_o_lines, deep_transform, make_plus, make_variable)
@@ -200,8 +201,8 @@ def integrated_circuit(
         bom_data: BOMData | None,
         **options):
     "Draw an IC"
-    label_style = options.get("label", "VL")
-    scale = options.get("scale", 1)
+    label_style = options["label"]
+    scale = options["scale"]
     sz = (box.p2 - box.p1) * scale
     mid = (box.p2 + box.p1) * scale / 2
     out = XML.rect(
@@ -209,8 +210,8 @@ def integrated_circuit(
         y=box.p1.imag * scale,
         width=sz.real,
         height=sz.imag,
-        stroke__width=options.get("stroke_width", 1),
-        stroke=options.get("stroke", "black"),
+        stroke__width=options["stroke_width"],
+        stroke=options["stroke"],
         fill="none")
     for term in terminals:
         out += bunch_o_lines([(
@@ -225,9 +226,9 @@ def integrated_circuit(
         x=mid.real,
         y=mid.imag,
         text__anchor="middle",
-        font__size=options.get("scale", 1),
-        fill=options.get("stroke", "black"))
-    print("IC's in progress...")
+        font__size=options["scale"],
+        fill=options["stroke"])
+    warn("ICs are not fully implemented yet.")
     return out
 
 # code for drawing

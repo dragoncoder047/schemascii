@@ -19,24 +19,19 @@ def cli_main():
                     help="Output SVG file. (default input file plus .svg)")
     ap.add_argument("--padding",
                     help="Amount of padding to add on the edges.",
-                    type=int,
-                    default=10)
+                    type=int)
     ap.add_argument("--scale",
                     help="Scale at which to enlarge the entire diagram by.",
-                    type=int,
-                    default=15)
+                    type=int)
     ap.add_argument("--stroke_width",
                     help="Width of the lines",
-                    type=int,
-                    default=2)
+                    type=int)
     ap.add_argument("--stroke",
-                    help="Color of the lines.",
-                    default="black")
+                    help="Color of the lines.")
     ap.add_argument("--label",
                     help="Component label style "
                     "(L=include label, V=include value, VL=both)",
-                    choices="L V VL".split(),
-                    default="VL")
+                    choices="L V VL".split())
     args = ap.parse_args()
     if args.out_file is None:
         args.out_file = args.in_file + ".svg"

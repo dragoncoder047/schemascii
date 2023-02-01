@@ -7,12 +7,22 @@ from .utils import XML
 
 __version__ = "0.1.0"
 
+default_options = {
+    'padding': 10,
+    'scale': 15,
+    'stroke_width': 2,
+    'stroke': 'black',
+    'label': 'LV',
+}
+
 
 def render(filename: str, text: str = None, **options) -> str:
     "Render the Schemascii diagram to an SVG string."
     if text is None:
         with open(filename, encoding="ascii") as f:
             text = f.read()
+    # default options
+    options = default_options | options
     # get everything
     grid = Grid(filename, text)
     components, bom_data = find_all(grid)
@@ -21,8 +31,8 @@ def render(filename: str, text: str = None, **options) -> str:
                           b.id == c.id and b.type == c.type]
                       for c in components}
     # get some options
-    padding = options.get('padding', 1)
-    scale = options.get('scale', 1)
+    padding = options['padding']
+    scale = options['scale']
 
     wires = get_wires(grid, **options)
     components_strs = (render_component(

@@ -94,9 +94,9 @@ def blank_wire(grid: Grid, p1: complex, p2: complex):
 def next_wire(grid: Grid, **options) -> str | None:
     """Returns a SVG string of the next line in the grid,
     or None if there are no more. The line is masked off."""
-    scale = options.get("scale", 1)
-    stroke_width = options.get("stroke_width", 1)
-    color = options.get("stroke", "black")
+    scale = options["scale"]
+    stroke_width = options["stroke_width"]
+    color = options["stroke"]
     # Find the first wire or return None
     for i, line in enumerate(grid.lines):
         indexes = [line.index(c) for c in '-|()*' if c in line]

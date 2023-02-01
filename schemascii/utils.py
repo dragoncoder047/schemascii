@@ -112,9 +112,9 @@ XML = XMLClass()
 
 def polylinegon(points: list[complex], is_polygon: bool = False, **options):
     "Turn the list of points into a <polyline> or <polygon>."
-    scale = options.get("scale", 1)
-    w = options.get("stroke_width", 0.15)
-    c = options.get("stroke", "black")
+    scale = options["scale"]
+    w = options["stroke_width"]
+    c = options["stroke"]
     pts = ' '.join(
         f'{x.real * scale},{x.imag * scale}'
         for x in points)
@@ -126,9 +126,9 @@ def polylinegon(points: list[complex], is_polygon: bool = False, **options):
 def bunch_o_lines(points: list[tuple[complex, complex]], **options):
     "Return a <line> for each pair of points."
     out = ''
-    scale = options.get('scale', 1)
-    w = options.get("stroke_width", 0.15)
-    c = options.get("stroke", "black")
+    scale = options['scale']
+    w = options["stroke_width"]
+    c = options["stroke"]
     for p1, p2 in points:
         out += XML.line(
             x1=p1.real * scale,
@@ -148,7 +148,7 @@ def id_text(
         point: complex | None = None,
         **options):
     "Format the component ID and value around the point"
-    label_style = options.get("label", "VL")
+    label_style = options["label"]
     if point is None:
         point = sum(t.pt for t in terminals) / len(terminals)
     data = ""
@@ -176,14 +176,14 @@ def id_text(
             any(Side.BOTTOM == t.side for t in terminals)
             or any(Side.TOP == t.side for t in terminals)
         ) else "middle",
-        font__size=options.get("scale", 1),
-        fill=options.get("stroke", "black"))
+        font__size=options["scale"],
+        fill=options["stroke"])
 
 
 def make_text_point(t1: complex, t2: complex, **options) -> complex:
     "Compute the scaled coordinates of the text anchor point."
     quad_angle = phase(t1 - t2) + pi / 2
-    scale = options.get("scale", 1)
+    scale = options["scale"]
     text_pt = (t1 + t2) * scale / 2
     offset = rect(scale / 2, quad_angle)
     text_pt += complex(abs(offset.real), -abs(offset.imag))
