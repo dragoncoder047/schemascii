@@ -13,6 +13,7 @@ default_options = {
     'stroke_width': 2,
     'stroke': 'black',
     'label': 'LV',
+    'nolabels': False,
 }
 
 
