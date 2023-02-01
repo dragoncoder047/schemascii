@@ -4,7 +4,8 @@ from math import pi
 from warnings import warn
 from .utils import (Cbox, Terminal, BOMData, XML, Side,
                     polylinegon, id_text, make_text_point,
-                    bunch_o_lines, deep_transform, make_plus, make_variable)
+                    bunch_o_lines, deep_transform, make_plus, make_variable,
+                    sort_counterclockwise)
 from .errors import TerminalsError, BOMError, UnsupportedComponentError
 
 RENDERERS = {}
@@ -221,7 +222,7 @@ def integrated_circuit(
             term.pt,
             term.pt + rect(1, SIDE_TO_ANGLE_MAP[term.side])
         )], **options)
-    if "V" in label_style:
+    if "V" in label_style and part_num:
         out += XML.text(
             XML.tspan(part_num, class_="part-num"),
             x=mid.real,
@@ -238,7 +239,20 @@ def integrated_circuit(
             text__anchor="middle",
             font__size=options["scale"],
             fill=options["stroke"])
-    warn("ICs are not fully implemented yet. Pin labels have not been rendered.")
+    s_terminals = sort_counterclockwise(terminals)
+    for terminal, label in zip(s_terminals, pin_labels):
+        sc_text_pt = terminal.pt * scale
+        out += XML.text(
+            label,
+            x=sc_text_pt.real,
+            y=sc_text_pt.imag,
+            text__anchor=("start" if (terminal.side in (Side.TOP, Side.BOTTOM))
+                          else "middle"),
+            font__size=options["scale"],
+            fill=options["stroke"],
+            class_="pin-label")
+    warn("ICs are not fully implemented yet. "
+         "Pin labels may have not been rendered correctly.")
     return out
 
 

@@ -1,4 +1,5 @@
 from collections import namedtuple
+from itertools import groupby, chain
 from enum import IntEnum
 from math import pi
 from cmath import phase, rect
@@ -221,3 +222,17 @@ def make_variable(
         (.75-.5j, .5-.55j),
         (.75-.5j, .7-.25j),
     ], center, theta), **options)
+
+
+def sort_counterclockwise(terminals: list[Terminal]) -> list[Terminal]:
+    "Sort the terminals in counterclockwise order."
+    partitioned = {
+        side: list(filtered_terminals)
+        for side, filtered_terminals in groupby(
+            terminals,
+            lambda t: t.side)}
+    return list(chain(
+        sorted(partitioned[Side.LEFT],   key=lambda t:  t.pt.imag),
+        sorted(partitioned[Side.BOTTOM], key=lambda t:  t.pt.real),
+        sorted(partitioned[Side.RIGHT],  key=lambda t: -t.pt.imag),
+        sorted(partitioned[Side.TOP],    key=lambda t: -t.pt.real)))
