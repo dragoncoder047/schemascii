@@ -10,7 +10,7 @@ A command-line tool and library for converting ASCII-art diagrams into beautiful
 
 Turn this:
 
-```txt
+```none
 *--BAT1+--*-------*---*
 |         |       |   |
 |         R1    .~~~. |
@@ -49,11 +49,28 @@ And with a little CSS, this:
 
 Works with Python 3.10+. It uses the new `match` feature in a few places. If you need to run Schemascii on an older version of Python, feel free to fork it and send me a pull request.
 
-Command line usage:
+## Installation
+
+Not published to PyPI yet, so you have two options:
+
+1. Install using pip's VCS support:
+  ```bash
+  pip install git+https://github.com/dragoncoder047/schemascii
+  ```
+2. Install from source:
+  ```bash
+  git clone https://github.com/dragoncoder047/schemascii
+  cd schemascii
+  pip install .
+  ```
+
+You can also add `git+https://github.com/dragoncoder047/schemascii` to your `requirements.txt` if you have one.
+
+## Command line usage
 
 ```usage
 usage: schemascii [-h] [-V] [-o OUT_FILE] [--padding PADDING] [--scale SCALE] [--stroke_width STROKE_WIDTH] [--stroke STROKE]
-                  [--label {L,V,VL}]
+                  [--label {L,V,VL}] [--nolabels]
                   in_file
 
 Render ASCII-art schematics into SVG.
@@ -72,9 +89,10 @@ options:
                         Width of the lines
   --stroke STROKE       Color of the lines.
   --label {L,V,VL}      Component label style (L=include label, V=include value, VL=both)
+  --nolabels            Turns off labels on all components, except for part numbers on ICs.
 ```
 
-Python usage example:
+## Python usage
 
 ```python
 import schemascii
@@ -92,8 +110,19 @@ svg = schemascii.render("my_circuit.txt",
     scale=15,
     stroke_width=2,
     stroke="black",
-    label="LV")
+    label="LV",
+    nolabels=False)
 # these are the defaults
+```
+
+## Contributing Tips
+
+Make sure you have an *editable* install, so you can edit and still be able to use the `schemascii` command to test it:
+
+```bash
+pip uninstall schemascii
+cd path/to/your/schemascii/checkout
+pip install -e .
 ```
 
 <!-- https://realpython.com/pypi-publish-python-package/ -->
