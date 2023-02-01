@@ -200,6 +200,7 @@ def integrated_circuit(
         bom_data: BOMData | None,
         **options):
     "Draw an IC"
+    label_style = options.get("label", "VL")
     scale = options.get("scale", 1)
     sz = (box.p2 - box.p1) * scale
     mid = (box.p2 + box.p1) * scale / 2
@@ -217,9 +218,10 @@ def integrated_circuit(
             term.pt + rect(1, SIDE_TO_ANGLE_MAP[term.side])
         )], **options)
     out += XML.text(
-        XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
-        " " * bool(bom_data.data),
-        XML.tspan(bom_data.data, class_="part-num"),
+        (XML.tspan(f"{box.type}{box.id}", class_="cmp-id")
+         * bool("L" in label_style)),
+        " " * (bool(bom_data.data) and "L" in label_style),
+        XML.tspan(bom_data.data, class_="part-num") * bool("V" in label_style),
         x=mid.real,
         y=mid.imag,
         text__anchor="middle",

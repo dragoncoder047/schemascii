@@ -148,6 +148,7 @@ def id_text(
         point: complex | None = None,
         **options):
     "Format the component ID and value around the point"
+    label_style = options.get("label", "VL")
     if point is None:
         point = sum(t.pt for t in terminals) / len(terminals)
     data = ""
@@ -165,9 +166,10 @@ def id_text(
             classy = "cmp-value"
         data = XML.tspan(text, class_=classy)
     return XML.text(
-        XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
-        " " * bool(data),
-        data,
+        (XML.tspan(f"{box.type}{box.id}", class_="cmp-id")
+         * bool("L" in label_style)),
+        " " * (bool(data) and "L" in label_style),
+        data * bool("V" in label_style),
         x=point.real,
         y=point.imag,
         text__anchor="start" if (
