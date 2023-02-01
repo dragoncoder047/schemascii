@@ -47,7 +47,7 @@ def cli_main():
     try:
         result_svg = render(args.in_file, text, **vars(args))
     except Error as err:
-        print(repr(err), file=sys.stderr)
+        print(err, file=sys.stderr)
         sys.exit(1)
     if args.out_file == "-":
         print(result_svg)
