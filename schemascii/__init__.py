@@ -4,6 +4,7 @@ from .edgemarks import find_edge_marks
 from .components_render import render_component
 from .wires import get_wires
 from .utils import XML
+from .errors import *
 
 __version__ = "0.1.0"
 
