@@ -238,7 +238,7 @@ def integrated_circuit(
             text__anchor="middle",
             font__size=options["scale"],
             fill=options["stroke"])
-    warn("ICs are not fully implemented yet.")
+    warn("ICs are not fully implemented yet. Pin labels have not been rendered.")
     return out
 
 
