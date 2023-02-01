@@ -1,5 +1,6 @@
 import argparse
 import sys
+import warnings
 from . import render, __version__
 from .errors import Error
 
@@ -49,10 +50,14 @@ def cli_main():
         text = sys.stdin.read()
         args.in_file = "<stdin>"
     try:
-        result_svg = render(args.in_file, text, **vars(args))
+        with warnings.catch_warnings(record=True) as captured_warnings:
+            result_svg = render(args.in_file, text, **vars(args))
     except Error as err:
         print(type(err).__name__ + ":", err, file=sys.stderr)
         sys.exit(1)
+    if captured_warnings:
+        for warn in captured_warnings:
+            print("warning:", warn.message, file=sys.stderr)
     if args.out_file == "-":
         print(result_svg)
     else:
