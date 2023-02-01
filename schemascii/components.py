@@ -1,6 +1,8 @@
 import re
 from .grid import Grid
 from .utils import Cbox, BOMData
+from .errors import DiagramSyntaxError, BOMError
+
 
 SMALL_COMPONENT_OR_BOM = re.compile(r'#*([A-Z]+)(\d+|\.\w+)(:[^\s]+)?#*')
 
@@ -47,22 +49,22 @@ def find_big(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
                         y2 = j
                         break
                     if not cs[0] == cs[-1] == ':':
-                        raise SyntaxError(
+                        raise DiagramSyntaxError(
                             f'{grid.filename}: Fragmented box '
                             f'starting at line {y1 + 1}, col {x1 + 1}')
                 else:
-                    raise SyntaxError(
+                    raise DiagramSyntaxError(
                         f'{grid.filename}: Unfinished box '
                         f'starting at line {y1 + 1}, col {x1 + 1}')
                 inside = grid.clip(complex(x1, y1), complex(x2, y2))
                 results, resb = find_small(inside)
                 if len(results) == 0 and len(resb) == 0:
-                    raise ValueError(
+                    raise BOMError(
                         f'{grid.filename}: Box starting at '
                         f'line {y1 + 1}, col {x1 + 1} is '
                         f'missing reference designator')
                 if len(results) != 1 and len(resb) != 1:
-                    raise ValueError(
+                    raise BOMError(
                         f'{grid.filename}: Box starting at '
                         f'line {y1 + 1}, col {x1 + 1} has '
                         f'multiple reference designators')
@@ -95,9 +97,9 @@ def find_all(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
 
 
 if __name__ == '__main__':
-    grid = Grid("test_data/test_resistors.txt")
-    bbb, _ = find_all(grid)
+    test_grid = Grid("test_data/test_resistors.txt")
+    bbb, _ = find_all(test_grid)
     all_pts = []
     for box in bbb:
         all_pts.extend([box.p1, box.p2])
-    grid.spark(*all_pts)
+    test_grid.spark(*all_pts)

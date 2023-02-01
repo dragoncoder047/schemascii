@@ -2,9 +2,9 @@ from typing import Callable
 from cmath import phase, rect
 from math import pi
 from .utils import (Cbox, Terminal, BOMData, XML, Side,
-                   polylinegon, id_text, make_text_point,
-                   bunch_o_lines, deep_transform, make_plus, make_variable)
-from .metric import format_metric_unit
+                    polylinegon, id_text, make_text_point,
+                    bunch_o_lines, deep_transform, make_plus, make_variable)
+from .errors import TerminalsError, BOMError, UnsupportedComponentError
 
 RENDERERS = {}
 
@@ -31,7 +31,7 @@ def n_terminal(n_terminals: int) -> Callable:
                 bom_data: list[BOMData],
                 **kwargs):
             if len(terminals) != n_terminals:
-                raise TypeError(
+                raise TerminalsError(
                     f"{box.type}{box.id} component can only "
                     f"have {n_terminals} terminals")
             return func(box, terminals, bom_data, **kwargs)
@@ -47,7 +47,7 @@ def no_ambiguous(func: Callable) -> Callable:
             bom_data: list[BOMData],
             **kwargs):
         if len(bom_data) > 1:
-            raise ValueError(
+            raise BOMError(
                 f"Ambiguous BOM data for {box.type}{box.id}: {bom_data!r}")
         return func(
             box,
@@ -66,7 +66,7 @@ def polarized(func: Callable) -> Callable:
             bom_data: list[BOMData],
             **kwargs):
         if len(terminals) != 2:
-            raise TypeError(
+            raise TerminalsError(
                 f"{box.type}{box.id} component can only "
                 f"have 2 terminals")
         if terminals[1].flag == '+':
@@ -261,8 +261,7 @@ def render_component(
         **kwargs):
     "Render the component into an SVG string."
     if box.type not in RENDERERS:
-        raise NameError(
-            f"Unsupported component type: {box.type}")
+        raise UnsupportedComponentError(box.type)
     return XML.g(
         RENDERERS[box.type](box, terminals, bom_data, **kwargs),
         class_=f"component {box.type}"
