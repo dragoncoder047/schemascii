@@ -8,6 +8,45 @@
 
 A command-line tool and library for converting ASCII-art diagrams into beautiful SVG circuit schematics.
 
+Turn this:
+
+```txt
+*--BAT1+--*-------*---*
+|         |       |   |
+|         R1    .~~~. |
+|         |     :   :-*
+|         *-----:   :---+C2--*--D2+--*----------J1
+|         |     :U1 :        |       |
+|        R2     :555:        |       |
+|         |   *-:   :-*      |       |
+|         C1  | :   : |      +       C3
+|         |   *-:   : C4     D1      +
+|         *---* .~~~. |      |       |
+|         |       |   |      |       |
+*---------*-------*---*------*-------*----------J2
+
+BAT1:5
+R1:10k
+R2:100k
+C1:10000p
+C2:10u
+C3:100u
+C4:10p
+D1:1N4001
+D2:1N4001
+U1:NE555,VCC,DIS,_TR,TH,GND,CTL,OUT,_RST
+J1:-5V
+J2:GND
+```
+
+Into this:
+
+![image](test_data/test_charge_pump_no_pin_labels.png)
+
+And with a little CSS, this:
+
+![image](test_data/test_charge_pump_no_pin_labels_css.png)
+
 Works with Python 3.10+. It uses the new `match` feature in a few places. If you need to run Schemascii on an older version of Python, feel free to fork it and send me a pull request.
 
 Command line usage:
