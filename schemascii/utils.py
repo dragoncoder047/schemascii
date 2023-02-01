@@ -147,7 +147,9 @@ def id_text(
         unit: str | list[str] | None,
         point: complex | None = None,
         **options):
-    "Format the component ID and value around the point"
+    "Format the component ID and value around the point."
+    if options["nolabels"]:
+        return ""
     label_style = options["label"]
     if point is None:
         point = sum(t.pt for t in terminals) / len(terminals)

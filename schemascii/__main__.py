@@ -19,19 +19,28 @@ def cli_main():
                     help="Output SVG file. (default input file plus .svg)")
     ap.add_argument("--padding",
                     help="Amount of padding to add on the edges.",
-                    type=int)
+                    type=int,
+                    default=10)
     ap.add_argument("--scale",
                     help="Scale at which to enlarge the entire diagram by.",
-                    type=int)
+                    type=int,
+                    default=15)
     ap.add_argument("--stroke_width",
                     help="Width of the lines",
-                    type=int)
+                    type=int,
+                    default=2)
     ap.add_argument("--stroke",
-                    help="Color of the lines.")
+                    help="Color of the lines.",
+                    default="black")
     ap.add_argument("--label",
                     help="Component label style "
                     "(L=include label, V=include value, VL=both)",
-                    choices="L V VL".split())
+                    choices=["L", "V", "VL"],
+                    default="VL")
+    ap.add_argument("--nolabels",
+                    help="Turns off labels on all components, "
+                    "except for part numbers on ICs.",
+                    action="store_true")
     args = ap.parse_args()
     if args.out_file is None:
         args.out_file = args.in_file + ".svg"
@@ -42,7 +51,7 @@ def cli_main():
     try:
         result_svg = render(args.in_file, text, **vars(args))
     except Error as err:
-        print(err, file=sys.stderr)
+        print(type(err).__name__ + ":", err, file=sys.stderr)
         sys.exit(1)
     if args.out_file == "-":
         print(result_svg)

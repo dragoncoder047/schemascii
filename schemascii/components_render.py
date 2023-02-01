@@ -50,10 +50,12 @@ def no_ambiguous(func: Callable) -> Callable:
         if len(bom_data) > 1:
             raise BOMError(
                 f"Ambiguous BOM data for {box.type}{box.id}: {bom_data!r}")
+        if not bom_data:
+            bom_data = [BOMData(box.type, box.id, "")]
         return func(
             box,
             terminals,
-            bom_data[0] if bom_data else None,
+            bom_data[0],
             **options)
     return de_ambiguous
 
@@ -86,7 +88,7 @@ def polarized(func: Callable) -> Callable:
 def resistor(
         box: Cbox,
         terminals: list[Terminal],
-        bom_data: BOMData | None,
+        bom_data: BOMData,
         **options):
     "Draw a resistor"
     t1, t2 = terminals[0].pt, terminals[1].pt
@@ -114,7 +116,7 @@ def resistor(
 def capacitor(
         box: Cbox,
         terminals: list[Terminal],
-        bom_data: BOMData | None,
+        bom_data: BOMData,
         **options):
     "Draw a capacitor"
     t1, t2 = terminals[0].pt, terminals[1].pt
@@ -141,7 +143,7 @@ def capacitor(
 def battery(
         box: Cbox,
         terminals: list[Terminal],
-        bom_data: BOMData | None,
+        bom_data: BOMData,
         **options):
     "Draw a battery cell"
     t1, t2 = terminals[0].pt, terminals[1].pt
@@ -168,7 +170,7 @@ def battery(
 def diode(
         box: Cbox,
         terminals: list[Terminal],
-        bom_data: BOMData | None,
+        bom_data: BOMData,
         **options):
     "Draw a diode or LED"
     t1, t2 = terminals[0].pt, terminals[1].pt
@@ -198,13 +200,14 @@ SIDE_TO_ANGLE_MAP = {
 def integrated_circuit(
         box: Cbox,
         terminals: list[Terminal],
-        bom_data: BOMData | None,
+        bom_data: BOMData,
         **options):
     "Draw an IC"
     label_style = options["label"]
     scale = options["scale"]
     sz = (box.p2 - box.p1) * scale
     mid = (box.p2 + box.p1) * scale / 2
+    part_num, *pin_labels = map(str.strip, bom_data.data.split(","))
     out = XML.rect(
         x=box.p1.real * scale,
         y=box.p1.imag * scale,
@@ -218,20 +221,59 @@ def integrated_circuit(
             term.pt,
             term.pt + rect(1, SIDE_TO_ANGLE_MAP[term.side])
         )], **options)
-    out += XML.text(
-        (XML.tspan(f"{box.type}{box.id}", class_="cmp-id")
-         * bool("L" in label_style)),
-        " " * (bool(bom_data.data) and "L" in label_style),
-        XML.tspan(bom_data.data, class_="part-num") * bool("V" in label_style),
-        x=mid.real,
-        y=mid.imag,
-        text__anchor="middle",
-        font__size=options["scale"],
-        fill=options["stroke"])
+    if "V" in label_style:
+        out += XML.text(
+            XML.tspan(part_num, class_="part-num"),
+            x=mid.real,
+            y=mid.imag,
+            text__anchor="middle",
+            font__size=options["scale"],
+            fill=options["stroke"])
+        mid -= 1j * scale
+    if "L" in label_style and not options["nolabels"]:
+        out += XML.text(
+            XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
+            x=mid.real,
+            y=mid.imag,
+            text__anchor="middle",
+            font__size=options["scale"],
+            fill=options["stroke"])
     warn("ICs are not fully implemented yet.")
     return out
 
-# code for drawing
+
+@component("J", "P")
+@n_terminal(1)
+@no_ambiguous
+def jack(
+        box: Cbox,
+        terminals: list[Terminal],
+        bom_data: BOMData,
+        **options):
+    "Draw a jack connector or plug"
+    scale = options["scale"]
+    sc_t1 = terminals[0].pt * scale
+    sc_t2 = sc_t1 + rect(scale, SIDE_TO_ANGLE_MAP[terminals[0].side])
+    sc_text_pt = sc_t2 + rect(scale * 2, SIDE_TO_ANGLE_MAP[terminals[0].side])
+    return (
+        XML.line(
+            x1=sc_t1.real,
+            x2=sc_t2.real,
+            y1=sc_t1.imag,
+            y2=sc_t2.imag,
+            stroke__width=options["stroke_width"],
+            stroke=options["stroke"])
+        + XML.circle(
+            cx=sc_t2.real,
+            cy=sc_t2.imag,
+            r=scale / 4,
+            stroke__width=options["stroke_width"],
+            stroke=options["stroke"],
+            fill="none")
+        + id_text(box, bom_data, terminals, None, sc_text_pt, **options))
+
+
+# code for drawing stuff
 # https://github.com/pfalstad/circuitjs1/tree/master/src/com/lushprojects/circuitjs1/client
 # https://github.com/KenKundert/svg_schematic/blob/0abb5dc/svg_schematic.py
 # https://yqnn.github.io/svg-path-editor/
