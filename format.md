@@ -40,5 +40,5 @@ Examples:
 * `L51:0.33` -- this is rewritten to "330 mH" so that it has no decimal point.
 * `F3:1500m` -- rewritten: "1.5 A"
 * `D7:1N4001` -- again, part number
-* `U1:SN74LS08N,14,1,2,7,3` -- some components let you label pins with whatever you want (in this case just numbers). They start at the top and follow **counterclockwise** to follow with the pin-numbering of most IC's.
+* `U1:SN74LS08N,14,1,2,7,3` -- some components let you label pins with whatever you want (in this case just numbers). They start at the top-leftmost and follow **counterclockwise** to follow with the pin-numbering of most IC's.
 * `R2:10,5` -- this is formatted as "10 &ohm; 5 W". The second value is the rating; for resistors, this is a wattage, for most else, this is a maximum voltage.
