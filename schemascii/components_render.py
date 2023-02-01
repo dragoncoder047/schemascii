@@ -29,12 +29,12 @@ def n_terminal(n_terminals: int) -> Callable:
                 box: Cbox,
                 terminals: list[Terminal],
                 bom_data: list[BOMData],
-                **kwargs):
+                **options):
             if len(terminals) != n_terminals:
                 raise TerminalsError(
                     f"{box.type}{box.id} component can only "
                     f"have {n_terminals} terminals")
-            return func(box, terminals, bom_data, **kwargs)
+            return func(box, terminals, bom_data, **options)
         return n_check
     return n_inner
 
@@ -45,7 +45,7 @@ def no_ambiguous(func: Callable) -> Callable:
             box: Cbox,
             terminals: list[Terminal],
             bom_data: list[BOMData],
-            **kwargs):
+            **options):
         if len(bom_data) > 1:
             raise BOMError(
                 f"Ambiguous BOM data for {box.type}{box.id}: {bom_data!r}")
@@ -53,7 +53,7 @@ def no_ambiguous(func: Callable) -> Callable:
             box,
             terminals,
             bom_data[0] if bom_data else None,
-            **kwargs)
+            **options)
     return de_ambiguous
 
 
@@ -64,7 +64,7 @@ def polarized(func: Callable) -> Callable:
             box: Cbox,
             terminals: list[Terminal],
             bom_data: list[BOMData],
-            **kwargs):
+            **options):
         if len(terminals) != 2:
             raise TerminalsError(
                 f"{box.type}{box.id} component can only "
@@ -75,7 +75,7 @@ def polarized(func: Callable) -> Callable:
             box,
             terminals,
             bom_data,
-            **kwargs)
+            **options)
     return sort_terminals
 
 
@@ -86,7 +86,7 @@ def resistor(
         box: Cbox,
         terminals: list[Terminal],
         bom_data: BOMData | None,
-        **kwargs):
+        **options):
     "Draw a resistor"
     t1, t2 = terminals[0].pt, terminals[1].pt
     vec = t1 - t2
@@ -99,12 +99,12 @@ def resistor(
         points.append(t1 - rect(i / 4, angle) +
                       pow(-1, i) * rect(1, quad_angle) / 4)
     points.append(t2)
-    text_pt = make_text_point(t1, t2, **kwargs)
-    return (polylinegon(points, **kwargs)
-            + make_variable(mid, angle, "V" in box.type, **kwargs)
+    text_pt = make_text_point(t1, t2, **options)
+    return (polylinegon(points, **options)
+            + make_variable(mid, angle, "V" in box.type, **options)
             + id_text(
         box, bom_data, terminals, (("&ohm;", False), ("W", False)),
-        text_pt, **kwargs))
+        text_pt, **options))
 
 
 @component("C", "CV", "VC")
@@ -114,7 +114,7 @@ def capacitor(
         box: Cbox,
         terminals: list[Terminal],
         bom_data: BOMData | None,
-        **kwargs):
+        **options):
     "Draw a capacitor"
     t1, t2 = terminals[0].pt, terminals[1].pt
     mid = (t1 + t2) / 2
@@ -125,13 +125,13 @@ def capacitor(
             (complex(.4,  .25), complex(-.4,  .25)),
             (complex(.4, -.25), complex(-.4, -.25)),
         ], mid, angle)
-    text_pt = make_text_point(t1, t2, **kwargs)
-    return (bunch_o_lines(lines, **kwargs)
-            + make_plus(terminals, mid, angle, **kwargs)
-            + make_variable(mid, angle, "V" in box.type, **kwargs)
+    text_pt = make_text_point(t1, t2, **options)
+    return (bunch_o_lines(lines, **options)
+            + make_plus(terminals, mid, angle, **options)
+            + make_variable(mid, angle, "V" in box.type, **options)
             + id_text(
         box, bom_data, terminals, (("F", True), ("V", False)),
-        text_pt, **kwargs))
+        text_pt, **options))
 
 
 @component("B", "BT", "BAT")
@@ -141,7 +141,7 @@ def battery(
         box: Cbox,
         terminals: list[Terminal],
         bom_data: BOMData | None,
-        **kwargs):
+        **options):
     "Draw a battery cell"
     t1, t2 = terminals[0].pt, terminals[1].pt
     mid = (t1 + t2) / 2
@@ -154,11 +154,11 @@ def battery(
             (complex(.5, -.16), complex(-.5,  -.16)),
             (complex(.25, -.5), complex(-.25, -.5)),
         ], mid, angle)
-    text_pt = make_text_point(t1, t2, **kwargs)
+    text_pt = make_text_point(t1, t2, **options)
     return (id_text(
         box, bom_data, terminals, (("V", False), ("Ah", False)),
-        text_pt, **kwargs)
-        + bunch_o_lines(lines, **kwargs))
+        text_pt, **options)
+        + bunch_o_lines(lines, **options))
 
 
 @component("D", "LED", "CR", "IR")
@@ -168,7 +168,7 @@ def diode(
         box: Cbox,
         terminals: list[Terminal],
         bom_data: BOMData | None,
-        **kwargs):
+        **options):
     "Draw a diode or LED"
     t1, t2 = terminals[0].pt, terminals[1].pt
     mid = (t1 + t2) / 2
@@ -178,10 +178,10 @@ def diode(
         (t1, mid + rect(-.3, angle)),
         deep_transform((-.3-.3j, .3-.3j), mid, angle)]
     triangle = deep_transform((-.3j, .3+.3j, -.3+.3j), mid, angle)
-    text_pt = make_text_point(t1, t2, **kwargs)
-    return (id_text(box, bom_data, terminals, None, text_pt, **kwargs)
-            + bunch_o_lines(lines, **kwargs)
-            + polylinegon(triangle, True, **kwargs))
+    text_pt = make_text_point(t1, t2, **options)
+    return (id_text(box, bom_data, terminals, None, text_pt, **options)
+            + bunch_o_lines(lines, **options)
+            + polylinegon(triangle, True, **options))
 
 
 SIDE_TO_ANGLE_MAP = {
@@ -198,9 +198,9 @@ def integrated_circuit(
         box: Cbox,
         terminals: list[Terminal],
         bom_data: BOMData | None,
-        **kwargs):
+        **options):
     "Draw an IC"
-    scale = kwargs.get("scale", 1)
+    scale = options.get("scale", 1)
     sz = (box.p2 - box.p1) * scale
     mid = (box.p2 + box.p1) * scale / 2
     out = XML.rect(
@@ -208,14 +208,14 @@ def integrated_circuit(
         y=box.p1.imag * scale,
         width=sz.real,
         height=sz.imag,
-        stroke__width=kwargs.get("stroke_width", 1),
-        stroke=kwargs.get("stroke", "black"),
+        stroke__width=options.get("stroke_width", 1),
+        stroke=options.get("stroke", "black"),
         fill="none")
     for term in terminals:
         out += bunch_o_lines([(
             term.pt,
             term.pt + rect(1, SIDE_TO_ANGLE_MAP[term.side])
-        )], **kwargs)
+        )], **options)
     out += XML.text(
         XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
         " " * bool(bom_data.data),
@@ -223,8 +223,8 @@ def integrated_circuit(
         x=mid.real,
         y=mid.imag,
         text__anchor="middle",
-        font__size=kwargs.get("scale", 1),
-        fill=kwargs.get("stroke", "black"))
+        font__size=options.get("scale", 1),
+        fill=options.get("stroke", "black"))
     print("IC's in progress...")
     return out
 
@@ -258,12 +258,12 @@ def render_component(
         box: Cbox,
         terminals: list[Terminal],
         bom_data: list[BOMData],
-        **kwargs):
+        **options):
     "Render the component into an SVG string."
     if box.type not in RENDERERS:
         raise UnsupportedComponentError(box.type)
     return XML.g(
-        RENDERERS[box.type](box, terminals, bom_data, **kwargs),
+        RENDERERS[box.type](box, terminals, bom_data, **options),
         class_=f"component {box.type}"
     )
 

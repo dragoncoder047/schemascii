@@ -192,14 +192,14 @@ def make_plus(
         terminals: list[Terminal],
         center: complex,
         theta: float,
-        **kwargs) -> str:
+        **options) -> str:
     "Make a + sign if the terminals indicate the component is polarized."
     if all(t.flag != "+" for t in terminals):
         return ""
     return XML.g(
         bunch_o_lines(deep_transform(deep_transform(
             [(.125, -.125), (.125j, -.125j)], 0, theta),
-            center + deep_transform(.33+.75j, 0, theta), 0), **kwargs),
+            center + deep_transform(.33+.75j, 0, theta), 0), **options),
         class_="plus")
 
 
