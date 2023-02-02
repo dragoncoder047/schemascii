@@ -3,33 +3,55 @@ import os
 import re
 import sys
 
+
+def cmd(sh_line):
+    print(sh_line)
+    if code := os.system(sh_line):
+        print("***Exit", code, file=sys.stderr)
+        sys.exit(code)
+
+
+def readfile(file):
+    with open(file) as f:
+        return f.read()
+
+
+def writefile(file, text):
+    with open(file, "w") as f:
+        f.write(text)
+
+
 a = argparse.ArgumentParser("release.py")
 a.add_argument("version", help="release tag")
 args = a.parse_args()
 
 # Patch new version into files
-with open("pyproject.toml") as pyproject:
-    pp_text = pyproject.read()
-with open("pyproject.toml", "w") as pyproject:
-    pyproject.write(
-        re.sub(r'version = "[\d.]+"', f'version = "{args.version}"', pp_text))
+pp_text = readfile("pyproject.toml")
+writefile("pyproject.toml",
+          re.sub(r'version = "[\d.]+"', f'version = "{args.version}"', pp_text))
 
-with open("schemascii/__init__.py") as init:
-    init_text = init.read()
-with open("schemascii/__init__.py", "w") as init:
-    init.write(
-        re.sub(r'__version__ = "[\d.]+"', f'__version__ = "{args.version}"', init_text))
-
-
-def cmd(sh_line):
-    print(sh_line)
-    if os.system(sh_line):
-        sys.exit(1)
+init_text = readfile("schemascii/__init__.py")
+writefile("schemascii/__init__.py",
+          re.sub(r'__version__ = "[\d.]+"', f'__version__ = "{args.version}"', init_text))
 
 
 cmd("python3 -m build --sdist")
 cmd("python3 -m build --wheel")
-print("git add -A")
-print("git commit -m 'blah'")
-print(f"git tag {args.version}")
-print("git push --tags")
+cmd("schemascii test_data/test_charge_pump.txt --out test_data/test_charge_pump.txt.svg --padding 30")
+cmd("convert test_data/test_charge_pump.txt.svg test_data/test_charge_pump.png")
+
+svg_content = readfile("test_data/test_charge_pump.txt.svg")
+css_content = readfile("schemascii_example.css")
+writefile("test_data/test_charge_pump.txt.svg",
+          svg_content.replace("</svg>", f'<style>{css_content}</style></svg>'))
+cmd("convert test_data/test_charge_pump.txt.svg test_data/test_charge_pump_css.png")
+writefile("test_data/test_charge_pump.txt.svg", svg_content)
+
+# cmd("git add -A")
+# cmd("git commit -m 'blah'")
+# cmd(f"git tag {args.version}")
+# cmd("git push --tags")
+
+# sudo apt update && sudo apt install imagemagick
+# for convert command
+# doesn't seem to work with the css though :(

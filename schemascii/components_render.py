@@ -107,7 +107,7 @@ def resistor(
     return (polylinegon(points, **options)
             + make_variable(mid, angle, "V" in box.type, **options)
             + id_text(
-        box, bom_data, terminals, (("&ohm;", False), ("W", False)),
+        box, bom_data, terminals, (("Ω", False), ("W", False)),
         text_pt, **options))
 
 

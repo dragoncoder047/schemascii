@@ -1,12 +1,11 @@
 svg.schemascii {
     background: black;
 
-    --sch-scale: attr(data-scale);
 }
 
 svg.schemascii .wire line {
     stroke: var(--sch-color, blue);
-    stroke-width: calc(0.15 * var(--sch-scale, 1));
+    stroke-width: 2;
     stroke-linecap: round;
     transition-duration: 0.2s;
 }
@@ -22,14 +21,14 @@ svg.schemascii :is(.wire, .component):hover {
 
 svg.schemascii .component :is(polyline, path, line, polygon, rect, circle) {
     stroke: var(--sch-color, red);
-    stroke-width: calc(0.15 * var(--sch-scale, 1));
+    stroke-width: 2;
     stroke-linecap: round;
     transition-duration: 0.2s;
     fill: transparent;
 }
 
 svg.schemascii .component .plus :is(polyline, path, line) {
-    stroke-width: calc(0.075 * var(--sch-scale, 1));
+    stroke-width: 1;
 }
 
 svg.schemascii .component polygon {

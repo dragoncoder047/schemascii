@@ -25,6 +25,8 @@ def prefix_to_exponent(prefix: int) -> str:
     E.g. "u" --> -6 (micro)"""
     if prefix in (' ', ''):
         return 0
+    if prefix == "µ":
+        prefix = "u" # allow unicode
     if prefix == 'K':
         prefix = prefix.lower()  # special case (preferred is lowercase)
     i = "pnum kMG".index(prefix)
@@ -59,7 +61,7 @@ def format_metric_unit(num: str, unit: str = '', six: bool = False) -> str:
     exp, digits = sorted(possibilities, key=lambda x: len(
         x[1]) + (0.5 * ('.' in x[1])))[0]
     out = digits + " " + exponent_to_prefix(exp) + unit
-    return out.replace(" u", " &micro;")
+    return out.replace(" u", " µ")
 
 
 if __name__ == '__main__':
