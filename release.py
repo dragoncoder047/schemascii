@@ -30,6 +30,6 @@ def cmd(sh_line):
 cmd("python3 -m build --sdist")
 cmd("python3 -m build --wheel")
 print("git add -A")
-print(f"git commit -m 'blah'")
+print("git commit -m 'blah'")
 print(f"git tag {args.version}")
 print("git push --tags")

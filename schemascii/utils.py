@@ -126,7 +126,7 @@ def polylinegon(points: list[complex], is_polygon: bool = False, **options):
 
 
 def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
-    "Finds all the points where there are 3 or more connecting wires."
+    "Finds all the points where there are 4 or more connecting wires."
     seen = {}
     for p1, p2 in points:
         if p1 not in seen:
@@ -137,7 +137,7 @@ def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
             seen[p2] = 1
         else:
             seen[p2] += 1
-    return [pt for pt, count in seen.items() if count > 2]
+    return [pt for pt, count in seen.items() if count > 3]
 
 
 def bunch_o_lines(points: list[tuple[complex, complex]], **options):
