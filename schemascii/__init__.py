@@ -6,7 +6,7 @@ from .wires import get_wires
 from .utils import XML
 from .errors import *
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 default_options = {
     'padding': 10,
