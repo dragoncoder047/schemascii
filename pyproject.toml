@@ -10,6 +10,7 @@ readme = "README.md"
 authors = [{ name = "dragoncoder047", email = "101021094+dragoncoder047@users.noreply.github.com" }]
 license = { file = "LICENSE" }
 classifiers = [
+    'Development Status :: 4 - Beta',
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
