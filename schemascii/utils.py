@@ -121,7 +121,23 @@ def polylinegon(points: list[complex], is_polygon: bool = False, **options):
         for x in points)
     if is_polygon:
         return XML.polygon(points=pts, fill=c)
-    return XML.polyline(points=pts, fill="transparent", stroke__width=w, stroke=c)
+    return XML.polyline(
+        points=pts, fill="transparent", stroke__width=w, stroke=c)
+
+
+def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
+    "Finds all the points where there are 3 or more connecting wires."
+    seen = {}
+    for p1, p2 in points:
+        if p1 not in seen:
+            seen[p1] = 1
+        else:
+            seen[p1] += 1
+        if p2 not in seen:
+            seen[p2] = 1
+        else:
+            seen[p2] += 1
+    return [pt for pt, count in seen.items() if count > 2]
 
 
 def bunch_o_lines(points: list[tuple[complex, complex]], **options):
@@ -131,11 +147,11 @@ def bunch_o_lines(points: list[tuple[complex, complex]], **options):
     w = options["stroke_width"]
     c = options["stroke"]
     for p1, p2 in points:
-        out += XML.line(
-            x1=p1.real * scale,
-            y1=p1.imag * scale,
-            x2=p2.real * scale,
-            y2=p2.imag * scale,
+        out += XML.polyline(
+            points=f"{p1.real * scale},"
+            f"{p1.imag * scale} "
+            f"{p2.real * scale},"
+            f"{p2.imag * scale}",
             stroke=c,
             stroke__width=w)
     return out

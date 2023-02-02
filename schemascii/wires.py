@@ -1,7 +1,7 @@
 from cmath import phase, rect
 from math import pi
 from .grid import Grid
-from .utils import iterate_line, merge_colinear, XML
+from .utils import iterate_line, merge_colinear, XML, find_dots
 
 # cSpell:ignore dydx
 
@@ -115,6 +115,7 @@ def next_wire(grid: Grid, **options) -> str | None:
         blank_wire(grid, p1, p2)
         if p1 == p2:
             raise RuntimeError("0-length wire")
+    dots = find_dots(line_pieces)
     return XML.g(
         *(
             XML.line(
@@ -123,10 +124,16 @@ def next_wire(grid: Grid, **options) -> str | None:
                 x2=p2.real * scale,
                 y2=p2.imag * scale,
                 stroke__width=stroke_width,
-                stroke=color,
-            )
-            for p1, p2 in line_pieces
-        ),
+                stroke=color)
+            for p1, p2 in line_pieces),
+        *(
+            XML.circle(
+                cx=pt.real * scale,
+                cy=pt.imag * scale,
+                r=2 * stroke_width,
+                stroke="none",
+                fill=color)
+            for pt in dots),
         class_="wire")
 
 

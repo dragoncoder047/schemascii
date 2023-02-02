@@ -11,6 +11,11 @@ svg.schemascii .wire line {
     transition-duration: 0.2s;
 }
 
+svg.schemascii .wire circle {
+    fill: var(--sch-color, blue);
+    transition-duration: 0.2s;
+}
+
 svg.schemascii :is(.wire, .component):hover {
     --sch-color: lime;
 }
