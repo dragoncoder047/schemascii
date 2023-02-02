@@ -14,6 +14,8 @@ def cmd(sh_line):
     os.system(sh_line)
 
 
+cmd("python3 -m build --sdist")
+cmd("python3 -m build --wheel")
 cmd("git add -A")
 cmd(f"git commit -m {args.message!r}")
 cmd(f"git tag {args.version}")
