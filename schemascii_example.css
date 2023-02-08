@@ -1,6 +1,5 @@
 svg.schemascii {
     background: black;
-
 }
 
 svg.schemascii .wire line {
@@ -45,5 +44,17 @@ svg.schemascii .component:hover text {
 }
 
 svg.schemascii .component tspan:is(.cmp-value, .part-num) {
-    fill: gray;
+    opacity: 50%;
+}
+
+@media all and (prefers-color-scheme: light) {
+    svg.schemascii {
+        background: white;
+    }
+    svg.schemascii .component text {
+        fill: black;
+    }
+    svg.schemascii :is(.wire, .component):hover {
+        --sch-color: green;
+    }
 }
