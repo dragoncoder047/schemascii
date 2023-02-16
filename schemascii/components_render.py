@@ -83,9 +83,6 @@ def polarized(func: Callable) -> Callable:
     return sort_terminals
 
 
-@component("R", "RV", "VR")
-@n_terminal(2)
-@no_ambiguous
 def resistor(
         box: Cbox,
         terminals: list[Terminal],
@@ -111,9 +108,10 @@ def resistor(
         text_pt, **options))
 
 
-@component("C", "CV", "VC")
-@polarized
-@no_ambiguous
+# Register it
+component("R", "RV", "VR")(n_terminal(2)(no_ambiguous(resistor)))
+
+
 def capacitor(
         box: Cbox,
         terminals: list[Terminal],
@@ -136,6 +134,9 @@ def capacitor(
             + id_text(
         box, bom_data, terminals, (("F", True), ("V", False)),
         text_pt, **options))
+
+# Register it
+component("C", "CV", "VC")(n_terminal(2)(no_ambiguous(capacitor)))
 
 
 @component("B", "BT", "BAT")

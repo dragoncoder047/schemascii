@@ -240,6 +240,22 @@ def make_variable(
     ], center, theta), **options)
 
 
+# def arrows(
+#         center: complex,
+#         theta: float,
+#         out: bool,
+#         **options):
+#     """Draw arrows towards or away from the component
+#     (i.e.light-emitting or light-dependent)."""
+#     theta = theta % pi
+#     if out:
+#         return bunch_o_lines(deep_transform([
+#             (-.5-.6j, .5-1.2j),
+#             (.375-1.2j, .5-1.2j),
+#             (.5-1.)
+#         ], center, theta), **options)
+
+
 def sort_counterclockwise(terminals: list[Terminal]) -> list[Terminal]:
     "Sort the terminals in counterclockwise order."
     partitioned = {

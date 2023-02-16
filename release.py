@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 import argparse
 import os
 import re
@@ -7,7 +8,7 @@ import sys
 def cmd(sh_line):
     print(sh_line)
     if code := os.system(sh_line):
-        print("***Exit", code, file=sys.stderr)
+        print("***Error", code, file=sys.stderr)
         sys.exit(code)
 
 
@@ -37,15 +38,19 @@ writefile("schemascii/__init__.py",
 
 cmd("python3 -m build --sdist")
 cmd("python3 -m build --wheel")
+
 cmd("schemascii test_data/test_charge_pump.txt --out test_data/test_charge_pump.txt.svg --padding 30")
+
+print("for some reason convert isn't working with the css, so aborting the auto-rendering")
+sys.exit(0)
+
 cmd("convert test_data/test_charge_pump.txt.svg test_data/test_charge_pump.png")
 
 svg_content = readfile("test_data/test_charge_pump.txt.svg")
 css_content = readfile("schemascii_example.css")
-writefile("test_data/test_charge_pump.txt.svg",
+writefile("test_data/test_charge_pump_css.txt.svg",
           svg_content.replace("</svg>", f'<style>{css_content}</style></svg>'))
-cmd("convert test_data/test_charge_pump.txt.svg test_data/test_charge_pump_css.png")
-writefile("test_data/test_charge_pump.txt.svg", svg_content)
+cmd("convert test_data/test_charge_pump_css.txt.svg test_data/test_charge_pump_css.png")
 
 # cmd("git add -A")
 # cmd("git commit -m 'blah'")

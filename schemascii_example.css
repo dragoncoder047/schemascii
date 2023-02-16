@@ -55,6 +55,6 @@ svg.schemascii .component tspan:is(.cmp-value, .part-num) {
         fill: black;
     }
     svg.schemascii :is(.wire, .component):hover {
-        --sch-color: green;
+        --sch-color: lime;
     }
 }
