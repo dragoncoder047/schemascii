@@ -5,7 +5,7 @@ from warnings import warn
 from .utils import (Cbox, Terminal, BOMData, XML, Side,
                     polylinegon, id_text, make_text_point,
                     bunch_o_lines, deep_transform, make_plus, make_variable,
-                    sort_counterclockwise)
+                    sort_counterclockwise, light_arrows)
 from .errors import TerminalsError, BOMError, UnsupportedComponentError
 
 RENDERERS = {}
@@ -112,6 +112,9 @@ def resistor(
 component("R", "RV", "VR")(n_terminal(2)(no_ambiguous(resistor)))
 
 
+@component("C", "CV", "VC")
+@n_terminal(2)
+@no_ambiguous
 def capacitor(
         box: Cbox,
         terminals: list[Terminal],
@@ -134,9 +137,6 @@ def capacitor(
             + id_text(
         box, bom_data, terminals, (("F", True), ("V", False)),
         text_pt, **options))
-
-# Register it
-component("C", "CV", "VC")(n_terminal(2)(no_ambiguous(capacitor)))
 
 
 @component("B", "BT", "BAT")
@@ -184,7 +184,9 @@ def diode(
         deep_transform((-.3-.3j, .3-.3j), mid, angle)]
     triangle = deep_transform((-.3j, .3+.3j, -.3+.3j), mid, angle)
     text_pt = make_text_point(t1, t2, **options)
-    return (id_text(box, bom_data, terminals, None, text_pt, **options)
+    return ((light_arrows(mid, angle, True, **options)
+             if box.id != "D" else "")
+            + id_text(box, bom_data, terminals, None, text_pt, **options)
             + bunch_o_lines(lines, **options)
             + polylinegon(triangle, True, **options))
 

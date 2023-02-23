@@ -22,18 +22,20 @@ def writefile(file, text):
         f.write(text)
 
 
-a = argparse.ArgumentParser("release.py")
+a = argparse.ArgumentParser()
 a.add_argument("version", help="release tag")
 args = a.parse_args()
 
 # Patch new version into files
 pp_text = readfile("pyproject.toml")
 writefile("pyproject.toml",
-          re.sub(r'version = "[\d.]+"', f'version = "{args.version}"', pp_text))
+          re.sub(r'version = "[\d.]+"',
+                 f'version = "{args.version}"', pp_text))
 
 init_text = readfile("schemascii/__init__.py")
 writefile("schemascii/__init__.py",
-          re.sub(r'__version__ = "[\d.]+"', f'__version__ = "{args.version}"', init_text))
+          re.sub(r'__version__ = "[\d.]+"',
+                 f'__version__ = "{args.version}"', init_text))
 
 
 cmd("python3 -m build --sdist")

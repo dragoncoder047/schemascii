@@ -3,9 +3,9 @@ from itertools import groupby, chain
 from enum import IntEnum
 from math import pi
 from cmath import phase, rect
-from types import GeneratorType
 from typing import Callable
 from .metric import format_metric_unit
+import re
 
 Cbox = namedtuple('Cbox', 'p1 p2 type id')
 BOMData = namedtuple('BOMData', 'type id data')
@@ -69,7 +69,7 @@ def merge_colinear(points: list[tuple[complex, complex]]) -> list[tuple[complex,
     return out
 
 
-def iterate_line(p1: complex, p2: complex, step: float = 1.) -> GeneratorType:
+def iterate_line(p1: complex, p2: complex, step: float = 1.):
     "Yields complex points along a line."
     vec = p2 - p1
     point = p1
@@ -96,19 +96,33 @@ def deep_transform(data, origin: complex, theta: float):
             "bad type to deep_transform(): " + type(data).__name__) from err
 
 
+def fix_number(n: float) -> str:
+    """If n is an integer, remove the trailing ".0". 
+    Otherwise round it to 2 digits."""
+    if n.is_integer():
+        return str(int(n))
+    return str(round(n, 4))
+
+
 class XMLClass:
     def __getattr__(self, tag) -> Callable:
         def mk_tag(*contents, **attrs) -> str:
             out = f'<{tag} '
             for k, v in attrs.items():
-                if v is not False:
-                    out += f'{k.removesuffix("_").replace("__", "-")}="{v}" '
+                if v is False:
+                    continue
+                if isinstance(v, float):
+                    v = fix_number(v)
+                elif isinstance(v, str):
+                    v = re.sub(r"\d+(\.\d+)", lambda m: fix_number(float(m.group())), v)
+                out += f'{k.removesuffix("_").replace("__", "-")}="{v}" '
             out = out.rstrip() + '>' + ''.join(contents)
             return out + f'</{tag}>'
         return mk_tag
 
 
 XML = XMLClass()
+del XMLClass
 
 
 def polylinegon(points: list[complex], is_polygon: bool = False, **options):
@@ -224,6 +238,16 @@ def make_plus(
         class_="plus")
 
 
+def arrow_points(p1: complex, p2: complex) -> list[tuple[complex, complex]]:
+    "Return points to make an arrow from p1 pointing to p2."
+    angle = phase(p2 - p1)
+    tick_len = min(0.25, abs(p2 - p1))
+    return [
+        (p2, p1),
+        (p2, p2 - rect(tick_len, angle + pi/5)),
+        (p2, p2 - rect(tick_len, angle - pi/5))]
+
+
 def make_variable(
         center: complex,
         theta: float,
@@ -232,28 +256,33 @@ def make_variable(
     "Draw a 'variable' arrow across the component."
     if not is_variable:
         return ""
-    theta = theta % pi
-    return bunch_o_lines(deep_transform([
-        (-.6+.5j, .75-.5j),
-        (.75-.5j, .5-.55j),
-        (.75-.5j, .7-.25j),
-    ], center, theta), **options)
+    return bunch_o_lines(
+        deep_transform(
+            arrow_points(-1, 1),
+            center,
+            (theta % pi) + pi/4),
+        **options)
 
 
-# def arrows(
-#         center: complex,
-#         theta: float,
-#         out: bool,
-#         **options):
-#     """Draw arrows towards or away from the component
-#     (i.e.light-emitting or light-dependent)."""
-#     theta = theta % pi
-#     if out:
-#         return bunch_o_lines(deep_transform([
-#             (-.5-.6j, .5-1.2j),
-#             (.375-1.2j, .5-1.2j),
-#             (.5-1.)
-#         ], center, theta), **options)
+def light_arrows(
+        center: complex,
+        theta: float,
+        out: bool,
+        **options):
+    """Draw arrows towards or away from the component
+    (i.e. light-emitting or light-dependent)."""
+    a, b = 1j, .3+.3j
+    if out:
+        a, b = b, a
+    return bunch_o_lines(
+        deep_transform(
+            arrow_points(a, b),
+            center, theta - pi/2),
+        **options) + bunch_o_lines(
+        deep_transform(
+            arrow_points(a - .5, b - .5),
+            center, theta - pi/2),
+        **options)
 
 
 def sort_counterclockwise(terminals: list[Terminal]) -> list[Terminal]:
