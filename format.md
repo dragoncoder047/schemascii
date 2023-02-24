@@ -1,17 +1,31 @@
 # Schemascii Format
 
-The diagram is made of 3 components: wires, 1-, 2-, and 3-terminal components, and larger components (IC's, etc.) drawn as boxes.
+## Wires
 
-Wires are simply lines drawn using dashes or pipe symbols. A corner or wire join (drawn as a dot) is notated by an asterisk (`*`), and crossed wires (not joined) are notated with a `)` or simply broken to allow the other wire to pass. Examples:
+Wires are simply lines drawn using dashes or pipe symbols.
+
+A corner or wire join (drawn as a dot) is notated by an asterisk (`*`)
+
+Crossed wires (not joined) are notated with a `)` or simply broken to allow the other wire to pass. Examples:
 
 ```txt
-Crossed:         Joined:       Corner:      Corner:      Crossed:      Crossed:
-    |               |            |            |              |             |
- ---)---         ---*---         *---         |---        -------       ---|---
-    |               |                                        |             |
+Crossed:         Joined:       Corner:     Crossed:      Crossed:    Dangling ends:
+    |               |            |            |             |              |
+ ---)---         ---*---         *---      -------       ---|---           |---
+    |               |                         |             |
 ```
 
-Small components are notated with their reference designator: one or more uppercase letters followed by an ID, which can either be a number, or a period followed by some text. They are always written horizontally even if the terminals are on the top and bottom. IDs are allowed to be duplicated and result in the same component values. Components can be padded on either side with `#`'s to make them bigger.
+## Components
+
+### Small components
+
+Small components are notated with their reference designator: one or more uppercase letters followed by an ID, which can either be a number, or a period followed by some text.
+
+They are always written horizontally even if the terminals are on the top and bottom.
+
+IDs are allowed to be duplicated and result in the same component values.
+
+Components can be padded on either side with `#`'s to make them bigger.
 
 Examples:
 
@@ -25,11 +39,17 @@ Examples:
 
 Components are able to accept "flags", which are other punctuation characters and lowercase letters touching them.
 
-Polarized components (caps, diodes, etc.) accept a `+` to indicate the polarity, whereas transistors use lowercase letters to indicate collector/emitter/base (for BJTs) or source/gate/drain (for FETs).
+* Polarized components (caps, diodes, etc.) accept a `+` to indicate the polarity,
+* Transistors use lowercase letters to indicate collector/emitter/base (for BJTs) or source/gate/drain (for FETs).
 
-Big components are indicated with a box made of `~` (top and bottom), `:` (sides), and `.` (corners). The inside of the box can be anything you want, but it must include exactly one reference designator as to what component it is.
+### Big components
 
-To include component values, pin numbers, etc, somewhere in the drawing but not touching any wires or other components, you can write component values - these are formatted as the reference designator (same as in circuit) followed by a `:` and the value parameter (which stops at the first whitespace). I usually put these in a "BOM section" below the circuit itself but you could also put them right next to the component.
+* Big components are indicated with a box made of `~` (top and bottom), `:` (sides), and `.` (corners).
+* The inside of the box can contain anything you want, but it must include exactly one reference designator as to what component it is.
+
+## Reference designators
+
+To include component values, pin numbers, etc, somewhere in the drawing but not touching any wires or other components, you can write component values - these are formatted as the reference designator (same as in circuit) followed by a `:` and the value parameter (which stops at the first whitespace). *I usually put these in a "BOM section" below the circuit itself but you could also put them right next to the component.*
 
 For simple components, this is usually just a value rating. For more specific components (mostly semiconductor devices) this is usually the part number.
 
