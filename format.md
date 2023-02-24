@@ -65,4 +65,6 @@ Examples:
 
 ## Inline configuration values
 
+**New in 0.2.0!**
+
 You can specify configuration values for rendering the components inline in the document by writing `!name=value!` in your document. See the help output of the Schemascii CLI for the different options (in the README) or look at the config options at the top of [`configs.py`](https://github.com/dragoncoder047/schemascii/blob/main/schemascii/configs.py). The most common options I use are `scale` and `padding`.

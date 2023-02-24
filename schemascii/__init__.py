@@ -8,7 +8,7 @@ from .wires import get_wires
 from .utils import XML
 from .errors import *
 
-__version__ = "0.1.3"
+__version__ = "0.2.0"
 
 
 def render(filename: str, text: str = None, **options) -> str:
@@ -19,7 +19,9 @@ def render(filename: str, text: str = None, **options) -> str:
     # get everything
     grid = Grid(filename, text)
     # Passed-in options override diagram inline options
-    options = apply_config_defaults(get_inline_configs(grid) | options)
+    options = apply_config_defaults(options
+                                    | get_inline_configs(grid)
+                                    | options.get("override_options", {}))
     components, bom_data = find_all(grid)
     terminals = {c: find_edge_marks(grid, c) for c in components}
     fixed_bom_data = {c: [b for b in bom_data if
