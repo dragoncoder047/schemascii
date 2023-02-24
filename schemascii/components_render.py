@@ -184,8 +184,9 @@ def diode(
         deep_transform((-.3-.3j, .3-.3j), mid, angle)]
     triangle = deep_transform((-.3j, .3+.3j, -.3+.3j), mid, angle)
     text_pt = make_text_point(t1, t2, **options)
+    light_emitting = "LED", "IR"
     return ((light_arrows(mid, angle, True, **options)
-             if box.type != "D" else "")
+             if box.type in light_emitting else "")
             + id_text(box, bom_data, terminals, None, text_pt, **options)
             + bunch_o_lines(lines, **options)
             + polylinegon(triangle, True, **options))
