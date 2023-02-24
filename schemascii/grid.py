@@ -1,5 +1,5 @@
 class Grid:
-    """Helper class for manmaging a 2-D
+    """Helper class for managing a 2-D
     grid of ASCII art."""
 
     def __init__(self, filename: str, data: str = None):

@@ -16,3 +16,7 @@ class BOMError(ValueError, Error):
 
 class UnsupportedComponentError(NameError, Error):
     "Component type is not supported."
+
+
+class ArgumentError(ValueError, Error):
+    "Invalid config argument value."

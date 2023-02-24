@@ -41,7 +41,7 @@ writefile("schemascii/__init__.py",
 cmd("python3 -m build --sdist")
 cmd("python3 -m build --wheel")
 
-cmd("schemascii test_data/test_charge_pump.txt --out test_data/test_charge_pump.txt.svg --padding 30")
+cmd("schemascii test_data/test_charge_pump.txt --out test_data/test_charge_pump.txt.svg")
 
 print("for some reason convert isn't working with the css, so aborting the auto-rendering")
 sys.exit(0)

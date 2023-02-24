@@ -1,3 +1,5 @@
+from .inline_config import get_inline_configs
+from .configs import apply_config_defaults
 from .grid import Grid
 from .components import find_all
 from .edgemarks import find_edge_marks
@@ -8,36 +10,16 @@ from .errors import *
 
 __version__ = "0.1.3"
 
-default_options = {
-    'padding': 10,
-    'scale': 15,
-    'stroke_width': 2,
-    'stroke': 'black',
-    'label': 'LV',
-    'nolabels': False,
-}
-
-option_types = {
-    'padding': float,
-    'scale': float,
-    'stroke_width': float,
-    'stroke': str,
-    'label': str,
-    'nolabels': bool,
-}
-
 
 def render(filename: str, text: str = None, **options) -> str:
     "Render the Schemascii diagram to an SVG string."
     if text is None:
         with open(filename, encoding="ascii") as f:
             text = f.read()
-    # default options
-    options = default_options | options
-    for oname, otypefun in option_types.items():
-        options[oname] = otypefun(options[oname])
     # get everything
     grid = Grid(filename, text)
+    # Passed-in options override diagram inline options
+    options = apply_config_defaults(get_inline_configs(grid) | options)
     components, bom_data = find_all(grid)
     terminals = {c: find_edge_marks(grid, c) for c in components}
     fixed_bom_data = {c: [b for b in bom_data if
