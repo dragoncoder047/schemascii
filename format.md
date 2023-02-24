@@ -51,7 +51,7 @@ Components are able to accept "flags", which are other punctuation characters an
 
 To include component values, pin numbers, etc, somewhere in the drawing but not touching any wires or other components, you can write component values - these are formatted as the reference designator (same as in circuit) followed by a `:` and the value parameter (which stops at the first whitespace). *I usually put these in a "BOM section" below the circuit itself but you could also put them right next to the component.*
 
-For simple components, this is usually just a value rating. For more specific components (mostly semiconductor devices) this is usually the part number.
+For simple components, this is usually just a value rating, but *without* the units (only the Metric prefix). For more specific components (mostly semiconductor devices) this is usually the part number.
 
 Examples:
 
@@ -62,3 +62,7 @@ Examples:
 * `D7:1N4001` -- again, part number
 * `U1:SN74LS08N,14,1,2,7,3` -- some components let you label pins with whatever you want (in this case just numbers). They start at the top-leftmost and follow **counterclockwise** to follow with the pin-numbering of most IC's.
 * `R2:10,5` -- this is formatted as "10 &ohm; 5 W". The second value is the rating; for resistors, this is a wattage, for most else, this is a maximum voltage.
+
+## Inline configuration values
+
+You can specify configuration values for rendering the components inline in the document by writing `!name=value!` in your document. See the help output of the Schemascii CLI for the different options (in the README) or look at the config options at the top of [`configs.py`](https://github.com/dragoncoder047/schemascii/blob/main/schemascii/configs.py). The most common options I use are `scale` and `padding`.
