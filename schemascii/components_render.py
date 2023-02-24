@@ -185,7 +185,7 @@ def diode(
     triangle = deep_transform((-.3j, .3+.3j, -.3+.3j), mid, angle)
     text_pt = make_text_point(t1, t2, **options)
     return ((light_arrows(mid, angle, True, **options)
-             if box.id != "D" else "")
+             if box.type != "D" else "")
             + id_text(box, bom_data, terminals, None, text_pt, **options)
             + bunch_o_lines(lines, **options)
             + polylinegon(triangle, True, **options))
