@@ -4,6 +4,8 @@ import os
 import re
 import sys
 
+# pylint: disable=unspecified-encoding,missing-function-docstring
+
 
 def cmd(sh_line):
     print(sh_line)

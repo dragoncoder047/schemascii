@@ -18,7 +18,7 @@ OPTIONS = [
                  "Scale at which to enlarge the entire diagram by."),
     ConfigConfig("stroke_width", float, 2, "Width of the lines"),
     ConfigConfig("stroke", str, "black", "Color of the lines."),
-    ConfigConfig("label", ["", "VL", "L", "V"], "VL",
+    ConfigConfig("label", ["L", "V", "VL"], "VL",
                  "Component label style (L=include label, V=include value, VL=both)"),
     ConfigConfig("nolabels", bool, False,
                  "Turns off labels on all components, except for part numbers on ICs."),
@@ -34,6 +34,11 @@ def add_config_arguments(a: argparse.ArgumentParser):
                 help=opt.description,
                 choices=opt.clazz,
                 default=opt.default)
+        elif opt.clazz is bool:
+            a.add_argument(
+                "--" + opt.name,
+                help=opt.description,
+                action="store_false" if opt.default else "store_true")
         else:
             a.add_argument(
                 "--" + opt.name,
@@ -51,7 +56,8 @@ def apply_config_defaults(options: dict) -> dict:
         if isinstance(opt.clazz, list):
             if options[opt.name] not in opt.clazz:
                 raise ArgumentError(
-                    f"config option {opt.name}: invalid choice: {options[opt.name]} "
+                    f"config option {opt.name}: "
+                    f"invalid choice: {options[opt.name]} "
                     f"(valid options are {', '.join(map(repr, opt.clazz))})")
             continue
         try:
