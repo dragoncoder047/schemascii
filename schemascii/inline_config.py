@@ -5,6 +5,7 @@ INLINE_CONFIG_RE = re.compile(r"!([a-z]+)=([^!]*)!", re.I)
 
 
 def get_inline_configs(grid: Grid) -> dict:
+    "Extract all the inline config options into a dict and blank them out."
     out = {}
     for y, line in enumerate(grid.lines):
         for m in INLINE_CONFIG_RE.finditer(line):
