@@ -56,7 +56,7 @@ For simple components, this is usually just a value rating, but *without* the un
 Examples:
 
 * `C33:2.2u` -- "2.2 &micro;F"
-* `Q1001:pnp:TIP102` -- "pnp" or "npn" to determine what kind of transistor, just the part number; printed verbatim
+* `Q1001:pnp:TIP102` -- "pnp", "npn", "pfet", or "nfet" to determine what kind of transistor, plus the part number; printed verbatim
 * `L51:0.33` -- this is rewritten to "330 mH" so that it has no decimal point.
 * `F3:1500m` -- rewritten: "1.5 A"
 * `D7:1N4001` -- again, part number

@@ -157,12 +157,14 @@ def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
 
 
 def bunch_o_lines(points: list[tuple[complex, complex]], **options):
-    "Return a <line> for each pair of points."
+    "Return a <polyline> for each pair of points."
     out = ''
     scale = options['scale']
     w = options["stroke_width"]
     c = options["stroke"]
     for p1, p2 in points:
+        if abs(p1 - p2) == 0:
+            continue
         out += XML.polyline(
             points=f"{p1.real * scale},"
             f"{p1.imag * scale} "
@@ -243,7 +245,7 @@ def make_plus(
 def arrow_points(p1: complex, p2: complex) -> list[tuple[complex, complex]]:
     "Return points to make an arrow from p1 pointing to p2."
     angle = phase(p2 - p1)
-    tick_len = min(0.25, abs(p2 - p1))
+    tick_len = min(0.5, abs(p2 - p1))
     return [
         (p2, p1),
         (p2, p2 - rect(tick_len, angle + pi/5)),

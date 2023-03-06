@@ -8,6 +8,8 @@ from .utils import (Cbox, Terminal, BOMData, XML, Side, arrow_points,
                     sort_counterclockwise, light_arrows, sort_for_flags, is_clockwise)
 from .errors import TerminalsError, BOMError, UnsupportedComponentError
 
+# pylint: disable=unbalanced-tuple-unpacking
+
 RENDERERS = {}
 
 
@@ -311,7 +313,22 @@ def transistor(
     else:
         ae, se, ctl = sort_for_flags(terminals, box, "e", "c", "b")
     ap, sp = ae.pt, se.pt
-    mid = (ap + sp) / 2  # TODO: slide this to line up with middle
+    diff = sp - ap
+    try:
+        slope = diff.imag / diff.real
+    except ZeroDivisionError:
+        mid = complex(ap.real, ctl.pt.imag)
+    else:
+        try:
+            diff.real / diff.imag
+        except ZeroDivisionError:
+            mid = complex(ctl.pt.real, ap.imag)
+        else:
+            # From wolfram alpha "solve m*(x-x1)+y1=(-1/m)*(x-x2)+y2 for x"
+            # x = (m^2 x1 - m y1 + m y2 + x2)/(m^2 + 1)
+            mid_x = (slope ** 2 * ap.real - slope * ap.imag + slope *
+                    ctl.pt.imag + ctl.pt.real) / (slope ** 2 + 1)
+            mid = complex(mid_x, slope * (mid_x - ap.real) + ap.imag)
     theta = phase(ap - sp)
     backwards = 1 if is_clockwise([ae, se, ctl]) else -1
     thetaquarter = theta + (backwards * pi / 2)
@@ -343,6 +360,7 @@ def transistor(
             (mid + rect(1, theta) + rect(1, thetaquarter),
              mid - rect(1, theta) + rect(1, thetaquarter)),
         ])
+    out_lines.append((mid + rect(1, thetaquarter), ctl.pt))
     text_pt = make_text_point(ap, sp, **options)
     return (id_text(box, bom_data, [ae, se], None, text_pt, **options)
             + bunch_o_lines(out_lines, **options))
