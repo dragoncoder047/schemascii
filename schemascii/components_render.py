@@ -311,7 +311,7 @@ def transistor(
     else:
         ae, se, ctl = sort_for_flags(terminals, box, "e", "c", "b")
     ap, sp = ae.pt, se.pt
-    mid = (ap + sp) / 2 # TODO: slide this to line up with middle
+    mid = (ap + sp) / 2  # TODO: slide this to line up with middle
     theta = phase(ap - sp)
     backwards = 1 if is_clockwise([ae, se, ctl]) else -1
     thetaquarter = theta + (backwards * pi / 2)
@@ -320,7 +320,8 @@ def transistor(
         (sp, mid - rect(.8, theta)),  # Lead out
     ]
     if 'fet' in silicon_type:
-        arr = mid + rect(.8, theta), mid + rect(.8, theta) + rect(.7, thetaquarter)
+        arr = mid + rect(.8, theta), mid + rect(.8, theta) + \
+            rect(.7, thetaquarter)
         if 'nfet' == silicon_type:
             arr = arr[1], arr[0]
         out_lines.extend([
@@ -332,7 +333,8 @@ def transistor(
              mid - rect(.5, theta) + rect(1, thetaquarter)),
         ])
     else:
-        arr = mid + rect(.8, theta), mid + rect(.4, theta) + rect(1, thetaquarter)
+        arr = mid + rect(.8, theta), mid + rect(.4, theta) + \
+            rect(1, thetaquarter)
         if 'npn' == silicon_type:
             arr = arr[1], arr[0]
         out_lines.extend([
