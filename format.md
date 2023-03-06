@@ -51,12 +51,12 @@ Components are able to accept "flags", which are other punctuation characters an
 
 To include component values, pin numbers, etc, somewhere in the drawing but not touching any wires or other components, you can write component values - these are formatted as the reference designator (same as in circuit) followed by a `:` and the value parameter (which stops at the first whitespace). *I usually put these in a "BOM section" below the circuit itself but you could also put them right next to the component.*
 
-For simple components, this is usually just a value rating, but *without* the units (only the Metric prefix). For more specific components (mostly semiconductor devices) this is usually the part number.
+For simple components, this is usually just a value rating, but *without* the units (only the Metric prefix). For more specific components (mostly semiconductor devices) this is usually the part number and/or some string to determine how to draw the component.
 
 Examples:
 
 * `C33:2.2u` -- "2.2 &micro;F"
-* `Q1001:TIP102` -- just the part number; printed verbatim
+* `Q1001:pnp:TIP102` -- "pnp" or "npn" to determine what kind of transistor, just the part number; printed verbatim
 * `L51:0.33` -- this is rewritten to "330 mH" so that it has no decimal point.
 * `F3:1500m` -- rewritten: "1.5 A"
 * `D7:1N4001` -- again, part number

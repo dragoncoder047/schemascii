@@ -2,10 +2,10 @@ from typing import Callable
 from cmath import phase, rect
 from math import pi
 from warnings import warn
-from .utils import (Cbox, Terminal, BOMData, XML, Side,
+from .utils import (Cbox, Terminal, BOMData, XML, Side, arrow_points,
                     polylinegon, id_text, make_text_point,
                     bunch_o_lines, deep_transform, make_plus, make_variable,
-                    sort_counterclockwise, light_arrows)
+                    sort_counterclockwise, light_arrows, sort_for_flags, is_clockwise)
 from .errors import TerminalsError, BOMError, UnsupportedComponentError
 
 RENDERERS = {}
@@ -290,6 +290,60 @@ def jack(
             fill="transparent")
         + id_text(box, bom_data, terminals, None, sc_text_pt, **options))
 
+
+@component("Q", "MOSFET", "MOS", "FET")
+@n_terminal(3)
+@no_ambiguous
+def transistor(
+        box: Cbox,
+        terminals: list[Terminal],
+        bom_data: BOMData,
+        **options):
+    "Draw a bipolar transistor (PNP/NPN) or FET (NFET/PFET)"
+    if all(x not in bom_data.data.lower() for x in ("pnp:", "npn:", "nfet:", "pfet:")):
+        raise BOMError(
+            f"Need type of transistor for {box.type}{box.id}")
+    silicon_type, part_num = bom_data.data.split(":")
+    silicon_type = silicon_type.lower()
+    bom_data = BOMData(bom_data.type, bom_data.id, part_num)
+    if 'fet' in silicon_type:
+        ae, se, ctl = sort_for_flags(terminals, box, "s", "d", "g")
+    else:
+        ae, se, ctl = sort_for_flags(terminals, box, "e", "c", "b")
+    ap, sp = ae.pt, se.pt
+    mid = (ap + sp) / 2 # TODO: slide this to line up with middle
+    theta = phase(ap - sp)
+    backwards = 1 if is_clockwise([ae, se, ctl]) else -1
+    thetaquarter = theta + (backwards * pi / 2)
+    out_lines = [
+        (ap, mid + rect(.8, theta)),  # Lead in
+        (sp, mid - rect(.8, theta)),  # Lead out
+    ]
+    if 'fet' in silicon_type:
+        arr = mid + rect(.8, theta), mid + rect(.8, theta) + rect(.7, thetaquarter)
+        if 'nfet' == silicon_type:
+            arr = arr[1], arr[0]
+        out_lines.extend([
+            *arrow_points(*arr),
+            (mid - rect(.8, theta), mid - rect(.8, theta) + rect(.7, thetaquarter)),
+            (mid + rect(1, theta) + rect(.7, thetaquarter),
+             mid - rect(1, theta) + rect(.7, thetaquarter)),
+            (mid + rect(.5, theta) + rect(1, thetaquarter),
+             mid - rect(.5, theta) + rect(1, thetaquarter)),
+        ])
+    else:
+        arr = mid + rect(.8, theta), mid + rect(.4, theta) + rect(1, thetaquarter)
+        if 'npn' == silicon_type:
+            arr = arr[1], arr[0]
+        out_lines.extend([
+            *arrow_points(*arr),
+            (mid - rect(.8, theta), mid - rect(.4, theta) + rect(1, thetaquarter)),
+            (mid + rect(1, theta) + rect(1, thetaquarter),
+             mid - rect(1, theta) + rect(1, thetaquarter)),
+        ])
+    text_pt = make_text_point(ap, sp, **options)
+    return (id_text(box, bom_data, [ae, se], None, text_pt, **options)
+            + bunch_o_lines(out_lines, **options))
 
 # code for drawing stuff
 # https://github.com/pfalstad/circuitjs1/tree/master/src/com/lushprojects/circuitjs1/client

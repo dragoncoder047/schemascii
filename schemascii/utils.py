@@ -4,8 +4,9 @@ from enum import IntEnum
 from math import pi
 from cmath import phase, rect
 from typing import Callable
-from .metric import format_metric_unit
 import re
+from .metric import format_metric_unit
+from .errors import TerminalsError
 
 Cbox = namedtuple('Cbox', 'p1 p2 type id')
 BOMData = namedtuple('BOMData', 'type id data')
@@ -114,7 +115,8 @@ class XMLClass:
                 if isinstance(v, float):
                     v = fix_number(v)
                 elif isinstance(v, str):
-                    v = re.sub(r"\d+(\.\d+)", lambda m: fix_number(float(m.group())), v)
+                    v = re.sub(r"\d+(\.\d+)",
+                               lambda m: fix_number(float(m.group())), v)
                 out += f'{k.removesuffix("_").replace("__", "-")}="{v}" '
             out = out.rstrip() + '>' + ''.join(contents)
             return out + f'</{tag}>'
@@ -293,7 +295,37 @@ def sort_counterclockwise(terminals: list[Terminal]) -> list[Terminal]:
             terminals,
             lambda t: t.side)}
     return list(chain(
-        sorted(partitioned[Side.LEFT],   key=lambda t:  t.pt.imag),
-        sorted(partitioned[Side.BOTTOM], key=lambda t:  t.pt.real),
-        sorted(partitioned[Side.RIGHT],  key=lambda t: -t.pt.imag),
-        sorted(partitioned[Side.TOP],    key=lambda t: -t.pt.real)))
+        sorted(partitioned.get(Side.LEFT, []),   key=lambda t:  t.pt.imag),
+        sorted(partitioned.get(Side.BOTTOM, []), key=lambda t:  t.pt.real),
+        sorted(partitioned.get(Side.RIGHT, []),  key=lambda t: -t.pt.imag),
+        sorted(partitioned.get(Side.TOP, []),    key=lambda t: -t.pt.real)))
+
+
+def is_clockwise(terminals: list[Terminal]) -> bool:
+    "Return true if the terminals are clockwise order."
+    sort = sort_counterclockwise(terminals)
+    for _ in range(len(sort)):
+        if sort == terminals:
+            return True
+        sort = sort[1:] + [sort[0]]
+    return False
+
+
+def sort_for_flags(terminals: list[Terminal], box: Cbox, *flags: list[str]) -> list[Terminal]:
+    """Sorts out the terminals in the specified order using the flags.
+    Raises and error if the flags are absent."""
+    out = ()
+    for flag in flags:
+        matching_terminals = list(filter(lambda t: t.flag == flag, terminals))
+        if len(matching_terminals) > 1:
+            raise TerminalsError(
+                f"Multiple terminals with the same flag {flag} "
+                f"on component {box.type}{box.id}")
+        if len(matching_terminals) == 0:
+            raise TerminalsError(
+                f"Need a terminal with the flag {flag} "
+                f"on component {box.type}{box.id}")
+        terminal, = matching_terminals
+        out = *out, terminal
+        terminals.remove(terminal)
+    return out
