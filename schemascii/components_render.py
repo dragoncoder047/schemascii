@@ -39,6 +39,7 @@ def n_terminal(n_terminals: int) -> Callable:
                     f"{box.type}{box.id} component can only "
                     f"have {n_terminals} terminals")
             return func(box, terminals, bom_data, **options)
+        n_check.__doc__ = func.__doc__
         return n_check
     return n_inner
 
@@ -60,6 +61,7 @@ def no_ambiguous(func: Callable) -> Callable:
             terminals,
             bom_data[0],
             **options)
+    de_ambiguous.__doc__ = func.__doc__
     return de_ambiguous
 
 
@@ -82,6 +84,7 @@ def polarized(func: Callable) -> Callable:
             terminals,
             bom_data,
             **options)
+    sort_terminals.__doc__ = func.__doc__
     return sort_terminals
 
 
@@ -90,7 +93,8 @@ def resistor(
         terminals: list[Terminal],
         bom_data: BOMData,
         **options):
-    "Draw a resistor"
+    """Resistor, Variable resistor, etc.
+    bom:ohms[,watts]"""
     t1, t2 = terminals[0].pt, terminals[1].pt
     vec = t1 - t2
     mid = (t1 + t2) / 2
@@ -122,7 +126,9 @@ def capacitor(
         terminals: list[Terminal],
         bom_data: BOMData,
         **options):
-    "Draw a capacitor"
+    """Draw a capacitor, variable capacitor, etc.
+    bom:farads[,volts]
+    flags:+=positive"""
     t1, t2 = terminals[0].pt, terminals[1].pt
     mid = (t1 + t2) / 2
     angle = phase(t1 - t2)
@@ -149,7 +155,9 @@ def battery(
         terminals: list[Terminal],
         bom_data: BOMData,
         **options):
-    "Draw a battery cell"
+    """Draw a battery cell.
+    bom:volts[,amp-hours]
+    flags:+=positive"""
     t1, t2 = terminals[0].pt, terminals[1].pt
     mid = (t1 + t2) / 2
     angle = phase(t1 - t2)
@@ -176,7 +184,9 @@ def diode(
         terminals: list[Terminal],
         bom_data: BOMData,
         **options):
-    "Draw a diode or LED"
+    """Draw a diode or LED.
+    bom:part-number
+    flags:+=positive"""
     t1, t2 = terminals[0].pt, terminals[1].pt
     mid = (t1 + t2) / 2
     angle = phase(t1 - t2)
@@ -209,7 +219,8 @@ def integrated_circuit(
         terminals: list[Terminal],
         bom_data: BOMData,
         **options):
-    "Draw an IC"
+    """Draw an IC.
+    bom:part-number[,pin1-label[,pin2-label[,...]]]"""
     label_style = options["label"]
     scale = options["scale"]
     sz = (box.p2 - box.p1) * scale
@@ -270,7 +281,8 @@ def jack(
         terminals: list[Terminal],
         bom_data: BOMData,
         **options):
-    "Draw a jack connector or plug"
+    """Draw a jack connector or plug.
+    bom:label"""
     scale = options["scale"]
     sc_t1 = terminals[0].pt * scale
     sc_t2 = sc_t1 + rect(scale, SIDE_TO_ANGLE_MAP[terminals[0].side])
@@ -301,8 +313,10 @@ def transistor(
         terminals: list[Terminal],
         bom_data: BOMData,
         **options):
-    "Draw a bipolar transistor (PNP/NPN) or FET (NFET/PFET)"
-    if all(x not in bom_data.data.lower() for x in ("pnp:", "npn:", "nfet:", "pfet:")):
+    """Draw a bipolar transistor (PNP/NPN) or FET (NFET/PFET).
+    bom:{npn/pnp/nfet/pfet}:part-number
+    flags:s=source,d=drain,g=gate,e=emitter,c=collector,b=base"""
+    if not any(bom_data.data.lower().startswith(x) for x in ("pnp:", "npn:", "nfet:", "pfet:")):
         raise BOMError(
             f"Need type of transistor for {box.type}{box.id}")
     silicon_type, part_num = bom_data.data.split(":")
@@ -314,21 +328,17 @@ def transistor(
         ae, se, ctl = sort_for_flags(terminals, box, "e", "c", "b")
     ap, sp = ae.pt, se.pt
     diff = sp - ap
-    try:
-        slope = diff.imag / diff.real
-    except ZeroDivisionError:
+    if diff.real == 0:
         mid = complex(ap.real, ctl.pt.imag)
+    elif diff.imag == 0:
+        mid = complex(ctl.pt.real, ap.imag)
     else:
-        try:
-            diff.real / diff.imag
-        except ZeroDivisionError:
-            mid = complex(ctl.pt.real, ap.imag)
-        else:
-            # From wolfram alpha "solve m*(x-x1)+y1=(-1/m)*(x-x2)+y2 for x"
-            # x = (m^2 x1 - m y1 + m y2 + x2)/(m^2 + 1)
-            mid_x = (slope ** 2 * ap.real - slope * ap.imag + slope *
-                    ctl.pt.imag + ctl.pt.real) / (slope ** 2 + 1)
-            mid = complex(mid_x, slope * (mid_x - ap.real) + ap.imag)
+        # From wolfram alpha "solve m*(x-x1)+y1=(-1/m)*(x-x2)+y2 for x"
+        # x = (m^2 x1 - m y1 + m y2 + x2)/(m^2 + 1)
+        slope = diff.imag / diff.real
+        mid_x = (slope ** 2 * ap.real - slope * ap.imag + slope *
+                ctl.pt.imag + ctl.pt.real) / (slope ** 2 + 1)
+        mid = complex(mid_x, slope * (mid_x - ap.real) + ap.imag)
     theta = phase(ap - sp)
     backwards = 1 if is_clockwise([ae, se, ctl]) else -1
     thetaquarter = theta + (backwards * pi / 2)
