@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "schemascii"
-version = "0.2.1"
+version = "0.2.2"
 description = "Render ASCII-art schematics to SVG"
 readme = "README.md"
 authors = [{ name = "dragoncoder047", email = "101021094+dragoncoder047@users.noreply.github.com" }]

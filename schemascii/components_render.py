@@ -88,6 +88,9 @@ def polarized(func: Callable) -> Callable:
     return sort_terminals
 
 
+@component("R", "RV", "VR")
+@n_terminal(2)
+@no_ambiguous
 def resistor(
         box: Cbox,
         terminals: list[Terminal],
@@ -106,16 +109,11 @@ def resistor(
         points.append(t1 - rect(i / 4, angle) +
                       pow(-1, i) * rect(1, quad_angle) / 4)
     points.append(t2)
-    text_pt = make_text_point(t1, t2, **options)
     return (polylinegon(points, **options)
             + make_variable(mid, angle, "V" in box.type, **options)
             + id_text(
         box, bom_data, terminals, (("Ω", False), ("W", False)),
-        text_pt, **options))
-
-
-# Register it
-component("R", "RV", "VR")(n_terminal(2)(no_ambiguous(resistor)))
+        make_text_point(t1, t2, **options), **options))
 
 
 @component("C", "CV", "VC")
@@ -138,13 +136,42 @@ def capacitor(
             (complex(.4,  .25), complex(-.4,  .25)),
             (complex(.4, -.25), complex(-.4, -.25)),
         ], mid, angle)
-    text_pt = make_text_point(t1, t2, **options)
     return (bunch_o_lines(lines, **options)
             + make_plus(terminals, mid, angle, **options)
             + make_variable(mid, angle, "V" in box.type, **options)
             + id_text(
         box, bom_data, terminals, (("F", True), ("V", False)),
-        text_pt, **options))
+        make_text_point(t1, t2, **options), **options))
+
+
+@component("L", "VL", "LV")
+@no_ambiguous
+def inductor(
+        box: Cbox,
+        terminals: list[Terminal],
+        bom_data: BOMData,
+        **options):
+    """Draw an inductor (coil, choke, etc)
+    bom:henries"""
+    t1, t2 = terminals[0].pt, terminals[1].pt
+    vec = t1 - t2
+    mid = (t1 + t2) / 2
+    length = abs(vec)
+    angle = phase(vec)
+    scale = options["scale"]
+    data = f"M{t1.real * scale} {t1.imag * scale}"
+    dxdy = rect(scale, angle)
+    for _ in range(int(length)):
+        data += f"a1 1 0 01{-dxdy.real} {dxdy.imag}"
+    return (XML.path(
+        d=data,
+        stroke=options["stroke"],
+        fill="transparent",
+        stroke__width=options["stroke_width"])
+        + make_variable(mid, angle, "V" in box.type, **options)
+        + id_text(
+        box, bom_data, terminals, (("H", False),),
+        make_text_point(t1, t2, **options), **options))
 
 
 @component("B", "BT", "BAT")
@@ -169,10 +196,9 @@ def battery(
             (complex(.5, -.16), complex(-.5,  -.16)),
             (complex(.25, -.5), complex(-.25, -.5)),
         ], mid, angle)
-    text_pt = make_text_point(t1, t2, **options)
     return (id_text(
         box, bom_data, terminals, (("V", False), ("Ah", False)),
-        text_pt, **options)
+        make_text_point(t1, t2, **options), **options)
         + bunch_o_lines(lines, **options))
 
 
@@ -195,12 +221,13 @@ def diode(
         (t1, mid + rect(-.3, angle)),
         deep_transform((-.3-.3j, .3-.3j), mid, angle)]
     triangle = deep_transform((-.3j, .3+.3j, -.3+.3j), mid, angle)
-    text_pt = make_text_point(t1, t2, **options)
-    light_emitting = "LED", "IR"
+    light_emitting = box.type in ("LED", "IR")
+    fill_override = {"stroke": bom_data.data} if box.type == "LED" else {}
     return ((light_arrows(mid, angle, True, **options)
-             if box.type in light_emitting else "")
-            + id_text(box, bom_data, terminals, None, text_pt, **options)
-            + bunch_o_lines(lines, **options)
+             if light_emitting else "")
+            + id_text(box, bom_data, terminals, None,
+                      make_text_point(t1, t2, **options), **options)
+            + bunch_o_lines(lines, **(options | fill_override))
             + polylinegon(triangle, True, **options))
 
 
@@ -337,7 +364,7 @@ def transistor(
         # x = (m^2 x1 - m y1 + m y2 + x2)/(m^2 + 1)
         slope = diff.imag / diff.real
         mid_x = (slope ** 2 * ap.real - slope * ap.imag + slope *
-                ctl.pt.imag + ctl.pt.real) / (slope ** 2 + 1)
+                 ctl.pt.imag + ctl.pt.real) / (slope ** 2 + 1)
         mid = complex(mid_x, slope * (mid_x - ap.real) + ap.imag)
     theta = phase(ap - sp)
     backwards = 1 if is_clockwise([ae, se, ctl]) else -1
@@ -371,8 +398,8 @@ def transistor(
              mid - rect(1, theta) + rect(1, thetaquarter)),
         ])
     out_lines.append((mid + rect(1, thetaquarter), ctl.pt))
-    text_pt = make_text_point(ap, sp, **options)
-    return (id_text(box, bom_data, [ae, se], None, text_pt, **options)
+    return (id_text(box, bom_data, [ae, se], None,
+                    make_text_point(ap, sp, **options), **options)
             + bunch_o_lines(out_lines, **options))
 
 # code for drawing stuff
@@ -390,10 +417,6 @@ twoterminals = {
     'F': 'M0-.9A.1.1 0 000-1.1.1.1 0 000-.9ZM0-1Q.5-.5 0 0T0 1Q-.5.5 0 0T0-1ZM0 1.1A.1.1 0 000 .9.1.1 0 000 1.1Z',
     # jumper pads
     'JP': 'M0-1Q-1-1-1-.25H1Q1-1 0-1ZM0 1Q-1 1-1 .25H1Q1 1 0 1',
-    # inductor style 1 (humps)
-    'L': 'M0-1A.1.1 0 010-.6.1.1 0 010-.2.1.1 0 010 .2.1.1 0 010 .6.1.1 0 010 1 .1.1 0 000 .6.1.1 0 000 .2.1.1 0 000-.2.1.1 0 000-.6.1.1 0 000-1Z',
-    # inductor style 2 (coil)
-    # 'L': 'M0-1C1-1 1-.2 0-.2S-1-.8 0-.8 1 0 0 0-1-.6 0-.6 1 .2 0 .2-1-.4 0-.4 1 .4 0 .4-1-.2 0-.2 1 .6 0 .6-1 0 0 0 1 .8 0 .8-1 .2 0 .2 1 1 0 1C1 1 1 .2 0 .2S-1 .8 0 .8 1 0 0 0-1 .6 0 .6 1-.2 0-.2-1 .4 0 .4 1-.4 0-.4-1 .2 0 .2 1-.6 0-.6-1 0 0 0 1-.8 0-.8-1-.2 0-.2 1-1 0-1Z',
     # loudspeaker
     'LS': 'M0-1V-.5H-.25V.5H.25V-.5H0M0 1V.5ZM1-1 .25-.5V.5L1 1Z',
     # electret mic

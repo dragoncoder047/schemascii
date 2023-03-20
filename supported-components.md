@@ -10,6 +10,7 @@ Instead, edit schemascii/components_render.py and run scripts/cdoc.py to re-gene
 |:--:|:--|:--:|:--|
 | `R`, `RV`, `VR` | Resistor, Variable resistor, etc. | `ohms[,watts]` |  |
 | `C`, `CV`, `VC` | Draw a capacitor, variable capacitor, etc. | `farads[,volts]` | `+` = positive |
+| `L`, `VL`, `LV` | Draw an inductor (coil, choke, etc) | `henries` |  |
 | `B`, `BT`, `BAT` | Draw a battery cell. | `volts[,amp-hours]` | `+` = positive |
 | `D`, `LED`, `CR`, `IR` | Draw a diode or LED. | `part-number` | `+` = positive |
 | `U`, `IC` | Draw an IC. | `part-number[,pin1-label[,pin2-label[,...]]]` |  |
