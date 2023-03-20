@@ -98,11 +98,11 @@ def deep_transform(data, origin: complex, theta: float):
 
 
 def fix_number(n: float) -> str:
-    """If n is an integer, remove the trailing ".0". 
+    """If n is an integer, remove the trailing ".0".
     Otherwise round it to 2 digits."""
     if n.is_integer():
         return str(int(n))
-    return str(round(n, 4))
+    return str(round(n, 2))
 
 
 class XMLClass:

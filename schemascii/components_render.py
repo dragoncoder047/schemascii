@@ -162,7 +162,7 @@ def inductor(
     data = f"M{t1.real * scale} {t1.imag * scale}"
     dxdy = rect(scale, angle)
     for _ in range(int(length)):
-        data += f"a1 1 0 01{-dxdy.real} {dxdy.imag}"
+        data += f"a1 1 0 01 {-dxdy.real} {dxdy.imag}"
     return (XML.path(
         d=data,
         stroke=options["stroke"],
