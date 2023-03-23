@@ -4,13 +4,15 @@ from itertools import groupby
 from schemascii.components_render import RENDERERS
 
 # pylint: disable=unspecified-encoding,missing-function-docstring,invalid-name,not-an-iterable
-# cSpell:ignore siht etareneg redner iicsa stpircs
-# cSpell:ignore mehcs daetsn detareneg yllacitamotua codc stnenopmoc
+# cSpell:ignore siht etareneg redner iicsa stpircs nettirwrevo ylpmis segnahc
+# cSpell:ignore mehcs daetsn detareneg yllacitamotua codc stnenopmoc lliw ruo
 
 TOP = ("# Supported Schemascii Components\n\n<!--\n"
-       + "".join(reversed(".elif siht etareneg-er ot yp.codc/"
-                          "stpircs nur dna yp.redner_stnenopmoc/iicsa"
-                          "mehcs tide ,daetsnI\n!TIDE TON OD\n!ELIF"
+       + "".join(reversed(".elif siht etareneg-er ot "))
+       + __file__
+       + "".join(reversed("/stpircs nur dna yp.redner_stnenopmoc/iicsa"
+                          "mehcs tide ,daetsnI\n.nettirwrevo eb ylpmis "
+                          "lliw segnahc ruoY!TIDE TON OD\n!ELIF"
                           " DETARENEG YLLACITAMOTUA")) +
        "\n-->\n\n| Reference Designators | Description | BOM Syntax | Supported Flags |"
        "\n|:--:|:--|:--:|:--|\n")
