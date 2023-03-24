@@ -3,7 +3,9 @@
 <!--
 AUTOMATICALLY GENERATED FILE!
 DO NOT EDIT!
-Instead, edit schemascii/components_render.py and run scripts/cdoc.py to re-generate this file.
+Your changes will simply be overwritten.
+Instead, edit the docstrings in schemascii/components_render.py
+and run scripts/docs.py to re-generate this file.
 -->
 
 | Reference Designators | Description | BOM Syntax | Supported Flags |
