@@ -5,7 +5,8 @@ from warnings import warn
 from .utils import (Cbox, Terminal, BOMData, XML, Side, arrow_points,
                     polylinegon, id_text, make_text_point,
                     bunch_o_lines, deep_transform, make_plus, make_variable,
-                    sort_counterclockwise, light_arrows, sort_for_flags, is_clockwise)
+                    sort_counterclockwise, light_arrows, sort_for_flags,
+                    is_clockwise)
 from .errors import TerminalsError, BOMError, UnsupportedComponentError
 
 # pylint: disable=unbalanced-tuple-unpacking
@@ -309,26 +310,35 @@ def jack(
         bom_data: BOMData,
         **options):
     """Draw a jack connector or plug.
-    bom:label"""
+    bom:label[,{circle/input/output}]"""
     scale = options["scale"]
-    sc_t1 = terminals[0].pt * scale
-    sc_t2 = sc_t1 + rect(scale, SIDE_TO_ANGLE_MAP[terminals[0].side])
-    sc_text_pt = sc_t2 + rect(scale * 2, SIDE_TO_ANGLE_MAP[terminals[0].side])
+    t1 = terminals[0].pt
+    t2 = t1 + rect(1, SIDE_TO_ANGLE_MAP[terminals[0].side])
+    sc_t2 = t2 * scale
+    sc_text_pt = sc_t2 + rect(scale, SIDE_TO_ANGLE_MAP[terminals[0].side])
+    style = "input" if terminals[0].side in (
+        Side.LEFT, Side.TOP) else "output"
+    if any(bom_data.data.endswith(x)
+           for x in (",circle", ",input", ",output")):
+        style = bom_data.data.split(",")[-1]
+        bom_data = BOMData(bom_data.type, bom_data.id,
+                           bom_data.data.rstrip("cirlenputo")
+                           .removesuffix(","))
+    if style == "circle":
+        return (
+            bunch_o_lines([(t1, t2)], **options)
+            + XML.circle(
+                cx=sc_t2.real,
+                cy=sc_t2.imag,
+                r=scale / 4,
+                stroke__width=options["stroke_width"],
+                stroke=options["stroke"],
+                fill="transparent")
+            + id_text(box, bom_data, terminals, None, sc_text_pt, **options))
+    if style == "output":
+        t1, t2 = t2, t1
     return (
-        XML.line(
-            x1=sc_t1.real,
-            x2=sc_t2.real,
-            y1=sc_t1.imag,
-            y2=sc_t2.imag,
-            stroke__width=options["stroke_width"],
-            stroke=options["stroke"])
-        + XML.circle(
-            cx=sc_t2.real,
-            cy=sc_t2.imag,
-            r=scale / 4,
-            stroke__width=options["stroke_width"],
-            stroke=options["stroke"],
-            fill="transparent")
+        bunch_o_lines(arrow_points(t1, t2), **options)
         + id_text(box, bom_data, terminals, None, sc_text_pt, **options))
 
 
@@ -343,7 +353,8 @@ def transistor(
     """Draw a bipolar transistor (PNP/NPN) or FET (NFET/PFET).
     bom:{npn/pnp/nfet/pfet}:part-number
     flags:s=source,d=drain,g=gate,e=emitter,c=collector,b=base"""
-    if not any(bom_data.data.lower().startswith(x) for x in ("pnp:", "npn:", "nfet:", "pfet:")):
+    if not any(bom_data.data.lower().startswith(x) for x in (
+            "pnp:", "npn:", "nfet:", "pfet:")):
         raise BOMError(
             f"Need type of transistor for {box.type}{box.id}")
     silicon_type, part_num = bom_data.data.split(":")
@@ -380,7 +391,8 @@ def transistor(
             arr = arr[1], arr[0]
         out_lines.extend([
             *arrow_points(*arr),
-            (mid - rect(.8, theta), mid - rect(.8, theta) + rect(.7, thetaquarter)),
+            (mid - rect(.8, theta), mid - rect(.8, theta)
+             + rect(.7, thetaquarter)),
             (mid + rect(1, theta) + rect(.7, thetaquarter),
              mid - rect(1, theta) + rect(.7, thetaquarter)),
             (mid + rect(.5, theta) + rect(1, thetaquarter),
@@ -393,7 +405,8 @@ def transistor(
             arr = arr[1], arr[0]
         out_lines.extend([
             *arrow_points(*arr),
-            (mid - rect(.8, theta), mid - rect(.4, theta) + rect(1, thetaquarter)),
+            (mid - rect(.8, theta), mid - rect(.4, theta)
+             + rect(1, thetaquarter)),
             (mid + rect(1, theta) + rect(1, thetaquarter),
              mid - rect(1, theta) + rect(1, thetaquarter)),
         ])
@@ -412,7 +425,7 @@ def transistor(
 # + is on the top unless otherwise noted
 # terminals will be connected at (0, -1) and (0, 1) relative to the paths here
 # if they aren't the path will be transformed
-twoterminals = {
+{
     # fuse
     'F': 'M0-.9A.1.1 0 000-1.1.1.1 0 000-.9ZM0-1Q.5-.5 0 0T0 1Q-.5.5 0 0T0-1ZM0 1.1A.1.1 0 000 .9.1.1 0 000 1.1Z',
     # jumper pads

@@ -4,7 +4,7 @@ from .utils import Cbox, BOMData
 from .errors import DiagramSyntaxError, BOMError
 
 
-SMALL_COMPONENT_OR_BOM = re.compile(r'#*([A-Z]+)(\d+|\.\w+)(:[^\s]+)?#*')
+SMALL_COMPONENT_OR_BOM = re.compile(r'#*([A-Z]+)(\d*|\.\w+)(:[^\s]+)?#*')
 
 
 def find_small(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
@@ -14,13 +14,14 @@ def find_small(grid: Grid) -> tuple[list[Cbox], list[BOMData]]:
     boms: list[BOMData] = []
     for i, line in enumerate(grid.lines):
         for m in SMALL_COMPONENT_OR_BOM.finditer(line):
+            ident = m.group(2) or '0'
             if m.group(3):
                 boms.append(BOMData(m.group(1),
-                                    m.group(2), m.group(3)[1:]))
+                                    ident, m.group(3)[1:]))
             else:
                 components.append(Cbox(complex(m.start(), i),
                                        complex(m.end() - 1, i),
-                                       m.group(1), m.group(2)))
+                                       m.group(1), ident))
             for z in range(*m.span(0)):
                 grid.setmask(complex(z, i))
     return components, boms
