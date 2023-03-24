@@ -37,13 +37,8 @@ def take_flags(grid: Grid, box: Cbox) -> list[Flag]:
         c = grid.get(p)
         if c in ' -|()*':
             return None
-        if s in (Side.TOP, Side.BOTTOM):
-            grid.setmask(p, '|')
-            return Flag(p, c, s)
-        if s in (Side.LEFT, Side.RIGHT):
-            grid.setmask(p, '-')
-            return Flag(p, c, s)
-        return None
+        grid.setmask(p, '*')
+        return Flag(p, c, s)
     return flags
 
 

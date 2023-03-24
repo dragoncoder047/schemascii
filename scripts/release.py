@@ -39,7 +39,7 @@ writefile("schemascii/__init__.py",
           re.sub(r'__version__ = "[\d.]+"',
                  f'__version__ = "{args.version}"', init_text))
 
-
+cmd("scripts/docs.py")
 cmd("python3 -m build --sdist")
 cmd("python3 -m build --wheel")
 

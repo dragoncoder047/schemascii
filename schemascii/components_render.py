@@ -315,7 +315,7 @@ def jack(
     t1 = terminals[0].pt
     t2 = t1 + rect(1, SIDE_TO_ANGLE_MAP[terminals[0].side])
     sc_t2 = t2 * scale
-    sc_text_pt = sc_t2 + rect(scale, SIDE_TO_ANGLE_MAP[terminals[0].side])
+    sc_text_pt = sc_t2 + rect(scale / 2, SIDE_TO_ANGLE_MAP[terminals[0].side])
     style = "input" if terminals[0].side in (
         Side.LEFT, Side.TOP) else "output"
     if any(bom_data.data.endswith(x)

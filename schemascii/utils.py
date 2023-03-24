@@ -145,6 +145,9 @@ def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
     "Finds all the points where there are 4 or more connecting wires."
     seen = {}
     for p1, p2 in points:
+        if p1 == p2:
+            # Skip zero-length wires
+            continue
         if p1 not in seen:
             seen[p1] = 1
         else:
@@ -202,6 +205,14 @@ def id_text(
                             for x, (y, six) in zip(text.split(","), unit))
             classy = "cmp-value"
         data = XML.tspan(text, class_=classy)
+    if len(terminals) > 1:
+        textach = "start" if (
+            any(Side.BOTTOM == t.side for t in terminals)
+            or any(Side.TOP == t.side for t in terminals)
+        ) else "middle"
+    else:
+        textach = "middle" if terminals[0].side in (
+            Side.TOP, Side.BOTTOM) else "start"
     return XML.text(
         (XML.tspan(f"{box.type}{box.id}", class_="cmp-id")
          * bool("L" in label_style)),
@@ -209,10 +220,7 @@ def id_text(
         data * bool("V" in label_style),
         x=point.real,
         y=point.imag,
-        text__anchor="start" if (
-            any(Side.BOTTOM == t.side for t in terminals)
-            or any(Side.TOP == t.side for t in terminals)
-        ) else "middle",
+        text__anchor=textach,
         font__size=options["scale"],
         fill=options["stroke"])
 
