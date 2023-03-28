@@ -415,6 +415,42 @@ def transistor(
                     make_text_point(ap, sp, **options), **options)
             + bunch_o_lines(out_lines, **options))
 
+
+@component("G", "GND")
+@n_terminal(1)
+@no_ambiguous
+def ground(
+        box: Cbox,
+        terminals: list[Terminal],
+        bom_data: BOMData,
+        **options):
+    """Draw a ground symbol.
+    bom:[{earth/chassis/signal/common}]"""
+    icon_type = bom_data.data or "earth"
+    points = [(0, 1j), (-.5+1j, .5+1j)]
+    match icon_type:
+        case "earth":
+            points += [
+                (-.33+1.25j, .33+1.25j),
+                (-.16+1.5j, .16+1.5j)]
+        case "chassis":
+            points += [
+                (-.5+1j, -.25+1.5j),
+                (1j, .25+1.5j),
+                (.5+1j, .75+1.5j)]
+        case "signal":
+            points += [
+                (-.5+1j, 1.5j),
+                (.5+1j, 1.5j)]
+        case "common":
+            pass
+        case _:
+            raise BOMError(
+                f"Unknown ground symbol type: {icon_type}")
+    points = deep_transform(points, terminals[0].pt, pi / 2)
+    return bunch_o_lines(points, **options)
+
+
 # code for drawing stuff
 # https://github.com/pfalstad/circuitjs1/tree/master/src/com/lushprojects/circuitjs1/client
 # https://github.com/KenKundert/svg_schematic/blob/0abb5dc/svg_schematic.py
