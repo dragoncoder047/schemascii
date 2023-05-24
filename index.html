@@ -30,7 +30,7 @@
 
     <body>
         <h1>Schemascii Playground</h1>
-        <div class="flex row">
+        <div class="flex row" style="width: 100%">
             <div class="flex column">
                 <div class="flex row">
                     <p style="flex: 1">Schemascii Source</p>
@@ -67,7 +67,7 @@
                 info(`Installing schemascii-${ver}... `);
                 await pyodide.runPythonAsync(`import micropip\nawait micropip.install("https://dragoncoder047.github.io/schemascii/dist/schemascii-${ver}-py3-none-any.whl")`);
                 schemascii = pyodide.pyimport("schemascii");
-                setup();
+                await setup();
                 console.textContent = "ready\n";
             } catch (e) {
                 error(`\nJS Error:\n${e.stack}\n`);
@@ -80,7 +80,8 @@
         function error(text) {
             errors.textContent += text;
         }
-        function setup() {
+        async function setup() {
+            css.value = await fetch("schemascii_example.css").then(x => x.text());
             css.addEventListener("input", () => {
                 style_elem.innerHTML = css.value;
             });
