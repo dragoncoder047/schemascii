@@ -8,7 +8,7 @@
             .flex {
                 display: flex;
                 flex: 1;
-                padding: 1em;
+                padding: 2px;
             }
 
             .flex.row {
@@ -92,7 +92,7 @@
                 console.textContent = "";
                 errors.textContent = "";
                 try {
-                    output.innerHTML = await schemascii.render(source.value);
+                    output.innerHTML = await schemascii.render("playground", source.value);
                 } catch (e) {
                     error(`\nJS Error:\n${e.stack}\n`);
                     throw e;
