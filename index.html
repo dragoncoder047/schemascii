@@ -34,10 +34,7 @@
         <h1>Schemascii Playground</h1>
         <div class="flex row">
             <div class="flex column">
-                <div class="flex row">
-                    <p style="flex: 3">Schemascii Source</p>
-                    <button id="render" style="flex: 1">Render</button>
-                </div><textarea id="schemascii"></textarea>
+                <p>Schemascii Source</p><textarea id="schemascii"></textarea>
             </div>
             <div class="flex column">
                 <p>CSS</p><textarea id="css"></textarea>
@@ -89,15 +86,19 @@
             css.addEventListener("input", () => {
                 style_elem.innerHTML = css.value;
             });
-            render_button.addEventListener("click", async () => {
-                console.textContent = "";
-                errors.textContent = "";
-                try {
-                    output.innerHTML = await schemascii.render("playground", source.value);
-                } catch (e) {
-                    error(`\nJS Error:\n${e.stack}\n`);
-                    throw e;
-                }
+            var timeout = null;
+            source.addEventListener("input", () => {
+                if (timeout) clearTimeout(timeout);
+                setTimeout(async () => {
+                    console.textContent = "";
+                    errors.textContent = "";
+                    try {
+                        output.innerHTML = await schemascii.render("playground", source.value);
+                    } catch (e) {
+                        error(`\nJS Error:\n${e.stack}\n`);
+                        throw e;
+                    }
+                }, 500);
             });
         }
         main();
