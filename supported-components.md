@@ -18,3 +18,5 @@ and run scripts/docs.py to re-generate this file.
 | `U`, `IC` | Draw an IC. | `part-number[,pin1-label[,pin2-label[,...]]]` |  |
 | `J`, `P` | Draw a jack connector or plug. | `label[,{circle/input/output}]` |  |
 | `Q`, `MOSFET`, `MOS`, `FET` | Draw a bipolar transistor (PNP/NPN) or FET (NFET/PFET). | `{npn/pnp/nfet/pfet}:part-number` | `s` = source<br>`d` = drain<br>`g` = gate<br>`e` = emitter<br>`c` = collector<br>`b` = base |
+| `G`, `GND` | Draw a ground symbol. | `[{earth/chassis/signal/common}]` |  |
+| `S`, `SW`, `PB` | Draw a mechanical switch symbol. | `{nc/no}[m][:label]` |  |

@@ -69,7 +69,8 @@ def no_ambiguous(func: Callable) -> Callable:
         box: Cbox, terminals: list[Terminal], bom_data: list[BOMData], **options
     ):
         if len(bom_data) > 1:
-            raise BOMError(f"Ambiguous BOM data for {box.type}{box.id}: {bom_data!r}")
+            raise BOMError(
+                f"Ambiguous BOM data for {box.type}{box.id}: {bom_data!r}")
         if not bom_data:
             bom_data = [BOMData(box.type, box.id, "")]
         return func(box, terminals, bom_data[0], **options)
@@ -111,7 +112,8 @@ def resistor(box: Cbox, terminals: list[Terminal], bom_data: BOMData, **options)
     quad_angle = angle + pi / 2
     points = [t1]
     for i in range(1, 4 * int(length)):
-        points.append(t1 - rect(i / 4, angle) + pow(-1, i) * rect(1, quad_angle) / 4)
+        points.append(t1 - rect(i / 4, angle) + pow(-1, i)
+                      * rect(1, quad_angle) / 4)
     points.append(t2)
     return (
         polylinegon(points, **options)
@@ -323,7 +325,8 @@ def integrated_circuit(
             x=sc_text_pt.real,
             y=sc_text_pt.imag,
             text__anchor=(
-                "start" if (terminal.side in (Side.TOP, Side.BOTTOM)) else "middle"
+                "start" if (terminal.side in (
+                    Side.TOP, Side.BOTTOM)) else "middle"
             ),
             font__size=options["scale"],
             fill=options["stroke"],
@@ -415,7 +418,8 @@ def transistor(box: Cbox, terminals: list[Terminal], bom_data: BOMData, **option
         (sp, mid - rect(0.8, theta)),  # Lead out
     ]
     if "fet" in silicon_type:
-        arr = mid + rect(0.8, theta), mid + rect(0.8, theta) + rect(0.7, thetaquarter)
+        arr = mid + rect(0.8, theta), mid + \
+            rect(0.8, theta) + rect(0.7, thetaquarter)
         if "nfet" == silicon_type:
             arr = arr[1], arr[0]
         out_lines.extend(
@@ -436,7 +440,8 @@ def transistor(box: Cbox, terminals: list[Terminal], bom_data: BOMData, **option
             ]
         )
     else:
-        arr = mid + rect(0.8, theta), mid + rect(0.4, theta) + rect(1, thetaquarter)
+        arr = mid + rect(0.8, theta), mid + \
+            rect(0.4, theta) + rect(1, thetaquarter)
         if "npn" == silicon_type:
             arr = arr[1], arr[0]
         out_lines.extend(
@@ -468,7 +473,8 @@ def ground(box: Cbox, terminals: list[Terminal], bom_data: BOMData, **options):
     points = [(0, 1j), (-0.5 + 1j, 0.5 + 1j)]
     match icon_type:
         case "earth":
-            points += [(-0.33 + 1.25j, 0.33 + 1.25j), (-0.16 + 1.5j, 0.16 + 1.5j)]
+            points += [(-0.33 + 1.25j, 0.33 + 1.25j),
+                       (-0.16 + 1.5j, 0.16 + 1.5j)]
         case "chassis":
             points += [
                 (-0.5 + 1j, -0.25 + 1.5j),
@@ -483,6 +489,61 @@ def ground(box: Cbox, terminals: list[Terminal], bom_data: BOMData, **options):
             raise BOMError(f"Unknown ground symbol type: {icon_type}")
     points = deep_transform(points, terminals[0].pt, pi / 2)
     return bunch_o_lines(points, **options)
+
+
+@component("S", "SW", "PB")
+@n_terminal(2)
+@no_ambiguous
+def switch(box: Cbox, terminals: list[Terminal], bom_data: BOMData, **options):
+    """Draw a mechanical switch symbol.
+    bom:{nc/no}[m][:label]"""
+    icon_type = bom_data.data or "no"
+    if ":" in icon_type:
+        icon_type, *b = icon_type.split(":")
+        bom_data = BOMData(bom_data.type, bom_data.id, ":".join(b))
+    else:
+        bom_data = BOMData(bom_data.type, bom_data.id, "")
+    t1, t2 = terminals[0].pt, terminals[1].pt
+    mid = (t1 + t2) / 2
+    angle = phase(t1 - t2)
+    quad_angle = angle + pi / 2
+    scale = options["scale"]
+    out = (XML.circle(
+        cx=(rect(-scale, angle) + mid * scale).real,
+        cy=(rect(-scale, angle) + mid * scale).imag,
+        r=scale / 4,
+        stroke="transparent",
+        fill=options["stroke"],
+        class_="filled",
+    ) + XML.circle(
+        cx=(rect(scale, angle) + mid * scale).real,
+        cy=(rect(scale, angle) + mid * scale).imag,
+        r=scale / 4,
+        stroke="transparent",
+        fill=options["stroke"],
+        class_="filled",
+    ) + bunch_o_lines([(t1, mid + rect(1, angle)), (t2, mid + rect(-1, angle))], **options))
+    sc = 1
+    match icon_type:
+        case "nc":
+            points = [(-1j, -.3+1j)]
+        case "no":
+            points = [(-1j, -.8+1j)]
+            sc = 1.9
+        case "ncm":
+            points = [(.3-1j, .3+1j)]
+            out += polylinegon(deep_transform([-.5+.6j, -.5-.6j, .3-.6j, .3+.6j], mid, angle), True, **options)
+            sc = 1.3
+        case "nom":
+            points = [(-.5-1j, -.5+1j)]
+            out += polylinegon(deep_transform([-1+.6j, -1-.6j, -.5-.6j, -.5+.6j], mid, angle), True, **options)
+            sc = 2.5
+        case _:
+            raise BOMError(f"Unknown switch symbol type: {icon_type}")
+    points = deep_transform(points, mid, angle)
+    return bunch_o_lines(points, **options) + out + id_text(
+        box, bom_data, terminals, None, make_text_point(
+            t1, t2, **(options | {"offset_scaler": sc})), **options)
 
 
 # code for drawing stuff

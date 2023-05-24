@@ -18,13 +18,20 @@ svg.schemascii :is(.wire, .component):hover {
     --sch-color: lime;
 }
 
-svg.schemascii .component :is(polyline, path, line, polygon, rect, circle) {
+svg.schemascii .component :is(polyline, path, line, polygon, rect, circle):not(.filled) {
     stroke: var(--sch-color, red);
     stroke-width: 2;
     stroke-linecap: round;
     transition-duration: 0.2s;
     fill: transparent;
 }
+
+svg.schemascii .component :is(polyline, path, line, polygon, rect, circle).filled {
+    fill: var(--sch-color, red);
+    stroke: none;
+    transition-duration: 0.2s;
+}
+
 
 svg.schemascii .component .plus :is(polyline, path, line) {
     stroke-width: 1;

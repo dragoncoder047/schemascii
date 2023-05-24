@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+
+    <head>
+        <title>Schemascii</title>
+        <script src="https://cdn.jsdelivr.net/pyodide/v0.23.2/full/pyodide.js"></script>
+        <style>
+            .flex {
+                display: flex;
+            }
+
+            .flex.row {
+                flex-direction: row;
+            }
+
+            .flex.column {
+                flex-direction: column;
+            }
+
+            textarea {
+                min-height: 10ch;
+            }
+
+            #errors {
+                color: red;
+            }
+        </style>
+        <style id="custom-css"></style>
+    </head>
+
+    <body>
+        <h1>Schemascii Playground</h1>
+        <div class="flex row">
+            <div class="flex column">
+                <div class="flex row">
+                    <p style="flex: 1">Schemascii Source</p>
+                    <button id="render">Render</button>
+                </div><textarea id="schemascii"></textarea>
+            </div>
+            <div class="flex column">
+                <p>CSS</p><textarea id="css"></textarea>
+            </div>
+        </div>
+        <div id="output"></div>
+        <pre id="console"></pre>
+        <div id="errors"></div>
+    </body>
+    <script>
+        // cSpell:ignore pyodide pyproject pyimport
+        var pyodide;
+        var output = document.getElementById("output");
+        var css = document.getElementById("css");
+        var console = document.getElementById("console");
+        var source = document.getElementById("schemascii");
+        var style_elem = document.getElementById("custom-css");
+        var render_button = document.getElementById("render");
+        var schemascii;
+        async function main() {
+            info("Loading Python... ");
+            pyodide = await loadPyodide({ stdout: info, stderr: error });
+            info("done\n");
+            info("Fetching current Schemascii version... ");
+            var pyproject_toml = await fetch("pyproject.toml").then(x => x.text());
+            var ver = /version = "([\d.]+)"/.exec(pyproject_toml)[1];
+            info(ver + "\n");
+            info(`Installing schemascii-${ver}... `);
+            await pyodide.runPythonAsync(`import micropip\nawait micropip.install("https://dragoncoder047.github.io/schemascii/dist/schemascii-${ver}-py3-none-any.whl")`);
+            schemascii = pyodide.pyimport("schemascii");
+            setup();
+            console.textContent = "ready\n";
+        }
+        function info(line) {
+            console.textContent += line;
+        }
+        function error(text) {
+            errors.textContent += text;
+        }
+        function setup() {
+            css.addEventListener("input", () => {
+                style_elem.innerHTML = css.value;
+            });
+            render_button.addEventListener("click", async () => {
+                console.textContent = "";
+                errors.textContent = "";
+                try {
+                    output.innerHTML = await schemascii.render(source.value);
+                } catch (e) {
+                    error(`\nJS Error:\n${e.stack}\n`);
+                    throw e;
+                }
+            });
+        }
+        main();
+    </script>
+
+</html>

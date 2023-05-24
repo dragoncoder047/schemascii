@@ -133,7 +133,7 @@ def polylinegon(points: list[complex], is_polygon: bool = False, **options):
     c = options["stroke"]
     pts = " ".join(f"{x.real * scale},{x.imag * scale}" for x in points)
     if is_polygon:
-        return XML.polygon(points=pts, fill=c)
+        return XML.polygon(points=pts, fill=c, class_="filled")
     return XML.polyline(points=pts, fill="transparent", stroke__width=w, stroke=c)
 
 
@@ -233,7 +233,7 @@ def make_text_point(t1: complex, t2: complex, **options) -> complex:
     quad_angle = phase(t1 - t2) + pi / 2
     scale = options["scale"]
     text_pt = (t1 + t2) * scale / 2
-    offset = rect(scale / 2, quad_angle)
+    offset = rect(scale / 2 * options.get("offset_scaler", 1), quad_angle)
     text_pt += complex(abs(offset.real), -abs(offset.imag))
     return text_pt
 

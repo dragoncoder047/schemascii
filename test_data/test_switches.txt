@@ -1,0 +1,6 @@
+!padding=30!
+*------S1-------S2--------S3-----S4--
+|    S1:nc S2:no S3:ncm S4:nom
+S5   S5:nc:LIMIT
+|
+|
