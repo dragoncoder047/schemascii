@@ -85,6 +85,7 @@
         }
         async function setup() {
             css.value = await fetch("schemascii_example.css").then(x => x.text());
+            style_elem.innerHTML = css.value;
             css.addEventListener("input", () => {
                 style_elem.innerHTML = css.value;
             });
