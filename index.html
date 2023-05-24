@@ -42,10 +42,10 @@
         <h1>Schemascii Playground</h1>
         <div class="flex row">
             <div class="flex column">
-                <p>Schemascii Source</p><textarea id="schemascii"></textarea>
+                <p>Schemascii Source</p><textarea id="schemascii" disabled></textarea>
             </div>
             <div class="flex column">
-                <p>CSS</p><textarea id="css"></textarea>
+                <p>CSS</p><textarea id="css" disabled></textarea>
             </div>
         </div>
         <h2>Result</h2>
@@ -112,6 +112,8 @@
                     }
                 }, 100);
             });
+            source.removeAttribute("disabled");
+            css.removeAttribute("disabled");
         }
         main();
     </script>
