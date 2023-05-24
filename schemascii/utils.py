@@ -8,10 +8,10 @@ import re
 from .metric import format_metric_unit
 from .errors import TerminalsError
 
-Cbox = namedtuple('Cbox', 'p1 p2 type id')
-BOMData = namedtuple('BOMData', 'type id data')
-Flag = namedtuple('Flag', 'pt char side')
-Terminal = namedtuple('Terminal', 'pt flag side')
+Cbox = namedtuple("Cbox", "p1 p2 type id")
+BOMData = namedtuple("BOMData", "type id data")
+Flag = namedtuple("Flag", "pt char side")
+Terminal = namedtuple("Terminal", "pt flag side")
 
 
 class Side(IntEnum):
@@ -24,7 +24,7 @@ class Side(IntEnum):
 
 def colinear(points: list[complex]) -> bool:
     "Returns true if all the points are in the same line."
-    return len(set(phase(p-points[0]) for p in points[1:])) == 1
+    return len(set(phase(p - points[0]) for p in points[1:])) == 1
 
 
 def sharpness_score(points: list[complex]) -> float:
@@ -50,7 +50,9 @@ def intersecting(a, b, p, q):
 
 
 # UNUSED as of yet
-def merge_colinear(points: list[tuple[complex, complex]]) -> list[tuple[complex, complex]]:
+def merge_colinear(
+    points: list[tuple[complex, complex]]
+) -> list[tuple[complex, complex]]:
     "Merges line segments that are colinear."
     points = list(set(points))
     out = []
@@ -70,7 +72,7 @@ def merge_colinear(points: list[tuple[complex, complex]]) -> list[tuple[complex,
     return out
 
 
-def iterate_line(p1: complex, p2: complex, step: float = 1.):
+def iterate_line(p1: complex, p2: complex, step: float = 1.0):
     "Yields complex points along a line."
     vec = p2 - p1
     point = p1
@@ -87,14 +89,11 @@ def deep_transform(data, origin: complex, theta: float):
     if isinstance(data, list | tuple):
         return [deep_transform(d, origin, theta) for d in data]
     if isinstance(data, complex):
-        return (origin
-                + rect(data.real, theta + pi / 2)
-                + rect(data.imag, theta))
+        return origin + rect(data.real, theta + pi / 2) + rect(data.imag, theta)
     try:
         return deep_transform(complex(data), origin, theta)
     except TypeError as err:
-        raise TypeError(
-            "bad type to deep_transform(): " + type(data).__name__) from err
+        raise TypeError("bad type to deep_transform(): " + type(data).__name__) from err
 
 
 def fix_number(n: float) -> str:
@@ -107,19 +106,19 @@ def fix_number(n: float) -> str:
 
 class XMLClass:
     def __getattr__(self, tag) -> Callable:
-        def mk_tag(*contents, **attrs) -> str:
-            out = f'<{tag} '
+        def mk_tag(*contents: str, **attrs: str) -> str:
+            out = f"<{tag} "
             for k, v in attrs.items():
                 if v is False:
                     continue
                 if isinstance(v, float):
                     v = fix_number(v)
                 elif isinstance(v, str):
-                    v = re.sub(r"\d+(\.\d+)",
-                               lambda m: fix_number(float(m.group())), v)
+                    v = re.sub(r"\d+(\.\d+)", lambda m: fix_number(float(m.group())), v)
                 out += f'{k.removesuffix("_").replace("__", "-")}="{v}" '
-            out = out.rstrip() + '>' + ''.join(contents)
-            return out + f'</{tag}>'
+            out = out.rstrip() + ">" + "".join(contents)
+            return out + f"</{tag}>"
+
         return mk_tag
 
 
@@ -132,13 +131,10 @@ def polylinegon(points: list[complex], is_polygon: bool = False, **options):
     scale = options["scale"]
     w = options["stroke_width"]
     c = options["stroke"]
-    pts = ' '.join(
-        f'{x.real * scale},{x.imag * scale}'
-        for x in points)
+    pts = " ".join(f"{x.real * scale},{x.imag * scale}" for x in points)
     if is_polygon:
         return XML.polygon(points=pts, fill=c)
-    return XML.polyline(
-        points=pts, fill="transparent", stroke__width=w, stroke=c)
+    return XML.polyline(points=pts, fill="transparent", stroke__width=w, stroke=c)
 
 
 def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
@@ -161,8 +157,8 @@ def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
 
 def bunch_o_lines(points: list[tuple[complex, complex]], **options):
     "Return a <polyline> for each pair of points."
-    out = ''
-    scale = options['scale']
+    out = ""
+    scale = options["scale"]
     w = options["stroke_width"]
     c = options["stroke"]
     for p1, p2 in points:
@@ -174,17 +170,19 @@ def bunch_o_lines(points: list[tuple[complex, complex]], **options):
             f"{p2.real * scale},"
             f"{p2.imag * scale}",
             stroke=c,
-            stroke__width=w)
+            stroke__width=w,
+        )
     return out
 
 
 def id_text(
-        box: Cbox,
-        bom_data: BOMData,
-        terminals: list[Terminal],
-        unit: str | list[str] | None,
-        point: complex | None = None,
-        **options):
+    box: Cbox,
+    bom_data: BOMData,
+    terminals: list[Terminal],
+    unit: str | list[str] | None,
+    point: complex | None = None,
+    **options,
+):
     "Format the component ID and value around the point."
     if options["nolabels"]:
         return ""
@@ -201,28 +199,33 @@ def id_text(
             text = format_metric_unit(text, unit)
             classy = "cmp-value"
         else:
-            text = " ".join(format_metric_unit(x, y, six)
-                            for x, (y, six) in zip(text.split(","), unit))
+            text = " ".join(
+                format_metric_unit(x, y, six)
+                for x, (y, six) in zip(text.split(","), unit)
+            )
             classy = "cmp-value"
         data = XML.tspan(text, class_=classy)
     if len(terminals) > 1:
-        textach = "start" if (
-            any(Side.BOTTOM == t.side for t in terminals)
-            or any(Side.TOP == t.side for t in terminals)
-        ) else "middle"
+        textach = (
+            "start"
+            if (
+                any(Side.BOTTOM == t.side for t in terminals)
+                or any(Side.TOP == t.side for t in terminals)
+            )
+            else "middle"
+        )
     else:
-        textach = "middle" if terminals[0].side in (
-            Side.TOP, Side.BOTTOM) else "start"
+        textach = "middle" if terminals[0].side in (Side.TOP, Side.BOTTOM) else "start"
     return XML.text(
-        (XML.tspan(f"{box.type}{box.id}", class_="cmp-id")
-         * bool("L" in label_style)),
+        (XML.tspan(f"{box.type}{box.id}", class_="cmp-id") * bool("L" in label_style)),
         " " * (bool(data) and "L" in label_style),
         data * bool("V" in label_style),
         x=point.real,
         y=point.imag,
         text__anchor=textach,
         font__size=options["scale"],
-        fill=options["stroke"])
+        fill=options["stroke"],
+    )
 
 
 def make_text_point(t1: complex, t2: complex, **options) -> complex:
@@ -236,18 +239,22 @@ def make_text_point(t1: complex, t2: complex, **options) -> complex:
 
 
 def make_plus(
-        terminals: list[Terminal],
-        center: complex,
-        theta: float,
-        **options) -> str:
+    terminals: list[Terminal], center: complex, theta: float, **options
+) -> str:
     "Make a + sign if the terminals indicate the component is polarized."
     if all(t.flag != "+" for t in terminals):
         return ""
     return XML.g(
-        bunch_o_lines(deep_transform(deep_transform(
-            [(.125, -.125), (.125j, -.125j)], 0, theta),
-            center + deep_transform(.33+.75j, 0, theta), 0), **options),
-        class_="plus")
+        bunch_o_lines(
+            deep_transform(
+                deep_transform([(0.125, -0.125), (0.125j, -0.125j)], 0, theta),
+                center + deep_transform(0.33 + 0.75j, 0, theta),
+                0,
+            ),
+            **options,
+        ),
+        class_="plus",
+    )
 
 
 def arrow_points(p1: complex, p2: complex) -> list[tuple[complex, complex]]:
@@ -256,59 +263,50 @@ def arrow_points(p1: complex, p2: complex) -> list[tuple[complex, complex]]:
     tick_len = min(0.5, abs(p2 - p1))
     return [
         (p2, p1),
-        (p2, p2 - rect(tick_len, angle + pi/5)),
-        (p2, p2 - rect(tick_len, angle - pi/5))]
+        (p2, p2 - rect(tick_len, angle + pi / 5)),
+        (p2, p2 - rect(tick_len, angle - pi / 5)),
+    ]
 
 
 def make_variable(
-        center: complex,
-        theta: float,
-        is_variable: bool = True,
-        **options) -> str:
+    center: complex, theta: float, is_variable: bool = True, **options
+) -> str:
     "Draw a 'variable' arrow across the component."
     if not is_variable:
         return ""
     return bunch_o_lines(
-        deep_transform(
-            arrow_points(-1, 1),
-            center,
-            (theta % pi) + pi/4),
-        **options)
+        deep_transform(arrow_points(-1, 1), center, (theta % pi) + pi / 4), **options
+    )
 
 
-def light_arrows(
-        center: complex,
-        theta: float,
-        out: bool,
-        **options):
+def light_arrows(center: complex, theta: float, out: bool, **options):
     """Draw arrows towards or away from the component
     (i.e. light-emitting or light-dependent)."""
-    a, b = 1j, .3+.3j
+    a, b = 1j, 0.3 + 0.3j
     if out:
         a, b = b, a
     return bunch_o_lines(
-        deep_transform(
-            arrow_points(a, b),
-            center, theta - pi/2),
-        **options) + bunch_o_lines(
-        deep_transform(
-            arrow_points(a - .5, b - .5),
-            center, theta - pi/2),
-        **options)
+        deep_transform(arrow_points(a, b), center, theta - pi / 2), **options
+    ) + bunch_o_lines(
+        deep_transform(arrow_points(a - 0.5, b - 0.5), center, theta - pi / 2),
+        **options,
+    )
 
 
 def sort_counterclockwise(terminals: list[Terminal]) -> list[Terminal]:
     "Sort the terminals in counterclockwise order."
     partitioned = {
         side: list(filtered_terminals)
-        for side, filtered_terminals in groupby(
-            terminals,
-            lambda t: t.side)}
-    return list(chain(
-        sorted(partitioned.get(Side.LEFT, []),   key=lambda t:  t.pt.imag),
-        sorted(partitioned.get(Side.BOTTOM, []), key=lambda t:  t.pt.real),
-        sorted(partitioned.get(Side.RIGHT, []),  key=lambda t: -t.pt.imag),
-        sorted(partitioned.get(Side.TOP, []),    key=lambda t: -t.pt.real)))
+        for side, filtered_terminals in groupby(terminals, lambda t: t.side)
+    }
+    return list(
+        chain(
+            sorted(partitioned.get(Side.LEFT, []), key=lambda t: t.pt.imag),
+            sorted(partitioned.get(Side.BOTTOM, []), key=lambda t: t.pt.real),
+            sorted(partitioned.get(Side.RIGHT, []), key=lambda t: -t.pt.imag),
+            sorted(partitioned.get(Side.TOP, []), key=lambda t: -t.pt.real),
+        )
+    )
 
 
 def is_clockwise(terminals: list[Terminal]) -> bool:
@@ -321,7 +319,9 @@ def is_clockwise(terminals: list[Terminal]) -> bool:
     return False
 
 
-def sort_for_flags(terminals: list[Terminal], box: Cbox, *flags: list[str]) -> list[Terminal]:
+def sort_for_flags(
+    terminals: list[Terminal], box: Cbox, *flags: list[str]
+) -> list[Terminal]:
     """Sorts out the terminals in the specified order using the flags.
     Raises and error if the flags are absent."""
     out = ()
@@ -330,12 +330,14 @@ def sort_for_flags(terminals: list[Terminal], box: Cbox, *flags: list[str]) -> l
         if len(matching_terminals) > 1:
             raise TerminalsError(
                 f"Multiple terminals with the same flag {flag} "
-                f"on component {box.type}{box.id}")
+                f"on component {box.type}{box.id}"
+            )
         if len(matching_terminals) == 0:
             raise TerminalsError(
                 f"Need a terminal with the flag {flag} "
-                f"on component {box.type}{box.id}")
-        terminal, = matching_terminals
+                f"on component {box.type}{box.id}"
+            )
+        (terminal,) = matching_terminals
         out = *out, terminal
         terminals.remove(terminal)
     return out

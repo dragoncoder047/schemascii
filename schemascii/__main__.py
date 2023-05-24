@@ -8,17 +8,19 @@ from .configs import add_config_arguments
 
 def cli_main():
     ap = argparse.ArgumentParser(
-        prog="schemascii",
-        description="Render ASCII-art schematics into SVG.")
-    ap.add_argument("-V", "--version",
-                    action="version",
-                    version="%(prog)s " + __version__)
-    ap.add_argument("in_file",
-                    help="File to process.")
-    ap.add_argument("-o", "--out",
-                    default=None,
-                    dest="out_file",
-                    help="Output SVG file. (default input file plus .svg)")
+        prog="schemascii", description="Render ASCII-art schematics into SVG."
+    )
+    ap.add_argument(
+        "-V", "--version", action="version", version="%(prog)s " + __version__
+    )
+    ap.add_argument("in_file", help="File to process.")
+    ap.add_argument(
+        "-o",
+        "--out",
+        default=None,
+        dest="out_file",
+        help="Output SVG file. (default input file plus .svg)",
+    )
     add_config_arguments(ap)
     args = ap.parse_args()
     if args.out_file is None:
@@ -43,5 +45,5 @@ def cli_main():
             out.write(result_svg)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli_main()

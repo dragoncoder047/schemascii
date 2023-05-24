@@ -8,12 +8,12 @@ class Grid:
                 data = f.read()
         self.filename: str = filename
         self.raw: str = data
-        lines: list[str] = data.split('\n')
+        lines: list[str] = data.split("\n")
         maxlen: int = max(len(line) for line in lines)
-        self.data: list[list[str]] = [
-            list(line.ljust(maxlen, ' ')) for line in lines]
+        self.data: list[list[str]] = [list(line.ljust(maxlen, " ")) for line in lines]
         self.masks: list[list[bool | str]] = [
-            [False for x in range(maxlen)] for y in range(len(lines))]
+            [False for x in range(maxlen)] for y in range(len(lines))
+        ]
         self.width = maxlen
         self.height = len(self.data)
 
@@ -27,14 +27,16 @@ class Grid:
         the mask character if it was set,
         otherwise the original character."""
         if not self.validbounds(p):
-            return ' '
+            return " "
         return self.getmask(p) or self.data[int(p.imag)][int(p.real)]
 
     @property
     def lines(self):
         "The current contents, with masks applied."
-        return [''.join(self.get(complex(x, y)) for x in range(self.width))
-                for y in range(self.height)]
+        return [
+            "".join(self.get(complex(x, y)) for x in range(self.width))
+            for y in range(self.height)
+        ]
 
     def getmask(self, p: complex) -> str | bool:
         """Sees the mask applied to the specified point;
@@ -43,7 +45,7 @@ class Grid:
             return False
         return self.masks[int(p.imag)][int(p.real)]
 
-    def setmask(self, p: complex, mask: str | bool = ' '):
+    def setmask(self, p: complex, mask: str | bool = " "):
         "Sets or clears the mask at the point."
         if not self.validbounds(p):
             return
@@ -55,19 +57,19 @@ class Grid:
 
     def clrall(self):
         "Clears all the masks at once."
-        self.masks = [[False for x in range(self.width)]
-                      for y in range(self.height)]
+        self.masks = [[False for x in range(self.width)] for y in range(self.height)]
 
     def clip(self, p1: complex, p2: complex):
         """Returns a sub-grid with the contents bounded by the p1 and p2 box.
         Masks are not copied."""
         ls = slice(int(p1.real), int(p2.real))
         cs = slice(int(p1.imag), int(p2.imag) + 1)
-        d = '\n'.join(''.join(ln[ls]) for ln in self.data[cs])
+        d = "\n".join("".join(ln[ls]) for ln in self.data[cs])
         return Grid(self.filename, d)
 
     def __repr__(self):
         return f"Grid({self.filename!r}, '''\n{chr(10).join(self.lines)}''')"
+
     __str__ = __repr__
 
     def spark(self, *points):
@@ -82,6 +84,7 @@ class Grid:
                     print(char, end="")
             print()
 
-if __name__ == '__main__':
-    x = Grid('', '   \n   \n   ')
-    x.spark(0, 1, 2, 1j, 2j, 1+2j, 2+2j, 2+1j)
+
+if __name__ == "__main__":
+    x = Grid("", "   \n   \n   ")
+    x.spark(0, 1, 2, 1j, 2j, 1 + 2j, 2 + 2j, 2 + 1j)

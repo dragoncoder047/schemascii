@@ -9,33 +9,32 @@ DIRECTIONS = [1, -1, 1j, -1j]
 
 
 def next_in_dir(
-        grid: Grid,
-        point: complex,
-        dydx: complex) -> tuple[complex, complex] | None:
+    grid: Grid, point: complex, dydx: complex
+) -> tuple[complex, complex] | None:
     """Follows the wire starting at the point in the specified direction,
     until some interesting change (a corner, junction, or end). Returns the
     tuple (new, old)."""
     old_point = point
     match grid.get(point):
-        case '|' | '(' | ')':
+        case "|" | "(" | ")":
             # extend up or down
             if dydx in (1j, -1j):
-                while grid.get(point) in '-|()':
+                while grid.get(point) in "-|()":
                     point += dydx
-                if grid.get(point) != '*':
+                if grid.get(point) != "*":
                     point -= dydx
             else:
                 return None  # The vertical wires do not connect horizontally
-        case '-':
+        case "-":
             # extend sideways
             if dydx in (1, -1):
-                while grid.get(point) in '-|()':
+                while grid.get(point) in "-|()":
                     point += dydx
-                if grid.get(point) != '*':
+                if grid.get(point) != "*":
                     point -= dydx
             else:
                 return None  # The horizontal wires do not connect vertically
-        case '*':
+        case "*":
             # can extend any direction
             if grid.get(point + dydx) in "|()-*":
                 point += dydx
@@ -88,8 +87,7 @@ def blank_wire(grid: Grid, p1: complex, p2: complex):
         keep = ["|()", "-"][way]
         swap = "|-"[way]
         if old not in keep:
-            if (grid.get(px + side) in keep and
-                    grid.get(px - side) in keep):
+            if grid.get(px + side) in keep and grid.get(px - side) in keep:
                 grid.setmask(px, swap)
             else:
                 grid.setmask(px)
@@ -103,7 +101,7 @@ def next_wire(grid: Grid, **options) -> str | None:
     color = options["stroke"]
     # Find the first wire or return None
     for i, line in enumerate(grid.lines):
-        indexes = [line.index(c) for c in '-|()*' if c in line]
+        indexes = [line.index(c) for c in "-|()*" if c in line]
         if len(indexes) > 0:
             line_pieces = search_wire(grid, complex(min(indexes), i))
             if line_pieces:
@@ -124,17 +122,22 @@ def next_wire(grid: Grid, **options) -> str | None:
                 x2=p2.real * scale,
                 y2=p2.imag * scale,
                 stroke__width=stroke_width,
-                stroke=color)
-            for p1, p2 in line_pieces),
+                stroke=color,
+            )
+            for p1, p2 in line_pieces
+        ),
         *(
             XML.circle(
                 cx=pt.real * scale,
                 cy=pt.imag * scale,
                 r=2 * stroke_width,
                 stroke="none",
-                fill=color)
-            for pt in dots),
-        class_="wire")
+                fill=color,
+            )
+            for pt in dots
+        ),
+        class_="wire"
+    )
 
 
 def get_wires(grid: Grid, **options) -> str:
@@ -147,7 +150,7 @@ def get_wires(grid: Grid, **options) -> str:
     return out
 
 
-if __name__ == '__main__':
-    xg = Grid('test_data/test_resistors.txt')
+if __name__ == "__main__":
+    xg = Grid("test_data/test_resistors.txt")
     print(get_wires(xg, scale=20))
     print(xg)

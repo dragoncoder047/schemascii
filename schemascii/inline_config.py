@@ -22,12 +22,14 @@ def get_inline_configs(grid: Grid) -> dict:
     return out
 
 
-if __name__ == '__main__':
-    g = Grid("null",
-             """
+if __name__ == "__main__":
+    g = Grid(
+        "null",
+        """
 foobar -------C1-------
 !padding=30!!label=!
 !foobar=bar!
-""")
+""",
+    )
     print(get_inline_configs(g))
     print(g)
