@@ -26,6 +26,13 @@
             #errors {
                 color: red;
             }
+
+            @media screen and (prefers-color-scheme: dark) {
+                body {
+                    color: white;
+                    background: black;
+                }
+            }
         </style>
         <style id="custom-css"></style>
     </head>
@@ -96,6 +103,7 @@
                         output.innerHTML = await schemascii.render("playground", source.value);
                     } catch (e) {
                         error(`\nJS Error:\n${e.stack}\n`);
+                        output.innerHTML = "";
                         throw e;
                     }
                 }, 500);
