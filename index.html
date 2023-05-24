@@ -56,18 +56,23 @@
         var render_button = document.getElementById("render");
         var schemascii;
         async function main() {
-            info("Loading Python... ");
-            pyodide = await loadPyodide({ stdout: info, stderr: error });
-            info("done\n");
-            info("Fetching current Schemascii version... ");
-            var pyproject_toml = await fetch("pyproject.toml").then(x => x.text());
-            var ver = /version = "([\d.]+)"/.exec(pyproject_toml)[1];
-            info(ver + "\n");
-            info(`Installing schemascii-${ver}... `);
-            await pyodide.runPythonAsync(`import micropip\nawait micropip.install("https://dragoncoder047.github.io/schemascii/dist/schemascii-${ver}-py3-none-any.whl")`);
-            schemascii = pyodide.pyimport("schemascii");
-            setup();
-            console.textContent = "ready\n";
+            try {
+                info("Loading Python... ");
+                pyodide = await loadPyodide({ stdout: info, stderr: error });
+                info("done\n");
+                info("Fetching current Schemascii version... ");
+                var pyproject_toml = await fetch("pyproject.toml").then(x => x.text());
+                var ver = /version = "([\d.]+)"/.exec(pyproject_toml)[1];
+                info(ver + "\n");
+                info(`Installing schemascii-${ver}... `);
+                await pyodide.runPythonAsync(`import micropip\nawait micropip.install("https://dragoncoder047.github.io/schemascii/dist/schemascii-${ver}-py3-none-any.whl")`);
+                schemascii = pyodide.pyimport("schemascii");
+                setup();
+                console.textContent = "ready\n";
+            } catch (e) {
+                error(`\nJS Error:\n${e.stack}\n`);
+                throw e;
+            }
         }
         function info(line) {
             console.textContent += line;
