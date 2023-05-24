@@ -100,7 +100,7 @@
             var timeout = null;
             source.addEventListener("input", () => {
                 if (timeout) clearTimeout(timeout);
-                setTimeout(async () => {
+                timeout = setTimeout(async () => {
                     console.textContent = "";
                     errors.textContent = "";
                     try {
@@ -110,7 +110,7 @@
                         output.innerHTML = "";
                         throw e;
                     }
-                }, 500);
+                }, 100);
             });
         }
         main();
