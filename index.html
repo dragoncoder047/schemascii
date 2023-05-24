@@ -7,6 +7,7 @@
         <style>
             .flex {
                 display: flex;
+                flex: 1;
             }
 
             .flex.row {
@@ -30,7 +31,7 @@
 
     <body>
         <h1>Schemascii Playground</h1>
-        <div class="flex row" style="width: 100%">
+        <div class="flex row">
             <div class="flex column">
                 <div class="flex row">
                     <p style="flex: 1">Schemascii Source</p>
@@ -59,13 +60,14 @@
             try {
                 info("Loading Python... ");
                 pyodide = await loadPyodide({ stdout: info, stderr: error });
-                info("done\nINstalling micropip...");
-                await pyodide.loadPackage("micropip");
+                info("done\nInstalling micropip...");
+                await pyodide.loadPackage("micropip", { errorCallback: error, messgaeCallback: info });
                 info("done\nFetching current Schemascii version... ");
                 var pyproject_toml = await fetch("pyproject.toml").then(x => x.text());
                 var ver = /version = "([\d.]+)"/.exec(pyproject_toml)[1];
                 info(`${ver}\nInstalling schemascii-${ver} ... `);
-                await pyodide.pyimport("micropip").install(`https://dragoncoder047.github.io/schemascii/dist/schemascii-${ver}-py3-none-any.whl`);
+                await pyodide.pyimport("micropip", { errorCallback: error, messgaeCallback: info })
+                    .install(`https://dragoncoder047.github.io/schemascii/dist/schemascii-${ver}-py3-none-any.whl`);
                 schemascii = pyodide.pyimport("schemascii");
                 await setup();
                 console.textContent = "ready\n";
