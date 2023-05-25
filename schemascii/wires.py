@@ -1,7 +1,7 @@
 from cmath import phase, rect
 from math import pi
 from .grid import Grid
-from .utils import iterate_line, bunch_o_lines, XML, find_dots
+from .utils import force_int, iterate_line, bunch_o_lines, XML, find_dots
 
 # cSpell:ignore dydx
 
@@ -77,18 +77,16 @@ def blank_wire(grid: Grid, p1: complex, p2: complex):
     "Blank out the wire from p1 to p2."
     # Crazy math!!
     way = int(phase(p1 - p2) / pi % 1.0 * 2)
-    side = rect(1, phase(p1 - p2) + pi / 2)
+    side = force_int(rect(1, phase(p1 - p2) + pi / 2))
+    # way: 0: Horizontal, 1: Vertical
+    # Don't mask out wire crosses
+    cross = ["|()", "-"][way]
+    swap = "|-"[way]
     for px in iterate_line(p1, p2):
-        old = grid.get(px)
-        # way: 0: Horizontal, 1: Vertical
-        # Don't mask out wire crosses
-        keep = ["|()", "-"][way]
-        swap = "|-"[way]
-        if old not in keep:
-            if grid.get(px + side) in keep and grid.get(px - side) in keep:
-                grid.setmask(px, swap)
-            else:
-                grid.setmask(px)
+        if grid.get(px + side) in cross and grid.get(px - side) in cross:
+            grid.setmask(px, swap)
+        else:
+            grid.setmask(px)
 
 
 def next_wire(grid: Grid, **options) -> str | None:

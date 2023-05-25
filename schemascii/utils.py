@@ -27,6 +27,11 @@ def colinear(*points: complex) -> bool:
     return len(set(phase(p - points[0]) for p in points[1:])) == 1
 
 
+def force_int(p: complex) -> complex:
+    "Force the coordinates of the complex number to line on the integer grid."
+    return complex(round(p.real), round(p.imag))
+
+
 def sharpness_score(points: list[complex]) -> float:
     """Returns a number indicating how twisty the line is -- higher means
     the corners are sharper."""
@@ -95,7 +100,7 @@ def iterate_line(p1: complex, p2: complex, step: float = 1.0):
     vec = p2 - p1
     point = p1
     while abs(vec) > abs(point - p1):
-        yield point
+        yield force_int(point)
         point += rect(step, phase(vec))
     yield point
 
