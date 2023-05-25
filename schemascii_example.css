@@ -2,11 +2,12 @@ svg.schemascii {
     background: black;
 }
 
-svg.schemascii .wire line {
+svg.schemascii .wire polyline {
     stroke: var(--sch-color, blue);
     stroke-width: 2;
     stroke-linecap: round;
     transition-duration: 0.2s;
+    fill: transparent;
 }
 
 svg.schemascii .wire circle {
