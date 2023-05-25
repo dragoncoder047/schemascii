@@ -1,16 +1,14 @@
 from cmath import phase, rect
 from math import pi
 from .grid import Grid
-from .utils import iterate_line, merge_colinear, XML, find_dots
+from .utils import iterate_line, bunch_o_lines, XML, find_dots
 
 # cSpell:ignore dydx
 
 DIRECTIONS = [1, -1, 1j, -1j]
 
 
-def next_in_dir(
-    grid: Grid, point: complex, dydx: complex
-) -> tuple[complex, complex] | None:
+def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, complex] | None:
     """Follows the wire starting at the point in the specified direction,
     until some interesting change (a corner, junction, or end). Returns the
     tuple (new, old)."""
@@ -115,17 +113,7 @@ def next_wire(grid: Grid, **options) -> str | None:
             raise RuntimeError("0-length wire")
     dots = find_dots(line_pieces)
     return XML.g(
-        *(
-            XML.line(
-                x1=p1.real * scale,
-                y1=p1.imag * scale,
-                x2=p2.real * scale,
-                y2=p2.imag * scale,
-                stroke__width=stroke_width,
-                stroke=color,
-            )
-            for p1, p2 in line_pieces
-        ),
+        bunch_o_lines(line_pieces, **options),
         *(
             XML.circle(
                 cx=pt.real * scale,

@@ -22,7 +22,7 @@ class Side(IntEnum):
     BOTTOM = 3
 
 
-def colinear(points: list[complex]) -> bool:
+def colinear(*points: complex) -> bool:
     "Returns true if all the points are in the same line."
     return len(set(phase(p - points[0]) for p in points[1:])) == 1
 
@@ -49,27 +49,45 @@ def intersecting(a, b, p, q):
     return sort_a <= sort_p <= sort_b or sort_p <= sort_b <= sort_q
 
 
-# UNUSED as of yet
-def merge_colinear(
-    points: list[tuple[complex, complex]]
-) -> list[tuple[complex, complex]]:
-    "Merges line segments that are colinear."
-    points = list(set(points))
-    out = []
-    a, b = points[0]
-    while points:
-        print(points)
-        for pq in points[1:]:
-            p, q = pq
-            if not (colinear((a, b, p, q)) and intersecting(a, b, p, q)):
+def take_next_group(links: list[tuple[complex, complex]]) -> list[tuple[complex, complex]]:
+    """Pops the longes possible link off of the `links` list and returns it,
+    mutating the input list."""
+    best = [links.pop()]
+    while True:
+        for pair in links:
+            if best[0][0] == pair[1]:
+                best.insert(0, pair)
+                links.remove(pair)
+            elif best[0][0] == pair[0]:
+                best.insert(0, (pair[1], pair[0]))
+                links.remove(pair)
+            elif best[-1][1] == pair[0]:
+                best.append(pair)
+                links.remove(pair)
+            elif best[-1][1] == pair[1]:
+                best.append((pair[1], pair[0]))
+                links.remove(pair)
+            else:
                 continue
-            points.remove(pq)
-            a, b = sorted((a, b, p, q), key=lambda x: x.real)[::3]
             break
         else:
-            out.append((a, b))
-            (a, b), points = points[0], points[1:]
-    return out
+            break
+    return best
+
+
+def merge_colinear(links: list[tuple[complex, complex]]):
+    "Merges line segments that are colinear. Mutates the input list."
+    i = 1
+    while True:
+        if i == len(links):
+            break
+        elif links[i][0] == links[i][1]:
+            links.remove(links[i])
+        elif links[i-1][1] == links[i][0] and colinear(links[i-1][0], links[i][0], links[i][1]):
+            links[i-1] = (links[i-1][0], links[i][1])
+            links.remove(links[i])
+        else:
+            i += 1
 
 
 def iterate_line(p1: complex, p2: complex, step: float = 1.0):
@@ -93,7 +111,8 @@ def deep_transform(data, origin: complex, theta: float):
     try:
         return deep_transform(complex(data), origin, theta)
     except TypeError as err:
-        raise TypeError("bad type to deep_transform(): " + type(data).__name__) from err
+        raise TypeError("bad type to deep_transform(): " +
+                        type(data).__name__) from err
 
 
 def fix_number(n: float) -> str:
@@ -114,7 +133,8 @@ class XMLClass:
                 if isinstance(v, float):
                     v = fix_number(v)
                 elif isinstance(v, str):
-                    v = re.sub(r"\d+(\.\d+)", lambda m: fix_number(float(m.group())), v)
+                    v = re.sub(r"\d+(\.\d+)",
+                               lambda m: fix_number(float(m.group())), v)
                 out += f'{k.removesuffix("_").replace("__", "-")}="{v}" '
             out = out.rstrip() + ">" + "".join(contents)
             return out + f"</{tag}>"
@@ -126,7 +146,7 @@ XML = XMLClass()
 del XMLClass
 
 
-def polylinegon(points: list[complex], is_polygon: bool = False, **options):
+def polylinegon(points: list[complex], is_polygon: bool = False, **options) -> str:
     "Turn the list of points into a <polyline> or <polygon>."
     scale = options["scale"]
     w = options["stroke_width"]
@@ -155,20 +175,23 @@ def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
     return [pt for pt, count in seen.items() if count > 3]
 
 
-def bunch_o_lines(points: list[tuple[complex, complex]], **options):
-    "Return a <polyline> for each pair of points."
+def bunch_o_lines(pairs: list[tuple[complex, complex]], **options) -> str:
+    "Collapse the pairs of points and return the smallest number of <polyline>s."
     out = ""
     scale = options["scale"]
     w = options["stroke_width"]
     c = options["stroke"]
-    for p1, p2 in points:
-        if abs(p1 - p2) == 0:
-            continue
+    lines = []
+    while pairs:
+        group = take_next_group(pairs)
+        merge_colinear(group)
+        # make it a polyline
+        pts = [group[0][0]] + [p[1] for p in group]
+        lines.append(pts)
+    for line in lines:
         out += XML.polyline(
-            points=f"{p1.real * scale},"
-            f"{p1.imag * scale} "
-            f"{p2.real * scale},"
-            f"{p2.imag * scale}",
+            points=" ".join(
+                f"{p.real * scale},{p.imag * scale}" for p in line),
             stroke=c,
             stroke__width=w,
         )
@@ -182,7 +205,7 @@ def id_text(
     unit: str | list[str] | None,
     point: complex | None = None,
     **options,
-):
+) -> str:
     "Format the component ID and value around the point."
     if options["nolabels"]:
         return ""
@@ -215,9 +238,11 @@ def id_text(
             else "middle"
         )
     else:
-        textach = "middle" if terminals[0].side in (Side.TOP, Side.BOTTOM) else "start"
+        textach = "middle" if terminals[0].side in (
+            Side.TOP, Side.BOTTOM) else "start"
     return XML.text(
-        (XML.tspan(f"{box.type}{box.id}", class_="cmp-id") * bool("L" in label_style)),
+        (XML.tspan(f"{box.type}{box.id}", class_="cmp-id")
+         * bool("L" in label_style)),
         " " * (bool(data) and "L" in label_style),
         data * bool("V" in label_style),
         x=point.real,
@@ -238,9 +263,7 @@ def make_text_point(t1: complex, t2: complex, **options) -> complex:
     return text_pt
 
 
-def make_plus(
-    terminals: list[Terminal], center: complex, theta: float, **options
-) -> str:
+def make_plus(terminals: list[Terminal], center: complex, theta: float, **options) -> str:
     "Make a + sign if the terminals indicate the component is polarized."
     if all(t.flag != "+" for t in terminals):
         return ""
@@ -268,9 +291,7 @@ def arrow_points(p1: complex, p2: complex) -> list[tuple[complex, complex]]:
     ]
 
 
-def make_variable(
-    center: complex, theta: float, is_variable: bool = True, **options
-) -> str:
+def make_variable(center: complex, theta: float, is_variable: bool = True, **options) -> str:
     "Draw a 'variable' arrow across the component."
     if not is_variable:
         return ""
@@ -319,9 +340,7 @@ def is_clockwise(terminals: list[Terminal]) -> bool:
     return False
 
 
-def sort_for_flags(
-    terminals: list[Terminal], box: Cbox, *flags: list[str]
-) -> list[Terminal]:
+def sort_for_flags(terminals: list[Terminal], box: Cbox, *flags: list[str]) -> list[Terminal]:
     """Sorts out the terminals in the specified order using the flags.
     Raises and error if the flags are absent."""
     out = ()
