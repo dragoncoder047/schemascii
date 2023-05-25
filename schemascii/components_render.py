@@ -386,10 +386,11 @@ def transistor(box: Cbox, terminals: list[Terminal], bom_data: BOMData, **option
     bom:{npn/pnp/nfet/pfet}:part-number
     flags:s=source,d=drain,g=gate,e=emitter,c=collector,b=base"""
     if not any(
-        bom_data.data.lower().startswith(x) for x in ("pnp:", "npn:", "nfet:", "pfet:")
+        bom_data.data.lower().startswith(x) for x in ("pnp", "npn", "nfet", "pfet")
     ):
         raise BOMError(f"Need type of transistor for {box.type}{box.id}")
-    silicon_type, part_num = bom_data.data.split(":")
+    silicon_type, *part_num = bom_data.data.split(":")
+    part_num = ":".join(part_num)
     silicon_type = silicon_type.lower()
     bom_data = BOMData(bom_data.type, bom_data.id, part_num)
     if "fet" in silicon_type:
