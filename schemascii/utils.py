@@ -28,7 +28,7 @@ def colinear(*points: complex) -> bool:
 
 
 def force_int(p: complex) -> complex:
-    "Force the coordinates of the complex number to line on the integer grid."
+    "Force the coordinates of the complex number to lie on the integer grid."
     return complex(round(p.real), round(p.imag))
 
 
@@ -125,7 +125,10 @@ def fix_number(n: float) -> str:
     Otherwise round it to 2 digits."""
     if n.is_integer():
         return str(int(n))
-    return str(round(n, 2))
+    n = round(n, 2)
+    if n.is_integer():
+        return str(int(n))
+    return str(n)
 
 
 class XMLClass:
@@ -138,7 +141,7 @@ class XMLClass:
                 if isinstance(v, float):
                     v = fix_number(v)
                 elif isinstance(v, str):
-                    v = re.sub(r"\d+(\.\d+)",
+                    v = re.sub(r"\b\d+(\.\d+)\b",
                                lambda m: fix_number(float(m.group())), v)
                 out += f'{k.removesuffix("_").replace("__", "-")}="{v}" '
             out = out.rstrip() + ">" + "".join(contents)
@@ -182,10 +185,6 @@ def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
 
 def bunch_o_lines(pairs: list[tuple[complex, complex]], **options) -> str:
     "Collapse the pairs of points and return the smallest number of <polyline>s."
-    out = ""
-    scale = options["scale"]
-    w = options["stroke_width"]
-    c = options["stroke"]
     lines = []
     while pairs:
         group = take_next_group(pairs)
@@ -193,14 +192,7 @@ def bunch_o_lines(pairs: list[tuple[complex, complex]], **options) -> str:
         # make it a polyline
         pts = [group[0][0]] + [p[1] for p in group]
         lines.append(pts)
-    for line in lines:
-        out += XML.polyline(
-            points=" ".join(
-                f"{p.real * scale},{p.imag * scale}" for p in line),
-            stroke=c,
-            stroke__width=w,
-        )
-    return out
+    return "".join(polylinegon(line, **options) for line in lines)
 
 
 def id_text(
