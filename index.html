@@ -40,6 +40,7 @@
 
     <body>
         <h1>Schemascii Playground</h1>
+        <h2 id="version">Loading version...</h2>
         <div class="flex row">
             <div class="flex column">
                 <h2>Schemascii Source</h2><textarea id="schemascii" disabled></textarea>
@@ -55,7 +56,7 @@
         <h2>Errors</h2>
         <pre id="errors"></pre>
         <h2>More Information</h2>
-        <p><a href="https://github.com/dragoncoder047/schemascii/" targer="_blank">https://github.com/dragoncoder047/schemascii/</a></p>
+        <p><a href="https://github.com/dragoncoder047/schemascii/" target="_blank">https://github.com/dragoncoder047/schemascii/</a></p>
     </body>
     <script>
         // cSpell:ignore pyodide pyproject pyimport
@@ -65,7 +66,6 @@
         var console = document.getElementById("console");
         var source = document.getElementById("schemascii");
         var style_elem = document.getElementById("custom-css");
-        var render_button = document.getElementById("render");
         var schemascii;
         async function main() {
             try {
@@ -76,6 +76,7 @@
                 info("done\nFetching current Schemascii version... ");
                 var pyproject_toml = await fetch("pyproject.toml").then(x => x.text());
                 var ver = /version = "([\d.]+)"/.exec(pyproject_toml)[1];
+                document.getElementById("version").textContent = `using Schemascii version ${ver}`;
                 info(`${ver}\nInstalling schemascii-${ver} ... `);
                 await pyodide.pyimport("micropip", { errorCallback: error, messageCallback: info })
                     .install(`https://dragoncoder047.github.io/schemascii/dist/schemascii-${ver}-py3-none-any.whl`);
@@ -102,6 +103,7 @@
             var timeout = null;
             source.addEventListener("input", () => {
                 if (timeout) clearTimeout(timeout);
+                // Debouncing
                 timeout = setTimeout(async () => {
                     console.textContent = "";
                     errors.textContent = "";
