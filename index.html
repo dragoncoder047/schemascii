@@ -66,7 +66,7 @@
         var console = document.getElementById("console");
         var source = document.getElementById("schemascii");
         var style_elem = document.getElementById("custom-css");
-        var schemascii;
+        var schemascii_render;
         async function main() {
             try {
                 info("Loading Python... ");
@@ -80,7 +80,18 @@
                 info(`${ver}\nInstalling schemascii-${ver} ... `);
                 await pyodide.pyimport("micropip", { errorCallback: error, messageCallback: info })
                     .install(`https://dragoncoder047.github.io/schemascii/dist/schemascii-${ver}-py3-none-any.whl`);
-                schemascii = pyodide.pyimport("schemascii");
+                schemascii_render = await pyodide.runPythonAsync(`
+import warnings
+import schemascii
+def foo(*args, **kwargs):
+    with warnings.catch_warnings(record=True) as captured_warnings:
+        out = schemascii.render(*args, **kwargs)
+    for warn in captured_warnings:
+        print("warning:", warn.message)
+    return out
+
+foo
+`);
                 await setup();
                 console.textContent = "ready\n";
             } catch (e) {
@@ -108,7 +119,7 @@
                     console.textContent = "";
                     errors.textContent = "";
                     try {
-                        output.innerHTML = await schemascii.render("playground", source.value);
+                        output.innerHTML = await schemascii_render("playground", source.value);
                     } catch (e) {
                         error(`\n${e.stack}\n`);
                         output.innerHTML = "";
