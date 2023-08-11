@@ -39,6 +39,7 @@ async function main() {
         download_button.addEventListener("click", download);
         ver_switcher.addEventListener("change", acatched(switch_version));
 
+        css_box.value = await fetch("schemascii_example.css").then(r => r.text());
         source.removeAttribute("disabled");
         css_box.removeAttribute("disabled");
         console.textContent = "Ready";
