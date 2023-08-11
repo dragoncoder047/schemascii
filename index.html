@@ -71,50 +71,6 @@
         <p><a href="https://github.com/dragoncoder047/schemascii/"
                 target="_blank">https://github.com/dragoncoder047/schemascii/</a></p>
     </body>
-    <script>
-        // cSpell:ignore pyodide pyproject
-        var pyodide;
-        var console = document.getElementById("console");
-        var errors = document.getElementById("errors");
-        var css_box = document.getElementById("css");
-        var source = document.getElementById("schemascii");
-        var download_button = document.getElementById("download");
-        var ver_switcher = document.getElementById("version");
-
-        async function main() {
-            try {
-                info("Loading Python... ");
-                pyodide = await loadPyodide({ stdout: info, stderr: error });
-                info("done\nInstalling micropip...");
-                await pyodide.loadPackage("micropip", { errorCallback: error, messageCallback: () => { } });
-                info("done\n");
-                await pyodide.runPythonAsync(await fetch("scripts/web_startup.py").then(r => r.text()));
-                css_box.addEventListener("input", debounce(pyodide.globals.get("sync_css")));
-                source.addEventListener("input", debounce(pyodide.globals.get("render_catch_warnings")));
-                download_button.addEventListener("click", pyodide.globals.get("download_svg"));
-                ver_switcher.addEventListener("change", pyodide.globals.get("switch_version"));
-                source.removeAttribute("disabled");
-                css_box.removeAttribute("disabled");
-                console.textContent = "Ready";
-            } catch (e) {
-                error(`\nFATAL ERROR:\n${e.stack}\n`);
-                throw e;
-            }
-        }
-        function info(line) {
-            console.textContent += line;
-        }
-        function error(text) {
-            errors.textContent += text;
-        }
-        function debounce(fun) {
-            var timeout;
-            return function() {
-                if (timeout) clearTimeout(timeout);
-                timeout = setTimeout(fun, 100);
-            }
-        }
-        main();
-    </script>
+    <script src="scripts/web_startup.js"></script>
 
 </html>
