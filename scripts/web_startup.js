@@ -30,7 +30,7 @@ async function main() {
             o.textContent = o.value = v;
             ver_switcher.append(o);
         }
-        var latest_version = await fetch("pyproject.toml").then(r => r.text()).then(r => /version = "([\d.]+)"/.exec(r)[0]);
+        var latest_version = await fetch("pyproject.toml").then(r => r.text()).then(r => /version = "([\d.]+)"/.exec(r)[1]);
         ver_switcher.value = latest_version;
         info(`["${all_versions.join('", "')}"]\nlatest=${latest_version}\n`);
         await switch_version();
