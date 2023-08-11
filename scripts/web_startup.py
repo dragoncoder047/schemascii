@@ -70,7 +70,7 @@ print("Loading all versions... ", end="")
 foo = json.load(
     get("https://api.github.com/repos/dragoncoder047/schemascii/contents/dist"))
 foo = filter(lambda x: x["name"].endswith(".whl"), foo)
-foo = map(lambda x: x["path"], foo)
+foo = list(map(lambda x: x["path"], foo))
 versions_to_wheel_map = dict(
     zip(map(lambda x: re.search(r"""/schemascii-([\d.]+)-""", x).group(1), foo), foo))
 all_versions = list(versions_to_wheel_map.keys())
