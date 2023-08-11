@@ -43,6 +43,7 @@ async function main() {
         ver_switcher.addEventListener("change", acatched(switch_version));
 
         css_box.value = await fetch("schemascii_example.css").then(r => r.text());
+        sync_css();
         source.removeAttribute("disabled");
         css_box.removeAttribute("disabled");
         console.textContent = "Ready";
