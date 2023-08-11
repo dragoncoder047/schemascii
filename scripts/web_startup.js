@@ -95,12 +95,14 @@ function render() {
 }
 
 async function switch_version() {
+    source.setAttribute("disabled", true);
     info("Installing Schemascii version " + ver_switcher.value + "... ")
     await pyodide.pyimport("micropip").install(ver_map[ver_switcher.value]);
     monkeypatch();
     schemascii = pyodide.runPython("import schemascii\nschemascii");
     info("done\n");
     output.innerHTML = "";
+    source.removeAttribute("disabled");
 }
 
 function download() {
