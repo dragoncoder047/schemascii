@@ -6,7 +6,6 @@ import sys
 import re
 import js
 import json
-from operator import itemgetter
 import warnings
 import micropip
 
@@ -68,12 +67,13 @@ ver_switcher = js.document.getElementById("version")
 
 
 print("Loading all versions... ", end="")
-versions_all = json.load(
+foo = json.load(
     get("https://api.github.com/repos/dragoncoder047/schemascii/contents/dist"))
+foo = filter(lambda x: x["name"].endswith(".whl"), foo)
+foo = map(lambda x: x["path"], foo)
 versions_to_wheel_map = dict(
-    zip(map(itemgetter("name"), versions_all), map(itemgetter("path"), versions_all)))
+    zip(map(lambda x: re.search(r"""/schemascii-([\d.]+)-""", x).group(1), foo), foo))
 all_versions = list(versions_to_wheel_map.keys())
-all_versions.append("DEV")
 latest_version = re.search(
     r'''version = "([\d.]+)"''', get("pyproject.toml").read()).group(1)
 print(all_versions, "latest =", latest_version)
