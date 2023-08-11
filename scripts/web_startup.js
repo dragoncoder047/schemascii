@@ -87,7 +87,7 @@ function sync_css() {
 function render() {
     console.textContent = "";
     errors.textContent = "";
-    output.textContent = schemascii.patched_render(source.value);
+    output.innerHTML = schemascii.patched_render(source.value);
 }
 
 async function switch_version() {
