@@ -6,6 +6,8 @@ var css_box = document.getElementById("css");
 var source = document.getElementById("schemascii");
 var download_button = document.getElementById("download");
 var ver_switcher = document.getElementById("version");
+var style_elem = document.getElementById("custom-css");
+var output = document.getElementById("output");
 
 var schemascii;
 var monkeysrc;
@@ -34,6 +36,7 @@ async function main() {
         ver_switcher.value = latest_version;
         info(`["${all_versions.join('", "')}"]\nlatest=${latest_version}\n`);
         await switch_version();
+
         css_box.addEventListener("input", debounce(sync_css));
         source.addEventListener("input", debounce(catched(render)));
         download_button.addEventListener("click", download);
@@ -95,11 +98,13 @@ async function switch_version() {
     info("Installing Schemascii version " + ver_switcher.value + "... ")
     await pyodide.pyimport("micropip").install(ver_map[ver_switcher.value]);
     monkeypatch();
-    schemascii = pyodide.runPython("import schemascii; schemascii");
+    schemascii = pyodide.runPython("import schemascii\nschemascii");
     info("done\n");
+    output.innerHTML = "";
 }
 
 function download() {
+    if (!output.innerHTML) return;
     var a = document.createElement("a");
     a.setAttribute("href", URL.createObjectURL(new Blob([output.innerHTML], {"type": "application/svg+xml"})));
     a.setAttribute("download", `schemascii_playground_${new Date().toISOString()}_no_css.svg`);
