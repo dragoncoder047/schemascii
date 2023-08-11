@@ -1,5 +1,3 @@
-from pyodide.http import pyfetch as fetch, open_url as get
-from pyodide.ffi import create_proxy as event_handler
 import asyncio
 import functools
 import sys
@@ -7,6 +5,8 @@ import re
 import js
 import json
 import warnings
+from pyodide.http import pyfetch as fetch, open_url as get
+from pyodide.ffi import create_proxy as event_handler
 import micropip
 
 
@@ -57,6 +57,13 @@ async def switch_version():
     version = ver_switcher.value
     await micropip.install(versions_to_wheel_map[version])
 
+@event_handler
+def download_svg():
+    a = js.document.createElement("a")
+    a.setAttribute("href", js.URL.createObjectURL(js.Blob.new([output.innerHTML], {"type": "application/svg+xml"})))
+    a.setAttribute("download", f"schemascii_playground_{js.Date.new.toISOString()}_no_css.svg")
+    a.click()
+
 output = js.document.getElementById("output")
 css_box = js.document.getElementById("css")
 console = js.document.getElementById("console")
@@ -64,6 +71,7 @@ source = js.document.getElementById("schemascii")
 style_elem = js.document.getElementById("custom-css")
 errors = js.document.getElementById("errors")
 ver_switcher = js.document.getElementById("version")
+download_button = js.document.getElementById("download")
 
 
 print("Loading all versions... ", end="")
@@ -93,6 +101,7 @@ css_box.value = css_source
 
 css_box.addEventListener("input", sync_css)
 source.addEventListener("input", render_catch_warnings)
+download_button.addEventListener("click", download_svg)
 
 source.removeAttribute("disabled")
 css_box.removeAttribute("disabled")
