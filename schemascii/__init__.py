@@ -8,7 +8,7 @@ from .wires import get_wires
 from .utils import XML
 from .errors import *
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 
 
 def render(filename: str, text: str = None, **options) -> str:
