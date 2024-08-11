@@ -2,7 +2,7 @@ class Grid:
     """Helper class for managing a 2-D
     grid of ASCII art."""
 
-    def __init__(self, filename: str, data: str = None):
+    def __init__(self, filename: str, data: str | None = None):
         if data is None:
             with open(filename, encoding="ascii") as f:
                 data = f.read()
@@ -10,9 +10,10 @@ class Grid:
         self.raw: str = data
         lines: list[str] = data.split("\n")
         maxlen: int = max(len(line) for line in lines)
-        self.data: list[list[str]] = [list(line.ljust(maxlen, " ")) for line in lines]
+        self.data: list[list[str]] = [list(line.ljust(maxlen, " "))
+                                      for line in lines]
         self.masks: list[list[bool | str]] = [
-            [False for x in range(maxlen)] for y in range(len(lines))
+            [False for _ in range(maxlen)] for _ in range(len(lines))
         ]
         self.width = maxlen
         self.height = len(self.data)
@@ -31,12 +32,12 @@ class Grid:
         return self.getmask(p) or self.data[int(p.imag)][int(p.real)]
 
     @property
-    def lines(self):
+    def lines(self) -> tuple[str]:
         "The current contents, with masks applied."
-        return [
+        return tuple([
             "".join(self.get(complex(x, y)) for x in range(self.width))
             for y in range(self.height)
-        ]
+        ])
 
     def getmask(self, p: complex) -> str | bool:
         """Sees the mask applied to the specified point;
@@ -57,7 +58,8 @@ class Grid:
 
     def clrall(self):
         "Clears all the masks at once."
-        self.masks = [[False for x in range(self.width)] for y in range(self.height)]
+        self.masks = [[False for _ in range(self.width)]
+                      for _ in range(self.height)]
 
     def clip(self, p1: complex, p2: complex):
         """Returns a sub-grid with the contents bounded by the p1 and p2 box.
@@ -67,8 +69,48 @@ class Grid:
         d = "\n".join("".join(ln[ls]) for ln in self.data[cs])
         return Grid(self.filename, d)
 
+    def shrink(self):
+        """Shrinks self so that there is not any space between the edges and
+        the next non-printing character. Takes masks into account."""
+        # clip the top lines
+        while all(self.get(complex(x, 0)).isspace()
+                  for x in range(self.width)):
+            self.height -= 1
+            self.data.pop(0)
+            self.masks.pop(0)
+        # clip the bottom lines
+        while all(self.get(complex(x, self.height - 1)).isspace()
+                  for x in range(self.width)):
+            self.height -= 1
+            self.data.pop()
+            self.masks.pop()
+        # find the max indent space on left
+        min_indent = self.width
+        for line in self.lines:
+            this_indent = len(line) - len(line.lstrip())
+            min_indent = min(min_indent, this_indent)
+        # chop the space
+        if min_indent > 0:
+            self.width -= min_indent
+            for line in self.data:
+                del line[0:min_indent]
+            for line in self.masks:
+                del line[0:min_indent]
+        # find the max indent space on right
+        min_indent = self.width
+        for line in self.lines:
+            this_indent = len(line) - len(line.rstrip())
+            min_indent = min(min_indent, this_indent)
+        # chop the space
+        if min_indent > 0:
+            self.width -= min_indent
+            for line in self.data:
+                del line[len(line)-min_indent:]
+            for line in self.masks:
+                del line[len(line)-min_indent:]
+
     def __repr__(self):
-        return f"Grid({self.filename!r}, '''\n{chr(10).join(self.lines)}''')"
+        return f"Grid({self.filename!r}, \"""\n{chr(10).join(self.lines)}\""")"
 
     __str__ = __repr__
 
@@ -86,5 +128,16 @@ class Grid:
 
 
 if __name__ == "__main__":
-    x = Grid("", "   \n   \n   ")
-    x.spark(0, 1, 2, 1j, 2j, 1 + 2j, 2 + 2j, 2 + 1j)
+    x = Grid("", """
+
+     xx---
+       hha--
+    a     awq           
+
+"""[1:-1])
+    x.spark(0, complex(x.width - 1, 0), complex(0, x.height - 1),
+            complex(x.width - 1, x.height - 1))
+    x.shrink()
+    print()
+    x.spark(0, complex(x.width - 1, 0), complex(0, x.height - 1),
+            complex(x.width - 1, x.height - 1))
