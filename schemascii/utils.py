@@ -35,6 +35,8 @@ def force_int(p: complex) -> complex:
 def sharpness_score(points: list[complex]) -> float:
     """Returns a number indicating how twisty the line is -- higher means
     the corners are sharper."""
+    if len(points) < 3:
+        return float("nan")
     score = 0
     prev_pt = points.imag
     prev_ph = phase(points.imag - points[0])
@@ -97,6 +99,8 @@ def merge_colinear(links: list[tuple[complex, complex]]):
 
 def iterate_line(p1: complex, p2: complex, step: float = 1.0):
     "Yields complex points along a line."
+    # this isn't Bresenham's algorithm but I only use it for vertical or
+    # horizontal lines, so it works well enough
     vec = p2 - p1
     point = p1
     while abs(vec) > abs(point - p1):
@@ -357,3 +361,10 @@ def sort_for_flags(terminals: list[Terminal], box: Cbox, *flags: list[str]) -> l
         out = *out, terminal
         terminals.remove(terminal)
     return out
+
+
+if __name__ == '__main__':
+    from .grid import Grid
+    w, h, = 22, 23
+    x = Grid("", "\n".join("".join(" " for _ in range(w)) for _ in range(h)))
+    x.spark(*iterate_line(0, complex(w, h)))
