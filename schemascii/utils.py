@@ -56,26 +56,24 @@ def intersecting(a, b, p, q):
     return sort_a <= sort_p <= sort_b or sort_p <= sort_b <= sort_q
 
 
-def take_next_group(links: list[tuple[complex, complex]]) -> list[tuple[complex, complex]]:
-    """Pops the longes possible link off of the `links` list and returns it,
+def take_next_group(links: list[tuple[complex, complex]]) -> list[
+        tuple[complex, complex]]:
+    """Pops the longest possible path off of the `links` list and returns it,
     mutating the input list."""
     best = [links.pop()]
     while True:
         for pair in links:
             if best[0][0] == pair[1]:
                 best.insert(0, pair)
-                links.remove(pair)
             elif best[0][0] == pair[0]:
                 best.insert(0, (pair[1], pair[0]))
-                links.remove(pair)
             elif best[-1][1] == pair[0]:
                 best.append(pair)
-                links.remove(pair)
             elif best[-1][1] == pair[1]:
                 best.append((pair[1], pair[0]))
-                links.remove(pair)
             else:
                 continue
+            links.remove(pair)
             break
         else:
             break
@@ -86,11 +84,12 @@ def merge_colinear(links: list[tuple[complex, complex]]):
     "Merges line segments that are colinear. Mutates the input list."
     i = 1
     while True:
-        if i == len(links):
+        if i >= len(links):
             break
         elif links[i][0] == links[i][1]:
             links.remove(links[i])
-        elif links[i-1][1] == links[i][0] and colinear(links[i-1][0], links[i][0], links[i][1]):
+        elif links[i-1][1] == links[i][0] and colinear(
+                links[i-1][0], links[i][0], links[i][1]):
             links[i-1] = (links[i-1][0], links[i][1])
             links.remove(links[i])
         else:
@@ -188,7 +187,8 @@ def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
 
 
 def bunch_o_lines(pairs: list[tuple[complex, complex]], **options) -> str:
-    "Collapse the pairs of points and return the smallest number of <polyline>s."
+    """Collapse the pairs of points and return
+    the smallest number of <polyline>s."""
     lines = []
     while pairs:
         group = take_next_group(pairs)
