@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 from itertools import combinations
 from typing import Literal
@@ -17,6 +18,8 @@ WIRE_DIRECTIONS: defaultdict[str, defaultdict[DirStr, str]] = defaultdict(
         "|": IDENTITY,
         "(": IDENTITY,
         ")": IDENTITY,
+        "~": IDENTITY,
+        ":": IDENTITY,
         "*": EVERYWHERE,
     })
 WIRE_STARTS: defaultdict[str, str] = defaultdict(lambda: NOWHERE, {
@@ -34,7 +37,7 @@ class Wire(list[complex]):
     """List of grid points along a wire."""
 
     @classmethod
-    def get_from_grid(cls, grid: Grid, start: complex):
+    def get_from_grid(cls, grid: Grid, start: complex) -> Wire:
         seen: set[complex] = set()
         pts: list[complex] = []
         stack: list[tuple[complex, DirStr]] = [

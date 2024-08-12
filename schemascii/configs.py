@@ -8,16 +8,16 @@ class ConfigConfig:
     name: str
     clazz: type | list
     default: object
-    description: str
+    help: str
 
 
 OPTIONS = [
-    ConfigConfig("padding", float, 10, "Amount of padding to add on the edges."),
-    ConfigConfig(
-        "scale", float, 15, "Scale at which to enlarge the entire diagram by."
-    ),
-    ConfigConfig("stroke_width", float, 2, "Width of the lines"),
-    ConfigConfig("stroke", str, "black", "Color of the lines."),
+    ConfigConfig("padding", float, 10, "Amount of padding to add "
+                 "to the edges around the drawing."),
+    ConfigConfig("scale", float, 15, "Scale by which to enlarge "
+                 "the entire diagram by."),
+    ConfigConfig("stroke_width", float, 2, "Width of lines."),
+    ConfigConfig("stroke", str, "black", "Color of lines."),
     ConfigConfig(
         "label",
         ["L", "V", "VL"],
@@ -39,20 +39,20 @@ def add_config_arguments(a: argparse.ArgumentParser):
         if isinstance(opt.clazz, list):
             a.add_argument(
                 "--" + opt.name,
-                help=opt.description,
+                help=opt.help,
                 choices=opt.clazz,
                 default=opt.default,
             )
         elif opt.clazz is bool:
             a.add_argument(
                 "--" + opt.name,
-                help=opt.description,
+                help=opt.help,
                 action="store_false" if opt.default else "store_true",
             )
         else:
             a.add_argument(
                 "--" + opt.name,
-                help=opt.description,
+                help=opt.help,
                 type=opt.clazz,
                 default=opt.default,
             )
