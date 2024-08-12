@@ -46,16 +46,17 @@ def best_exponent(num: Decimal, six: bool) -> tuple[str, int]:
     digits, exp = Decimal(res.group(1)), int(res.group(2) or "0")
     assert exp % 3 == 0, "failed to make engineering notation"
     possibilities = []
-    for cnd_exp_off in range(-12, 9, 3):
-        if (exp + cnd_exp_off) % 6 == 0 or not six:
-            new_exp = exp - cnd_exp_off
-            new_digits = str(digits * (Decimal(10) ** Decimal(cnd_exp_off)))
-            if "e" in new_digits.lower():
-                # we're trying to avoid getting exponential notation here
-                continue
-            if "." in new_digits:
-                new_digits = new_digits.rstrip("0").removesuffix(".")
-            possibilities.append((new_digits, new_exp))
+    for push in range(-12, 9, 3):
+        if six and (exp + push) % 6 != 0:
+            continue
+        new_exp = exp - push
+        new_digits = str(digits * (Decimal(10) ** Decimal(push)))
+        if "e" in new_digits.lower():
+            # we're trying to avoid getting exponential notation here
+            continue
+        if "." in new_digits:
+            new_digits = new_digits.rstrip("0").removesuffix(".")
+        possibilities.append((new_digits, new_exp))
     # heuristics:
     #   * shorter is better
     #   * prefer no decimal point
@@ -72,7 +73,7 @@ def normalize_metric(num: str, six: bool, unicode: bool) -> tuple[str, str]:
     a tuple (normalized_digits, metric_multiplier)."""
     match = METRIC_NUMBER.match(num)
     if not match:
-        return num
+        return num, None
     digits_str, multiplier = match.group(1), match.group(2)
     digits_decimal = Decimal(digits_str)
     digits_decimal *= Decimal(10) ** Decimal(
@@ -101,28 +102,29 @@ def format_metric_unit(
     if match:
         # format the range by calling recursively
         num0, num1 = match.group(1), match.group(2)
-        suffix = num[match.span(0)[1]:]
+        suffix = num[match.span()[1]:]
         digits0, exp0 = normalize_metric(num0, six, unicode)
         digits1, exp1 = normalize_metric(num1, six, unicode)
         if exp0 != exp1:
             # different multiplier so use multiplier and unit on both
-            return f"{digits0} {exp0}{unit} - {digits1} {exp1}{unit} {suffix}".rstrip()
+            return (f"{digits0} {exp0}{unit} - "
+                    f"{digits1} {exp1}{unit} {suffix}").rstrip()
         return f"{digits0}-{digits1} {exp0}{unit} {suffix}".rstrip()
     match = METRIC_NUMBER.match(num)
     if not match:
         return num
     suffix = num[match.span(0)[1]:]
-    digits, exp = normalize_metric(match.group(0), six, unicode)
+    digits, exp = normalize_metric(match.group(), six, unicode)
     return f"{digits} {exp}{unit} {suffix}".rstrip()
 
 
 if __name__ == "__main__":
     def test(*args):
-        print(">>> format_metric_unit", args)
+        print(">>> format_metric_unit", args, sep="")
         print(repr(format_metric_unit(*args)))
     test("2.5-3500", "V")
     test("50n", "F", True)
-    test("50M-1000M", "Hz")
+    test("50M-1000000000000000000000p", "Hz")
     test(".1", "Ω")
     test("2200u", "F", True)
     test("Gain", "Ω")
