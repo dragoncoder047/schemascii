@@ -110,7 +110,8 @@ class Grid:
                 del line[len(line)-min_indent:]
 
     def __repr__(self):
-        return f"Grid({self.filename!r}, \"""\n{chr(10).join(self.lines)}\""")"
+        return (f"Grid({self.filename!r}, \"\"\""
+                f"\n{chr(10).join(self.lines)}\"\"\")")
 
     __str__ = __repr__
 
