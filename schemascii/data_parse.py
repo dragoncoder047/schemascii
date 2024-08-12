@@ -1,11 +1,8 @@
 from __future__ import annotations
 
 import fnmatch
-import re
 import tomllib
 from dataclasses import dataclass
-
-from .errors import DiagramSyntaxError
 
 
 @dataclass
