@@ -10,14 +10,22 @@ from .utils import iterate_line, perimeter
 
 @dataclass
 class Component:
-    all_components: ClassVar[list[type[Component]]]
+    all_components: ClassVar[dict[str, type[Component]]] = {}
 
     rd: RefDes
     blobs: list[list[complex]]  # to support multiple parts.
     # flags: list[Flag]
+    # terminals: list[Terminal]
 
     @classmethod
     def from_rd(cls, rd: RefDes, grid: Grid) -> Component:
+        # find the right component class
+        for cname in cls.all_components:
+            if cname == rd.letter:
+                cls = cls.all_components[cname]
+                break
+
+        # now flood-fill to find the blobs
         blobs = []
         seen = set()
 
@@ -53,8 +61,24 @@ class Component:
         # done
         return cls(rd, blobs)
 
+    def __init_subclass__(cls, names: list[str]):
+        """Register the component subclass in the component registry."""
+        for name in names:
+            if not (name.isalpha() and name.upper() == name):
+                raise ValueError(
+                    f"invalid reference designator letters: {name!r}")
+            if name in cls.all_components:
+                raise ValueError(
+                    f"duplicate reference designator letters: {name!r}")
+            cls.all_components[name] = cls
+
 
 if __name__ == '__main__':
+    class FooComponent(Component, names=["U", "FOO"]):
+        pass
+
+    print(Component.all_components)
+
     testgrid = Grid("", """
 
   [xor gate]     [op amp]
@@ -72,3 +96,6 @@ if __name__ == '__main__':
         print(c)
         for blob in c.blobs:
             testgrid.spark(*blob)
+
+    class BarComponent(Component, names=["FOO"]):
+        pass
