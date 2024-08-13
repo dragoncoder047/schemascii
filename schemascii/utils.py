@@ -22,6 +22,19 @@ class Side(IntEnum):
     BOTTOM = 3
 
 
+def perimeter(pts: list[complex]) -> list[complex]:
+    """The set of points that are on the boundary of
+    the grid-aligned set pts."""
+    out = []
+    for pt in pts:
+        for d in [-1, -1-1j, -1j, 1, 1-1j, 1+1j, 1j, 1]:
+            xp = pt + d
+            if xp not in pts:
+                out.append(pt)
+                break
+    return out
+
+
 def colinear(*points: complex) -> bool:
     "Returns true if all the points are in the same line."
     return len(set(phase(p - points[0]) for p in points[1:])) == 1
