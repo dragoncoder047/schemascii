@@ -1,12 +1,13 @@
-from collections import namedtuple
-from itertools import groupby, chain
-from enum import IntEnum
-from math import pi
-from cmath import phase, rect
-from typing import Callable
 import re
-from .metric import format_metric_unit
+from cmath import phase, rect
+from collections import namedtuple
+from enum import IntEnum
+from itertools import chain, groupby
+from math import pi
+from typing import Callable
+
 from .errors import TerminalsError
+from .metric import format_metric_unit
 
 Cbox = namedtuple("Cbox", "p1 p2 type id")
 BOMData = namedtuple("BOMData", "type id data")
