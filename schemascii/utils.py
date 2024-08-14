@@ -150,7 +150,9 @@ def deep_transform(data, origin: complex, theta: float):
     if isinstance(data, list | tuple):
         return [deep_transform(d, origin, theta) for d in data]
     if isinstance(data, complex):
-        return origin + rect(data.real, theta + pi / 2) + rect(data.imag, theta)
+        return (origin
+                + rect(data.real, theta + pi / 2)
+                + rect(data.imag, theta))
     try:
         return deep_transform(complex(data), origin, theta)
     except TypeError as err:
@@ -192,7 +194,8 @@ XML = XMLClass()
 del XMLClass
 
 
-def polylinegon(points: list[complex], is_polygon: bool = False, **options) -> str:
+def polylinegon(
+        points: list[complex], is_polygon: bool = False, **options) -> str:
     "Turn the list of points into a <polyline> or <polygon>."
     scale = options["scale"]
     w = options["stroke_width"]
@@ -200,7 +203,9 @@ def polylinegon(points: list[complex], is_polygon: bool = False, **options) -> s
     pts = " ".join(f"{x.real * scale},{x.imag * scale}" for x in points)
     if is_polygon:
         return XML.polygon(points=pts, fill=c, class_="filled")
-    return XML.polyline(points=pts, fill="transparent", stroke__width=w, stroke=c)
+    return XML.polyline(
+        points=pts, fill="transparent",
+        stroke__width=w, stroke=c)
 
 
 def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
@@ -299,7 +304,8 @@ def make_text_point(t1: complex, t2: complex, **options) -> complex:
     return text_pt
 
 
-def make_plus(terminals: list[Terminal], center: complex, theta: float, **options) -> str:
+def make_plus(terminals: list[Terminal], center: complex,
+              theta: float, **options) -> str:
     "Make a + sign if the terminals indicate the component is polarized."
     if all(t.flag != "+" for t in terminals):
         return ""
@@ -327,13 +333,15 @@ def arrow_points(p1: complex, p2: complex) -> list[tuple[complex, complex]]:
     ]
 
 
-def make_variable(center: complex, theta: float, is_variable: bool = True, **options) -> str:
+def make_variable(center: complex, theta: float,
+                  is_variable: bool = True, **options) -> str:
     "Draw a 'variable' arrow across the component."
     if not is_variable:
         return ""
-    return bunch_o_lines(
-        deep_transform(arrow_points(-1, 1), center, (theta % pi) + pi / 4), **options
-    )
+    return bunch_o_lines(deep_transform(arrow_points(-1, 1),
+                                        center,
+                                        (theta % pi) + pi / 4),
+                         **options)
 
 
 def light_arrows(center: complex, theta: float, out: bool, **options):
@@ -376,7 +384,8 @@ def is_clockwise(terminals: list[Terminal]) -> bool:
     return False
 
 
-def sort_for_flags(terminals: list[Terminal], box: Cbox, *flags: list[str]) -> list[Terminal]:
+def sort_for_flags(terminals: list[Terminal],
+                   box: Cbox, *flags: list[str]) -> list[Terminal]:
     """Sorts out the terminals in the specified order using the flags.
     Raises and error if the flags are absent."""
     out = ()
