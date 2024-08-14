@@ -575,7 +575,8 @@ def switch(box: Cbox, terminals: list[Terminal], bom_data: BOMData, **options):
 # if they aren't the path will be transformed
 {
     # fuse
-    "F": "M0-.9A.1.1 0 000-1.1.1.1 0 000-.9ZM0-1Q.5-.5 0 0T0 1Q-.5.5 0 0T0-1ZM0 1.1A.1.1 0 000 .9.1.1 0 000 1.1Z",
+    "F": ("M0-.9A.1.1 0 000-1.1.1.1 0 000-.9ZM0-1Q.5-.5 0 0T0 1Q-.5.5 0 "
+          "0T0-1ZM0 1.1A.1.1 0 000 .9.1.1 0 000 1.1Z"),
     # jumper pads
     "JP": "M0-1Q-1-1-1-.25H1Q1-1 0-1ZM0 1Q-1 1-1 .25H1Q1 1 0 1",
     # loudspeaker

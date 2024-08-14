@@ -43,18 +43,22 @@ cmd("scripts/docs.py")
 cmd("python3 -m build --sdist")
 cmd("python3 -m build --wheel")
 
-cmd("schemascii test_data/test_charge_pump.txt --out test_data/test_charge_pump.txt.svg")
+cmd("schemascii test_data/test_charge_pump.txt --out "
+    "test_data/test_charge_pump.txt.svg")
 
-print("for some reason convert isn't working with the css, so aborting the auto-rendering")
+print("for some reason convert isn't working with the css, "
+      "so aborting the auto-rendering")
 sys.exit(0)
 
-cmd("convert test_data/test_charge_pump.txt.svg test_data/test_charge_pump.png")
+cmd("convert test_data/test_charge_pump.txt.svg "
+    "test_data/test_charge_pump.png")
 
 svg_content = slurp("test_data/test_charge_pump.txt.svg")
 css_content = slurp("schemascii_example.css")
 spit("test_data/test_charge_pump_css.txt.svg",
      svg_content.replace("</svg>", f'<style>{css_content}</style></svg>'))
-cmd("convert test_data/test_charge_pump_css.txt.svg test_data/test_charge_pump_css.png")
+cmd("convert test_data/test_charge_pump_css.txt.svg "
+    "test_data/test_charge_pump_css.png")
 
 # cmd("git add -A")
 # cmd("git commit -m 'blah'")
