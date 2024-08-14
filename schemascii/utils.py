@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import re
-from cmath import phase, rect
+from cmath import phase, rect, pi
 from enum import IntEnum
 from itertools import chain, groupby
-from math import pi
 from typing import Callable, NamedTuple
 
 from .errors import TerminalsError
 from .metric import format_metric_unit
+
+
+ORTHAGONAL = (1, -1, 1j, -1j)
+DIAGONAL = (-1+1j, 1+1j, -1-1j, 1-1j)
 
 
 class Cbox(NamedTuple):
@@ -43,18 +46,52 @@ class Side(IntEnum):
     LEFT = 2
     BOTTOM = 3
 
+    @classmethod
+    def from_phase(cls, pt: complex) -> Side:
+        ops = {
+            -pi: Side.LEFT,
+            pi: Side.LEFT,
+            pi / 2: Side.TOP,
+            -pi / 2: Side.BOTTOM,
+            0: Side.RIGHT
+        }
+        pph = phase(pt)
+        best_err = float("inf")
+        best_side = None
+        for ph, s in ops.items():
+            err = abs(ph - pph)
+            if best_err > err:
+                best_err = err
+                best_side = s
+        return best_side
+
 
 def perimeter(pts: list[complex]) -> list[complex]:
     """The set of points that are on the boundary of
     the grid-aligned set pts."""
     out = []
     for pt in pts:
-        for d in [-1, -1-1j, -1j, 1, 1-1j, 1+1j, 1j, 1]:
+        for d in ORTHAGONAL + DIAGONAL:
             xp = pt + d
             if xp not in pts:
                 out.append(pt)
                 break
-    return out
+    return out  # sort_counterclockwise(out, centroid(pts))
+
+
+def centroid(pts: list[complex]) -> complex:
+    """Return the centroid of the set of points pts."""
+    return sum(pts) / len(pts)
+
+
+def sort_counterclockwise(pts: list[complex],
+                          center: complex | None = None) -> list[complex]:
+    """Returns pts sorted so that the points
+    progress clockwise around the center, starting with the
+    rightmost point."""
+    if center is None:
+        center = centroid(pts)
+    return sorted(pts, key=lambda p: phase(p - center))
 
 
 def colinear(*points: complex) -> bool:
@@ -73,8 +110,8 @@ def sharpness_score(points: list[complex]) -> float:
     if len(points) < 3:
         return float("nan")
     score = 0
-    prev_pt = points.imag
-    prev_ph = phase(points.imag - points[0])
+    prev_pt = points[1]
+    prev_ph = phase(points[1] - points[0])
     for p in points[2:]:
         ph = phase(p - prev_pt)
         score += abs(prev_ph - ph)
@@ -358,7 +395,8 @@ def light_arrows(center: complex, theta: float, out: bool, **options):
     )
 
 
-def sort_counterclockwise(terminals: list[Terminal]) -> list[Terminal]:
+def sort_terminals_counterclockwise(
+        terminals: list[Terminal]) -> list[Terminal]:
     "Sort the terminals in counterclockwise order."
     partitioned = {
         side: list(filtered_terminals)
@@ -376,7 +414,7 @@ def sort_counterclockwise(terminals: list[Terminal]) -> list[Terminal]:
 
 def is_clockwise(terminals: list[Terminal]) -> bool:
     "Return true if the terminals are clockwise order."
-    sort = sort_counterclockwise(terminals)
+    sort = sort_terminals_counterclockwise(terminals)
     for _ in range(len(sort)):
         if sort == terminals:
             return True
@@ -408,7 +446,9 @@ def sort_for_flags(terminals: list[Terminal],
 
 
 if __name__ == '__main__':
-    from .grid import Grid
-    w, h, = 22, 23
-    x = Grid("", "\n".join("".join(" " for _ in range(w)) for _ in range(h)))
-    x.spark(*iterate_line(0, complex(w, h)))
+    import pprint
+    pts = []
+    n = 100
+    for x in range(n):
+        pts.append(force_int(rect(n, 2 * pi * x / n)))
+    pprint.pprint(sort_counterclockwise(pts))

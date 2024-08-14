@@ -5,7 +5,9 @@ from typing import ClassVar
 
 from .grid import Grid
 from .refdes import RefDes
-from .utils import iterate_line, perimeter
+from .utils import (DIAGONAL, ORTHAGONAL, Side, Terminal, iterate_line,
+                    perimeter)
+from .wire import Wire
 
 
 @dataclass
@@ -14,8 +16,7 @@ class Component:
 
     rd: RefDes
     blobs: list[list[complex]]  # to support multiple parts.
-    # flags: list[Flag]
-    # terminals: list[Terminal]
+    terminals: list[Terminal]
 
     @classmethod
     def from_rd(cls, rd: RefDes, grid: Grid) -> Component:
@@ -26,15 +27,15 @@ class Component:
                 break
 
         # now flood-fill to find the blobs
-        blobs = []
-        seen = set()
+        blobs: list[list[complex]] = []
+        seen: set[complex] = set()
 
         def flood(starting: list[complex], moore: bool) -> list[complex]:
             frontier = list(starting)
-            out = []
-            directions = [1, -1, 1j, -1j]
+            out: list[complex] = []
+            directions = ORTHAGONAL
             if moore:
-                directions.extend([-1+1j, 1+1j, -1-1j, 1-1j])
+                directions += DIAGONAL
             while frontier:
                 point = frontier.pop(0)
                 out.append(point)
@@ -50,16 +51,45 @@ class Component:
         # add in the RD's bounds and find the main blob
         blobs.append(flood(iterate_line(rd.left, rd.right), False))
         # now find all of the auxillary blobs
-        for pt in perimeter(blobs[0]):
-            for d in [-1+1j, 1+1j, -1-1j, 1-1j]:
-                cx = pt + d
-                if cx not in seen and grid.get(cx) == "#":
+        for perimeter_pt in perimeter(blobs[0]):
+            for d in DIAGONAL:
+                poss_aux_blob_pt = perimeter_pt + d
+                if (poss_aux_blob_pt not in seen
+                        and grid.get(poss_aux_blob_pt) == "#"):
                     # we found another blob
-                    blobs.append(flood([cx], True))
-        # find all of the flags
-        pass
+                    blobs.append(flood([poss_aux_blob_pt], True))
+        # find all of the terminals
+        terminals: list[Terminal] = []
+        for perimeter_pt in perimeter(seen):
+            # these get masked with wires because they are like wires
+            for d in ORTHAGONAL:
+                poss_term_pt = perimeter_pt + d
+                ch = grid.get(poss_term_pt)
+                if ch != "#" and not ch.isspace():
+                    # candidate for terminal
+                    # search around again to see if a wire connects
+                    # to it
+                    for d in ORTHAGONAL:
+                        if (grid.get(d + poss_term_pt)
+                                in Wire.starting_directions.keys()):
+                            # there is a neighbor with a wire, so it must
+                            # be a terminal
+                            break
+                            # now d holds the direction of the terminal
+                    else:
+                        # no nearby wires - must just be something
+                        # like the reference designator or other junk
+                        continue
+                    if any(t.pt == poss_term_pt for t in terminals):
+                        # already found this one
+                        continue
+                    if ch in Wire.starting_directions.keys():
+                        # it is just a connected wire, not a flag
+                        ch = None
+                    terminals.append(
+                        Terminal(poss_term_pt, ch, Side.from_phase(d)))
         # done
-        return cls(rd, blobs)
+        return cls(rd, blobs, terminals)
 
     def __init_subclass__(cls, names: list[str]):
         """Register the component subclass in the component registry."""
@@ -83,19 +113,17 @@ if __name__ == '__main__':
 
   [xor gate]     [op amp]
 
-# ######         #
- # ########      ###
-  # #########    #####
-  # #U1G1#####   #U2A###
-  # #########    #####
- # ########      ###
-# ######         #
+    # ######                   #
+     # ########                ###
+  ----# #########         ----+#####
+      # #U1G1#####----         #U2A###-----
+  ----# #########         -----#####
+     # ########                ###
+    # ######                   #
 """)
     for rd in RefDes.find_all(testgrid):
         c = Component.from_rd(rd, testgrid)
         print(c)
         for blob in c.blobs:
             testgrid.spark(*blob)
-
-    class BarComponent(Component, names=["FOO"]):
-        pass
+        testgrid.spark(*(t.pt for t in c.terminals))

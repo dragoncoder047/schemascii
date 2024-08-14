@@ -17,7 +17,7 @@ from .utils import (
     deep_transform,
     make_plus,
     make_variable,
-    sort_counterclockwise,
+    sort_terminals_counterclockwise,
     light_arrows,
     sort_for_flags,
     is_clockwise,
@@ -324,7 +324,7 @@ def integrated_circuit(
             font__size=options["scale"],
             fill=options["stroke"],
         )
-    s_terminals = sort_counterclockwise(terminals)
+    s_terminals = sort_terminals_counterclockwise(terminals)
     for terminal, label in zip(s_terminals, pin_labels):
         sc_text_pt = terminal.pt * scale
         out += XML.text(
