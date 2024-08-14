@@ -28,8 +28,6 @@ class Wire:
             "|": IDENTITY,
             "(": IDENTITY,
             ")": IDENTITY,
-            "~": IDENTITY,
-            ":": IDENTITY,
             "*": EVERYWHERE,
         })
     starting_directions: ClassVar[
