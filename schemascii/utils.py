@@ -83,7 +83,7 @@ def sharpness_score(points: list[complex]) -> float:
     return score
 
 
-def intersecting(a, b, p, q):
+def intersecting(a: complex, b: complex, p: complex, q: complex):
     """Return true if colinear line segments AB and PQ intersect."""
     a, b, p, q = a.real, b.real, p.real, q.real
     sort_a, sort_b = min(a, b), max(a, b)
@@ -172,7 +172,7 @@ def fix_number(n: float) -> str:
 
 
 class XMLClass:
-    def __getattr__(self, tag) -> Callable:
+    def __getattr__(self, tag: str) -> Callable:
         def mk_tag(*contents: str, **attrs: str) -> str:
             out = f"<{tag} "
             for k, v in attrs.items():
