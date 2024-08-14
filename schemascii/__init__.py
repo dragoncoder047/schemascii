@@ -6,12 +6,13 @@ from .edgemarks import find_edge_marks
 from .components_render import render_component
 from .wires import get_wires
 from .utils import XML
-from .errors import *
+from .errors import (Error, DiagramSyntaxError, TerminalsError,
+                     BOMError, UnsupportedComponentError, ArgumentError)
 
 __version__ = "0.3.2"
 
 
-def render(filename: str, text: str = None, **options) -> str:
+def render(filename: str, text: str | None = None, **options) -> str:
     "Render the Schemascii diagram to an SVG string."
     if text is None:
         with open(filename, encoding="ascii") as f:
@@ -20,7 +21,8 @@ def render(filename: str, text: str = None, **options) -> str:
     grid = Grid(filename, text)
     # Passed-in options override diagram inline options
     options = apply_config_defaults(
-        options | get_inline_configs(grid) | options.get("override_options", {})
+        options | get_inline_configs(
+            grid) | options.get("override_options", {})
     )
     components, bom_data = find_all(grid)
     terminals = {c: find_edge_marks(grid, c) for c in components}

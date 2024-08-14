@@ -1,18 +1,39 @@
+from __future__ import annotations
+
 import re
 from cmath import phase, rect
-from collections import namedtuple
 from enum import IntEnum
 from itertools import chain, groupby
 from math import pi
-from typing import Callable
+from typing import Callable, NamedTuple
 
 from .errors import TerminalsError
 from .metric import format_metric_unit
 
-Cbox = namedtuple("Cbox", "p1 p2 type id")
-BOMData = namedtuple("BOMData", "type id data")
-Flag = namedtuple("Flag", "pt char side")
-Terminal = namedtuple("Terminal", "pt flag side")
+
+class Cbox(NamedTuple):
+    p1: complex
+    p2: complex
+    type: str
+    id: str
+
+
+class BOMData(NamedTuple):
+    type: str
+    id: str
+    data: str
+
+
+class Flag(NamedTuple):
+    pt: complex
+    char: str
+    side: Side
+
+
+class Terminal(NamedTuple):
+    pt: complex
+    flag: str | None
+    side: Side
 
 
 class Side(IntEnum):

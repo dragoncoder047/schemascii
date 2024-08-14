@@ -1,10 +1,13 @@
 from itertools import chain
-from typing import Callable
+from typing import Callable, TypeVar
 from .utils import Cbox, Flag, Side, Terminal
 from .grid import Grid
 
+T = TypeVar("T")
 
-def over_edges(box: Cbox, func: Callable[[complex, Side], list | None]):
+
+def over_edges(box: Cbox,
+               func: Callable[[complex, Side], list[T] | None]) -> list[T]:
     "Decorator - Runs around the edges of the box on the grid."
     out = []
     for p, s in chain(
