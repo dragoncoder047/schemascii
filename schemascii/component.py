@@ -86,6 +86,9 @@ class Component:
                     if ch in Wire.starting_directions.keys():
                         # it is just a connected wire, not a flag
                         ch = None
+                    else:
+                        # mask the wire
+                        grid.setmask(poss_term_pt, "*")
                     terminals.append(
                         Terminal(poss_term_pt, ch, Side.from_phase(d)))
         # done
