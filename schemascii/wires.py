@@ -8,7 +8,9 @@ from .utils import force_int, iterate_line, bunch_o_lines, XML, find_dots
 DIRECTIONS = [1, -1, 1j, -1j]
 
 
-def next_in_dir(grid: Grid, point: complex, dydx: complex) -> tuple[complex, complex] | None:
+def next_in_dir(grid: Grid,
+                point: complex,
+                dydx: complex) -> tuple[complex, complex] | None:
     """Follows the wire starting at the point in the specified direction,
     until some interesting change (a corner, junction, or end). Returns the
     tuple (new, old)."""
