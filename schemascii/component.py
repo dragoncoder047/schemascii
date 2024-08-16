@@ -83,7 +83,7 @@ class Component:
                     if any(t.pt == poss_term_pt for t in terminals):
                         # already found this one
                         continue
-                    if ch in Wire.starting_directions.keys():
+                    if Wire.is_wire_character(ch):
                         # it is just a connected wire, not a flag
                         ch = None
                     else:

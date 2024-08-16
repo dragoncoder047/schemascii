@@ -70,6 +70,10 @@ class Wire:
                 links.append((p1, p2))
         return bunch_o_lines(links, **options)
 
+    @classmethod
+    def is_wire_character(cls, ch: str) -> bool:
+        return ch in cls.starting_directions
+
 
 if __name__ == '__main__':
     x = Grid("", """
