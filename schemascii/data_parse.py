@@ -1,9 +1,10 @@
 from __future__ import annotations
-import re
+
 import fnmatch
+import re
 from dataclasses import dataclass
 
-from .errors import DiagramSyntaxError
+import schemascii.errors as _errors
 
 TOKEN_PAT = re.compile("|".join([
     r"[\n{};=]",  # special one-character
@@ -48,7 +49,7 @@ class Data:
         lastsig = (0, 0, 0)
 
         def complain(msg):
-            raise DiagramSyntaxError(
+            raise _errors.DiagramSyntaxError(
                 f"{filename} line {line+startline}: {msg}\n"
                 f"  {lines[line]}\n"
                 f"  {' ' * col}{'^'*len(look())}".lstrip())

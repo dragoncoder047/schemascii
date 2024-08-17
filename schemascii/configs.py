@@ -1,6 +1,7 @@
 import argparse
 from dataclasses import dataclass
-from .errors import ArgumentError
+
+import schemascii.errors as _errors
 
 
 @dataclass
@@ -66,7 +67,7 @@ def apply_config_defaults(options: dict) -> dict:
             continue
         if isinstance(opt.clazz, list):
             if options[opt.name] not in opt.clazz:
-                raise ArgumentError(
+                raise _errors.ArgumentError(
                     f"config option {opt.name}: "
                     f"invalid choice: {options[opt.name]} "
                     f"(valid options are {', '.join(map(repr, opt.clazz))})"
@@ -75,7 +76,7 @@ def apply_config_defaults(options: dict) -> dict:
         try:
             options[opt.name] = opt.clazz(options[opt.name])
         except ValueError as err:
-            raise ArgumentError(
+            raise _errors.ArgumentError(
                 f"config option {opt.name}: "
                 f"invalid {opt.clazz.__name__} value: "
                 f"{options[opt.name]}"

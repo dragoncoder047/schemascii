@@ -5,12 +5,11 @@ from dataclasses import dataclass
 from itertools import combinations
 from typing import ClassVar, Literal
 
-from .grid import Grid
-from .utils import bunch_o_lines
+import schemascii.grid as _grid
+import schemascii.utils as _utils
+import schemascii.wire_tag as _wt
 
-# This is a map of the direction coming into the cell
-# to the set of directions coming "out" of the cell.
-DirStr = Literal["^", "v", "<", ">"]
+DirStr = Literal["^", "v", "<", ">"] | None
 EVERYWHERE: defaultdict[DirStr, str] = defaultdict(lambda: "<>^v")
 IDENTITY: dict[DirStr, str] = {">": ">", "^": "^", "<": "<", "v": "v"}
 
@@ -21,6 +20,8 @@ CHAR2DIR: dict[DirStr, complex] = {">": -1, "<": 1, "^": 1j, "v": -1j}
 class Wire:
     """List of grid points along a wire."""
 
+    # This is a map of the direction coming into the cell
+    # to the set of directions coming "out" of the cell.
     directions: ClassVar[
         defaultdict[str, defaultdict[DirStr, str]]] = defaultdict(
         lambda: None, {
@@ -40,11 +41,11 @@ class Wire:
             "*": "<>^v"
         })
 
-    # the sole member
     points: list[complex]
+    tag: _wt.WireTag | None
 
     @classmethod
-    def get_from_grid(cls, grid: Grid, start: complex) -> Wire:
+    def get_from_grid(cls, grid: _grid.Grid, start: complex) -> Wire:
         seen: set[complex] = set()
         points: list[complex] = []
         stack: list[tuple[complex, DirStr]] = [
@@ -68,7 +69,7 @@ class Wire:
         for p1, p2 in combinations(self.points, 2):
             if abs(p1 - p2) == 1:
                 links.append((p1, p2))
-        return bunch_o_lines(links, **options)
+        return _utils.bunch_o_lines(links, **options)
 
     @classmethod
     def is_wire_character(cls, ch: str) -> bool:
@@ -76,12 +77,12 @@ class Wire:
 
 
 if __name__ == '__main__':
-    x = Grid("", """
+    x = _grid.Grid("", """
 .
 
  *    -------------------------*
  |                             |
- *----------||||----*   -------*
+ *----------||||----*   -------*----=foo>
                     |          |
              -----------       |
                     |          |

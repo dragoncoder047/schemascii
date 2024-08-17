@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .component import Component
-from .data_parse import Data
-from .errors import DiagramSyntaxError
-from .grid import Grid
-from .net import Net
-from .refdes import RefDes
+import schemascii.component as _component
+import schemascii.data_parse as _data
+import schemascii.errors as _errors
+import schemascii.grid as _grid
+import schemascii.net as _net
+import schemascii.refdes as _rd
 
 
 @dataclass
@@ -15,9 +15,9 @@ class Drawing:
     """A Schemascii drawing document."""
 
     nets: list  # [Net]
-    components: list[Component]
+    components: list[_component.Component]
     annotations: list  # [Annotation]
-    data: Data
+    data: _data.Data
 
     @classmethod
     def parse_from_string(cls,
@@ -32,18 +32,19 @@ class Drawing:
         try:
             marker_pos = lines.index(marker)
         except ValueError as e:
-            raise DiagramSyntaxError(
+            raise _errors.DiagramSyntaxError(
                 "data-marker must be present in a drawing! "
                 f"(current data-marker is: {marker!r})") from e
         drawing_area = "\n".join(lines[:marker_pos])
         data_area = "\n".join(lines[marker_pos+1:])
-        grid = Grid(filename, drawing_area)
-        nets = Net.find_all(grid)
-        components = [Component.from_rd(r, grid)
-                      for r in RefDes.find_all(grid)]
+        grid = _grid.Grid(filename, drawing_area)
+        nets = _net.Net.find_all(grid)
+        components = [_component.Component.from_rd(r, grid)
+                      for r in _rd.RefDes.find_all(grid)]
         # todo: annotations!
         annotations = []
-        data = Data.parse_from_string(data_area, marker_pos + 1, filename)
+        data = _data.Data.parse_from_string(
+            data_area, marker_pos + 1, filename)
         return cls(nets, components, annotations, data)
 
     def to_xml_string(self, **options) -> str:
