@@ -231,17 +231,52 @@ XML = XMLClass()
 del XMLClass
 
 
+def points2path(points: list[complex], close: bool = False) -> str:
+    """Converts list of points into SVG <path> commands
+    to draw the set of lines."""
+    def fix(number: float) -> float | int:
+        return int(number) if number.is_integer() else number
+
+    def pad(number: float | int) -> str:
+        if number < 0:
+            return str(number)
+        return " " + str(number)
+
+    if not points:
+        return "z"
+    data = f"M{fix(points[0].real)}{pad(fix(points[0].imag))}"
+    prev_pt = points[0]
+    for pt in points[1:]:
+        diff = pt - prev_pt
+        if diff.real == 0 and diff.imag == 0:
+            continue
+        if diff.imag == 0:
+            data += f"h{fix(diff.real)}"
+        elif diff.real == 0:
+            data += f"v{fix(diff.imag)}"
+        else:
+            data += f"l{fix(diff.real)}{pad(fix(diff.imag))}"
+        prev_pt = pt
+    if close:
+        data += "z"
+    return data
+
+
 def polylinegon(
         points: list[complex], is_polygon: bool = False, **options) -> str:
-    "Turn the list of points into a <polyline> or <polygon>."
+    """Turn the list of points into a line or filled area.
+
+    If is_polygon is true, stroke color is used as fill color instead
+    and stroke width is ignored."""
     scale = options["scale"]
     w = options["stroke_width"]
     c = options["stroke"]
-    pts = " ".join(f"{x.real * scale},{x.imag * scale}" for x in points)
+    scaled_pts = [x * scale for x in points]
     if is_polygon:
-        return XML.polygon(points=pts, fill=c, class_="filled")
-    return XML.polyline(
-        points=pts, fill="transparent",
+        return XML.path(d=points2path(scaled_pts, True),
+                        fill=c, class_="filled")
+    return XML.path(
+        d=points2path(scaled_pts, False), fill="transparent",
         stroke__width=w, stroke=c)
 
 
