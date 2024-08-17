@@ -133,9 +133,9 @@ if __name__ == "__main__":
 
      xx---
        hha--
-    a     awq           
+    a     awq
 
-"""[1:-1])
+""")
     x.spark(0, complex(x.width - 1, 0), complex(0, x.height - 1),
             complex(x.width - 1, x.height - 1))
     x.shrink()
