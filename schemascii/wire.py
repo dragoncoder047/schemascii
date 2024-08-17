@@ -45,7 +45,9 @@ class Wire:
     tag: _wt.WireTag | None
 
     @classmethod
-    def get_from_grid(cls, grid: _grid.Grid, start: complex) -> Wire:
+    def get_from_grid(cls, grid: _grid.Grid,
+                      start: complex, tags: list[_wt.WireTag]) -> Wire:
+        """tags will be mutated"""
         seen: set[complex] = set()
         points: list[complex] = []
         stack: list[tuple[complex, DirStr]] = [
@@ -61,7 +63,17 @@ class Wire:
                 if ((next_dirs := cls.directions[grid.get(next_pt)])
                         is not None):
                     stack.append((next_pt, next_dirs[dir]))
-        return cls(points)
+        self_tag = None
+        for point in points:
+            for t in tags:
+                if t.connect_pt == point:
+                    self_tag = t
+                    tags.remove(t)
+                    break
+            else:
+                continue
+            break
+        return cls(points, self_tag)
 
     def to_xml_string(self, **options) -> str:
         # create lines for all of the neighbor pairs
@@ -93,6 +105,7 @@ if __name__ == '__main__':
 
 .
 """.strip())
-    pts = Wire.get_from_grid(x, 2+4j)
-    x.spark(*pts)
-    print(pts.to_xml_string(scale=10, stroke_width=2, stroke="black"))
+    wire = Wire.get_from_grid(x, 2+4j, _wt.WireTag.find_all(x))
+    print(wire)
+    x.spark(*wire.points)
+    print(wire.to_xml_string(scale=10, stroke_width=2, stroke="black"))

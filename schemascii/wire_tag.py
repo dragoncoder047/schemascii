@@ -24,6 +24,7 @@ class WireTag:
     position: complex
     attach_side: Literal[_utils.Side.LEFT, _utils.Side.RIGHT]
     point_dir: Literal[_utils.Side.LEFT, _utils.Side.RIGHT]
+    connect_pt: complex
 
     @classmethod
     def find_all(cls, grid: _grid.Grid) -> list[WireTag]:
@@ -43,10 +44,13 @@ class WireTag:
                 if _wire.Wire.is_wire_character(grid.get(left_pos - 1)):
                     attach_side = _utils.Side.LEFT
                     position = left_pos
+                    connect_pt = position - 1
                 else:
                     attach_side = _utils.Side.RIGHT
                     position = right_pos
-                out.append(WireTag(name, position, attach_side, point_dir))
+                    connect_pt = position + 1
+                out.append(WireTag(name, position, attach_side,
+                                   point_dir, connect_pt))
         return out
 
 
@@ -59,4 +63,4 @@ if __name__ == '__main__':
 """)
     tags = WireTag.find_all(g)
     pprint.pprint(tags)
-    g.spark(*(x.position for x in tags))
+    g.spark(*(x.connect_pt for x in tags))
