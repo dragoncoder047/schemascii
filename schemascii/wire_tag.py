@@ -28,7 +28,7 @@ class WireTag:
 
     @classmethod
     def find_all(cls, grid: _grid.Grid) -> list[WireTag]:
-        out: list[WireTag] = []
+        out: list[cls] = []
         for y, line in enumerate(grid.lines):
             for match in WIRE_TAG_PAT.finditer(line):
                 left_grp, right_grp = match.groups()
@@ -49,8 +49,8 @@ class WireTag:
                     attach_side = _utils.Side.RIGHT
                     position = right_pos
                     connect_pt = position + 1
-                out.append(WireTag(name, position, attach_side,
-                                   point_dir, connect_pt))
+                out.append(cls(name, position, attach_side,
+                               point_dir, connect_pt))
         return out
 
 
