@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import schemascii.grid as _grid
 
-REFDES_PAT = re.compile(r"([A-Z]+)(\d+)([A-Z\d]*)")
+REFDES_PAT = re.compile(r"([A-Z_]+)(\d*)([A-Z_\d]*)")
 
 
 @dataclass
@@ -26,7 +26,7 @@ class RefDes:
             for match in REFDES_PAT.finditer(line):
                 left_col, right_col = match.span()
                 letter, number, suffix = match.groups()
-                number = int(number)
+                number = int(number) if number else 0
                 out.append(cls(
                     letter,
                     number,
@@ -38,7 +38,13 @@ class RefDes:
 
 if __name__ == '__main__':
     import pprint
-    gg = _grid.Grid("test_data/test_charge_pump.txt")
+    gg = _grid.Grid("", """
+C1
+            BAT3V3
+        U3A
+                    Q1G1
+    GND
+""")
     rds = RefDes.find_all(gg)
     pts = [p for r in rds for p in [r.left, r.right]]
     gg.spark(*pts)
