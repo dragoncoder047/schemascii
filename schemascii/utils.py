@@ -51,8 +51,8 @@ class Side(IntEnum):
         ops = {
             -pi: Side.LEFT,
             pi: Side.LEFT,
-            pi / 2: Side.TOP,
-            -pi / 2: Side.BOTTOM,
+            -pi / 2: Side.TOP,
+            pi / 2: Side.BOTTOM,
             0: Side.RIGHT
         }
         pph = phase(pt)
