@@ -31,7 +31,7 @@ class Wire:
             ")": IDENTITY,
             "*": EVERYWHERE,
         })
-    starting_directions: ClassVar[
+    start_dirs: ClassVar[
         defaultdict[str, str]] = defaultdict(
         lambda: None, {
             "-": "<>",
@@ -51,7 +51,7 @@ class Wire:
         seen: set[complex] = set()
         points: list[complex] = []
         stack: list[tuple[complex, DirStr]] = [
-            (start, cls.starting_directions[grid.get(start)])]
+            (start, cls.start_dirs[grid.get(start)])]
         while stack:
             point, directions = stack.pop()
             if point in seen:
@@ -85,7 +85,7 @@ class Wire:
 
     @classmethod
     def is_wire_character(cls, ch: str) -> bool:
-        return ch in cls.starting_directions
+        return ch in cls.start_dirs
 
 
 if __name__ == '__main__':

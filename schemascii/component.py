@@ -63,31 +63,32 @@ class Component:
             # these get masked with wires because they are like wires
             for d in _utils.ORTHAGONAL:
                 poss_term_pt = perimeter_pt + d
+                if poss_term_pt in seen:
+                    continue
                 ch = grid.get(poss_term_pt)
                 if ch != "#" and not ch.isspace():
                     # candidate for terminal
-                    # search around again to see if a wire connects
-                    # to it
-                    for d in _utils.ORTHAGONAL:
-                        if (grid.get(d + poss_term_pt)
-                                in _wire.Wire.starting_directions.keys()):
-                            # there is a neighbor with a wire, so it must
-                            # be a terminal
-                            break
-                            # now d holds the direction of the terminal
-                    else:
-                        # no nearby wires - must just be something
-                        # like the reference designator or other junk
+                    # look to see if a wire connects
+                    # to it in the expected direction
+                    nch = grid.get(d + poss_term_pt)
+                    if not _wire.Wire.is_wire_character(nch):
+                        # no connecting wire - must just be something
+                        # like a close packed neighbor component or other junk
+                        continue
+                    if not any(_wire.CHAR2DIR[c] == -d
+                               for c in _wire.Wire.start_dirs[nch]):
+                        # the connecting wire is not really connecting!
                         continue
                     if any(t.pt == poss_term_pt for t in terminals):
                         # already found this one
                         continue
                     if _wire.Wire.is_wire_character(ch):
+                        if not any(_wire.CHAR2DIR[c] == -d
+                                   for c in _wire.Wire.start_dirs[ch]):
+                            # the terminal wire is not really connecting!
+                            continue
                         # it is just a connected wire, not a flag
                         ch = None
-                    else:
-                        # mask the wire
-                        grid.setmask(poss_term_pt, "*")
                     terminals.append(_utils.Terminal(
                         poss_term_pt, ch, _utils.Side.from_phase(d)))
         # done
