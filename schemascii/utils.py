@@ -308,7 +308,15 @@ def bunch_o_lines(pairs: list[tuple[complex, complex]], **options) -> str:
         # make it a polyline
         pts = [group[0][0]] + [p[1] for p in group]
         lines.append(pts)
-    return "".join(polylinegon(line, **options) for line in lines)
+    scale = options["scale"]
+    w = options["stroke_width"]
+    c = options["stroke"]
+    data = ""
+    for line in lines:
+        data += points2path([x * scale for x in line], False)
+    return XML.path(
+        d=data, fill="transparent",
+        stroke__width=w, stroke=c)
 
 
 def id_text(
