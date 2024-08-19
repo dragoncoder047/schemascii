@@ -204,7 +204,7 @@ class Data:
         return out
 
     def global_options(self) -> dict:
-        return self.get_values_for(":all")
+        return self.get_values_for("*")
 
 
 if __name__ == '__main__':
