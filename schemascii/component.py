@@ -101,21 +101,10 @@ class Component:
 if __name__ == '__main__':
     class FooComponent(Component, names=["U", "FOO"]):
         pass
-
     print(Component.all_components)
-
-    testgrid = _grid.Grid("", """
-
-    [xor gate]               [op amp]
-
-    # ######                   #
-     # ########                ###
-  ----# #########         ----+#####
-      # #U1G1#####----         #U2A###-----
-  ----# #########         -----#####
-     # ########                ###
-    # ######                   #
-""")
+    testgrid = _grid.Grid("test_data/stresstest.txt")
+    # this will erroneously search the DATA section too but that's OK
+    # for this test
     for rd in _rd.RefDes.find_all(testgrid):
         c = Component.from_rd(rd, testgrid)
         print(c)

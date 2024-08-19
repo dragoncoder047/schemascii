@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import schemascii.annotation as _a
+import schemascii.annoline as _annoline
 import schemascii.component as _component
 import schemascii.data_parse as _data
 import schemascii.errors as _errors
@@ -18,14 +19,15 @@ class Drawing:
     nets: list[_net.Net]
     components: list[_component.Component]
     annotations: list[_a.Annotation]
+    annotation_lines: list[_annoline.AnnotationLine]
     data: _data.Data
     grid: _grid.Grid
 
     @classmethod
-    def load(cls,
-             filename: str,
-             data: str | None = None,
-             **options) -> Drawing:
+    def from_file(cls,
+                  filename: str,
+                  data: str | None = None,
+                  **options) -> Drawing:
         if data is None:
             with open(filename) as f:
                 data = f.read()
@@ -44,10 +46,11 @@ class Drawing:
         components = [_component.Component.from_rd(r, grid)
                       for r in _rd.RefDes.find_all(grid)]
         annotations = _a.Annotation.find_all(grid)
+        annotation_lines = _annoline.AnnotationLine.find_all(grid)
         data = _data.Data.parse_from_string(
             data_area, marker_pos, filename)
         grid.clrall()
-        return cls(nets, components, annotations, data, grid)
+        return cls(nets, components, annotations, annotation_lines, data, grid)
 
     def to_xml_string(self, **options) -> str:
         raise NotImplementedError
@@ -56,7 +59,7 @@ class Drawing:
 if __name__ == '__main__':
     import pprint
     import itertools
-    d = Drawing.load("test_data/stresstest.txt")
+    d = Drawing.from_file("test_data/stresstest.txt")
     pprint.pprint(d)
     for net in d.nets:
         print("\n---net---")
