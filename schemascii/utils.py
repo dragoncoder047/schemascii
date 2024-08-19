@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import enum
 import itertools
-import re
 import typing
 from cmath import phase, pi, rect
 from collections import defaultdict
@@ -265,9 +264,12 @@ class XMLClass:
                     continue
                 if isinstance(v, float):
                     v = fix_number(v)
-                elif isinstance(v, str):
-                    v = re.sub(r"\b\d+(\.\d+)\b",
-                               lambda m: fix_number(float(m.group())), v)
+                # XXX: this gets called on every XML level
+                # XXX: which means that it will be called multiple times
+                # XXX: unnecessarily
+                # elif isinstance(v, str):
+                #     v = re.sub(r"\b\d+(\.\d+)\b",
+                #                lambda m: fix_number(float(m.group())), v)
                 out += f'{k.removesuffix("_").replace("__", "-")}="{v}" '
             out = out.rstrip() + ">" + "".join(contents)
             return out + f"</{tag}>"

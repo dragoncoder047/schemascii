@@ -13,7 +13,6 @@ class Net:
     electrically connected."""
 
     wires: list[_wire.Wire]
-    # annotation: WireTag | None
 
     @classmethod
     def find_all(cls, grid: _grid.Grid) -> list[Net]:
