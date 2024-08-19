@@ -1,50 +1,63 @@
 from __future__ import annotations
 
+import enum
+import itertools
 import re
-from cmath import phase, rect, pi
-from enum import IntEnum
-from itertools import chain, groupby
-from typing import Callable, NamedTuple
+import typing
+from cmath import phase, pi, rect
+from collections import defaultdict
 
-from .errors import TerminalsError
-from .metric import format_metric_unit
+import schemascii.errors as _errors
+import schemascii.grid as _grid
+import schemascii.metric as _metric
 
-
-ORTHAGONAL = (1, -1, 1j, -1j)
+LEFT_RIGHT = (-1, 1)
+UP_DOWN = (-1j, 1j)
+ORTHAGONAL = LEFT_RIGHT + UP_DOWN
 DIAGONAL = (-1+1j, 1+1j, -1-1j, 1-1j)
+EVERYWHERE: defaultdict[complex, list[complex]] = defaultdict(
+    lambda: ORTHAGONAL)
+EVERYWHERE_MOORE: defaultdict[complex, list[complex]] = defaultdict(
+    lambda: ORTHAGONAL + DIAGONAL)
+IDENTITY: dict[complex, list[complex]] = {
+    1: [1],
+    1j: [1j],
+    -1: [-1],
+    -1j: [-1j],
+}
 
 
-class Cbox(NamedTuple):
+class Cbox(typing.NamedTuple):
     p1: complex
     p2: complex
     type: str
     id: str
 
 
-class BOMData(NamedTuple):
+class BOMData(typing.NamedTuple):
     type: str
     id: str
     data: str
 
 
-class Flag(NamedTuple):
+class Flag(typing.NamedTuple):
     pt: complex
     char: str
     side: Side
 
 
-class Terminal(NamedTuple):
+class Terminal(typing.NamedTuple):
     pt: complex
     flag: str | None
     side: Side
 
 
-class Side(IntEnum):
+class Side(enum.Enum):
     "Which edge the flag was found on."
     RIGHT = 0
-    TOP = 1
-    LEFT = 2
-    BOTTOM = 3
+    TOP = -pi / 2
+    LEFT = pi
+    BOTTOM = pi / 2
 
     @classmethod
     def from_phase(cls, pt: complex) -> Side:
@@ -64,6 +77,41 @@ class Side(IntEnum):
                 best_err = err
                 best_side = s
         return best_side
+
+
+def flood_walk(
+        grid: _grid.Grid,
+        seed: list[complex],
+        start_dirs: defaultdict[str, list[complex] | None],
+        directions: defaultdict[str, defaultdict[
+            complex, list[complex] | None]],
+        seen: set[complex]) -> list[complex]:
+    """Flood-fills the area on the grid starting from seed, only following
+    connections in the directions allowed by start_dirs and directions.
+
+    Updates the set seen for points that were walked into
+    and returns the list of walked-into points."""
+    points: list[complex] = []
+    stack: list[tuple[complex, list[complex]]] = [
+        (p, start_dirs[grid.get(p)])
+        for p in seed]
+    while stack:
+        point, dirs = stack.pop()
+        if point in seen:
+            continue
+        if not dirs:
+            # invalid point
+            continue
+        seen.add(point)
+        points.append(point)
+        if dirs:
+            for dir in dirs:
+                next_pt = point + dir
+                next_dirs = directions[grid.get(next_pt)]
+                if next_dirs is None:
+                    next_dirs = defaultdict(lambda: None)
+                stack.append((next_pt, next_dirs[dir]))
+    return points
 
 
 def perimeter(pts: list[complex]) -> list[complex]:
@@ -209,7 +257,7 @@ def fix_number(n: float) -> str:
 
 
 class XMLClass:
-    def __getattr__(self, tag: str) -> Callable:
+    def __getattr__(self, tag: str) -> typing.Callable:
         def mk_tag(*contents: str, **attrs: str) -> str:
             out = f"<{tag} "
             for k, v in attrs.items():
@@ -340,11 +388,11 @@ def id_text(
         if unit is None:
             pass
         elif isinstance(unit, str):
-            text = format_metric_unit(text, unit)
+            text = _metric.format_metric_unit(text, unit)
             classy = "cmp-value"
         else:
             text = " ".join(
-                format_metric_unit(x, y, six)
+                _metric.format_metric_unit(x, y, six)
                 for x, (y, six) in zip(text.split(","), unit)
             )
             classy = "cmp-value"
@@ -443,10 +491,11 @@ def sort_terminals_counterclockwise(
     "Sort the terminals in counterclockwise order."
     partitioned = {
         side: list(filtered_terminals)
-        for side, filtered_terminals in groupby(terminals, lambda t: t.side)
+        for side, filtered_terminals in itertools.groupby(
+            terminals, lambda t: t.side)
     }
     return list(
-        chain(
+        itertools.chain(
             sorted(partitioned.get(Side.LEFT, []), key=lambda t: t.pt.imag),
             sorted(partitioned.get(Side.BOTTOM, []), key=lambda t: t.pt.real),
             sorted(partitioned.get(Side.RIGHT, []), key=lambda t: -t.pt.imag),
@@ -473,12 +522,12 @@ def sort_for_flags(terminals: list[Terminal],
     for flag in flags:
         matching_terminals = list(filter(lambda t: t.flag == flag, terminals))
         if len(matching_terminals) > 1:
-            raise TerminalsError(
+            raise _errors.TerminalsError(
                 f"Multiple terminals with the same flag {flag} "
                 f"on component {box.type}{box.id}"
             )
         if len(matching_terminals) == 0:
-            raise TerminalsError(
+            raise _errors.TerminalsError(
                 f"Need a terminal with the flag {flag} "
                 f"on component {box.type}{box.id}"
             )

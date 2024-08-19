@@ -1,19 +1,13 @@
 from __future__ import annotations
 
+import itertools
 from collections import defaultdict
 from dataclasses import dataclass
-from itertools import combinations
-from typing import ClassVar, Literal
+from typing import ClassVar
 
 import schemascii.grid as _grid
 import schemascii.utils as _utils
 import schemascii.wire_tag as _wt
-
-DirStr = Literal["^", "v", "<", ">"] | None
-EVERYWHERE: defaultdict[DirStr, str] = defaultdict(lambda: "<>^v")
-IDENTITY: dict[DirStr, str] = {">": ">", "^": "^", "<": "<", "v": "v"}
-
-CHAR2DIR: dict[DirStr, complex] = {">": -1, "<": 1, "^": 1j, "v": -1j}
 
 
 @dataclass
@@ -23,22 +17,22 @@ class Wire:
     # This is a map of the direction coming into the cell
     # to the set of directions coming "out" of the cell.
     directions: ClassVar[
-        defaultdict[str, defaultdict[DirStr, str]]] = defaultdict(
+        defaultdict[str, defaultdict[complex, list[complex]]]] = defaultdict(
         lambda: None, {
-            "-": IDENTITY,
-            "|": IDENTITY,
-            "(": IDENTITY,
-            ")": IDENTITY,
-            "*": EVERYWHERE,
+            "-": _utils.IDENTITY,
+            "|": _utils.IDENTITY,
+            "(": _utils.IDENTITY,
+            ")": _utils.IDENTITY,
+            "*": _utils.EVERYWHERE,
         })
     start_dirs: ClassVar[
-        defaultdict[str, str]] = defaultdict(
+        defaultdict[str, list[complex]]] = defaultdict(
         lambda: None, {
-            "-": "<>",
-            "|": "^v",
-            "(": "^v",
-            ")": "^v",
-            "*": "<>^v"
+            "-": _utils.LEFT_RIGHT,
+            "|": _utils.UP_DOWN,
+            "(": _utils.UP_DOWN,
+            ")": _utils.UP_DOWN,
+            "*": _utils.ORTHAGONAL,
         })
 
     points: list[complex]
@@ -48,37 +42,20 @@ class Wire:
     def get_from_grid(cls, grid: _grid.Grid,
                       start: complex, tags: list[_wt.WireTag]) -> Wire:
         """tags will be mutated"""
-        seen: set[complex] = set()
-        points: list[complex] = []
-        stack: list[tuple[complex, DirStr]] = [
-            (start, cls.start_dirs[grid.get(start)])]
-        while stack:
-            point, directions = stack.pop()
-            if point in seen:
-                continue
-            seen.add(point)
-            points.append(point)
-            for dir in directions:
-                next_pt = point + CHAR2DIR[dir]
-                if ((next_dirs := cls.directions[grid.get(next_pt)])
-                        is not None):
-                    stack.append((next_pt, next_dirs[dir]))
+        points = _utils.flood_walk(
+            grid, [start], cls.start_dirs, cls.directions, set())
         self_tag = None
-        for point in points:
-            for t in tags:
-                if t.connect_pt == point:
-                    self_tag = t
-                    tags.remove(t)
-                    break
-            else:
-                continue
-            break
+        for point, t in itertools.product(points, tags):
+            if t.connect_pt == point:
+                self_tag = t
+                tags.remove(t)
+                break
         return cls(points, self_tag)
 
     def to_xml_string(self, **options) -> str:
         # create lines for all of the neighbor pairs
         links = []
-        for p1, p2 in combinations(self.points, 2):
+        for p1, p2 in itertools.combinations(self.points, 2):
             if abs(p1 - p2) == 1:
                 links.append((p1, p2))
         return _utils.bunch_o_lines(links, **options)

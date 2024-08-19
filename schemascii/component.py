@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import ClassVar
 
@@ -29,26 +30,17 @@ class Component:
         blobs: list[list[complex]] = []
         seen: set[complex] = set()
 
-        def flood(starting: list[complex], moore: bool) -> list[complex]:
-            frontier = list(starting)
-            out: list[complex] = []
-            directions = _utils.ORTHAGONAL
-            if moore:
-                directions += _utils.DIAGONAL
-            while frontier:
-                point = frontier.pop(0)
-                out.append(point)
-                seen.add(point)
-                for d in directions:
-                    newpoint = point + d
-                    if grid.get(newpoint) != "#":
-                        continue
-                    if newpoint not in seen:
-                        frontier.append(newpoint)
-            return out
+        start_orth = defaultdict(
+            lambda: _utils.ORTHAGONAL)
+        start_moore = defaultdict(
+            lambda: _utils.ORTHAGONAL + _utils.DIAGONAL)
+        cont_orth = defaultdict(lambda: None, {"#": _utils.EVERYWHERE})
+        cont_moore = defaultdict(lambda: None, {"#": _utils.EVERYWHERE_MOORE})
 
         # add in the RD's bounds and find the main blob
-        blobs.append(flood(_utils.iterate_line(rd.left, rd.right), False))
+        blobs.append(_utils.flood_walk(
+            grid, list(_utils.iterate_line(rd.left, rd.right)),
+            start_orth, cont_orth, seen))
         # now find all of the auxillary blobs
         for perimeter_pt in _utils.perimeter(blobs[0]):
             for d in _utils.DIAGONAL:
@@ -56,7 +48,9 @@ class Component:
                 if (poss_aux_blob_pt not in seen
                         and grid.get(poss_aux_blob_pt) == "#"):
                     # we found another blob
-                    blobs.append(flood([poss_aux_blob_pt], True))
+                    blobs.append(_utils.flood_walk(
+                        grid, [poss_aux_blob_pt], start_moore,
+                        cont_moore, seen))
         # find all of the terminals
         terminals: list[_utils.Terminal] = []
         for perimeter_pt in _utils.perimeter(seen):
@@ -75,16 +69,14 @@ class Component:
                         # no connecting wire - must just be something
                         # like a close packed neighbor component or other junk
                         continue
-                    if not any(_wire.CHAR2DIR[c] == -d
-                               for c in _wire.Wire.start_dirs[nch]):
+                    if not any(c == -d for c in _wire.Wire.start_dirs[nch]):
                         # the connecting wire is not really connecting!
                         continue
                     if any(t.pt == poss_term_pt for t in terminals):
                         # already found this one
                         continue
                     if _wire.Wire.is_wire_character(ch):
-                        if not any(_wire.CHAR2DIR[c] == -d
-                                   for c in _wire.Wire.start_dirs[ch]):
+                        if not any(c == -d for c in _wire.Wire.start_dirs[ch]):
                             # the terminal wire is not really connecting!
                             continue
                         # it is just a connected wire, not a flag
@@ -114,7 +106,7 @@ if __name__ == '__main__':
 
     testgrid = _grid.Grid("", """
 
-  [xor gate]     [op amp]
+    [xor gate]               [op amp]
 
     # ######                   #
      # ########                ###
