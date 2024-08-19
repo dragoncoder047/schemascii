@@ -24,6 +24,9 @@ class Wire:
             "(": _utils.IDENTITY,
             ")": _utils.IDENTITY,
             "*": _utils.EVERYWHERE,
+            # allow jumps through annotation lines
+            ":": _utils.IDENTITY,
+            "~": _utils.IDENTITY,
         })
     start_dirs: ClassVar[
         defaultdict[str, list[complex]]] = defaultdict(
