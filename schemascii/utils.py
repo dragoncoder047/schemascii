@@ -313,21 +313,19 @@ def points2path(points: list[complex], close: bool = False) -> str:
 
 
 def polylinegon(
-        points: list[complex], is_polygon: bool = False, **options) -> str:
+        points: list[complex], is_polygon: bool = False,
+        *, scale: int, stroke_width: int, stroke: str) -> str:
     """Turn the list of points into a line or filled area.
 
     If is_polygon is true, stroke color is used as fill color instead
     and stroke width is ignored."""
-    scale = options["scale"]
-    w = options["stroke_width"]
-    c = options["stroke"]
     scaled_pts = [x * scale for x in points]
     if is_polygon:
         return XML.path(d=points2path(scaled_pts, True),
-                        fill=c, class_="filled")
+                        fill=stroke, class_="filled")
     return XML.path(
         d=points2path(scaled_pts, False), fill="transparent",
-        stroke__width=w, stroke=c)
+        stroke__width=stroke_width, stroke=stroke)
 
 
 def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
@@ -348,7 +346,9 @@ def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
     return [pt for pt, count in seen.items() if count > 3]
 
 
-def bunch_o_lines(pairs: list[tuple[complex, complex]], **options) -> str:
+def bunch_o_lines(
+        pairs: list[tuple[complex, complex]],
+        *, scale: int, stroke_width: int, stroke: str) -> str:
     """Collapse the pairs of points and return
     the smallest number of <polyline>s."""
     lines = []
@@ -358,15 +358,12 @@ def bunch_o_lines(pairs: list[tuple[complex, complex]], **options) -> str:
         # make it a polyline
         pts = [group[0][0]] + [p[1] for p in group]
         lines.append(pts)
-    scale = options["scale"]
-    w = options["stroke_width"]
-    c = options["stroke"]
     data = ""
     for line in lines:
         data += points2path([x * scale for x in line], False)
     return XML.path(
         d=data, fill="transparent",
-        stroke__width=w, stroke=c)
+        stroke__width=stroke_width, stroke=stroke)
 
 
 def id_text(
@@ -375,12 +372,15 @@ def id_text(
     terminals: list[Terminal],
     unit: str | list[str] | None,
     point: complex | None = None,
-    **options,
+    *,
+    label: typing.Literal["L", "V", "LV"],
+    nolabels: bool,
+    scale: int,
+    stroke: str
 ) -> str:
     "Format the component ID and value around the point."
-    if options["nolabels"]:
+    if nolabels:
         return ""
-    label_style = options["label"]
     if point is None:
         point = sum(t.pt for t in terminals) / len(terminals)
     data = ""
@@ -413,23 +413,23 @@ def id_text(
             Side.TOP, Side.BOTTOM) else "start"
     return XML.text(
         (XML.tspan(f"{box.type}{box.id}", class_="cmp-id")
-         * bool("L" in label_style)),
-        " " * (bool(data) and "L" in label_style),
-        data * bool("V" in label_style),
+         * bool("L" in label)),
+        " " * (bool(data) and "L" in label),
+        data * bool("V" in label),
         x=point.real,
         y=point.imag,
         text__anchor=textach,
-        font__size=options["scale"],
-        fill=options["stroke"],
+        font__size=scale,
+        fill=stroke,
     )
 
 
-def make_text_point(t1: complex, t2: complex, **options) -> complex:
+def make_text_point(t1: complex, t2: complex,
+                    *, scale: int, offset_scale: int = 1) -> complex:
     "Compute the scaled coordinates of the text anchor point."
     quad_angle = phase(t1 - t2) + pi / 2
-    scale = options["scale"]
     text_pt = (t1 + t2) * scale / 2
-    offset = rect(scale / 2 * options.get("offset_scaler", 1), quad_angle)
+    offset = rect(scale / 2 * offset_scale, quad_angle)
     text_pt += complex(abs(offset.real), -abs(offset.imag))
     return text_pt
 
@@ -481,10 +481,11 @@ def light_arrows(center: complex, theta: float, out: bool, **options):
     if out:
         a, b = b, a
     return bunch_o_lines(
-        deep_transform(arrow_points(a, b), center, theta - pi / 2), **options
-    ) + bunch_o_lines(
-        deep_transform(arrow_points(a - 0.5, b - 0.5), center, theta - pi / 2),
-        **options,
+        deep_transform(arrow_points(a, b),
+                       center, theta - pi / 2)
+        + deep_transform(arrow_points(a - 0.5, b - 0.5),
+                         center, theta - pi / 2),
+        **options
     )
 
 
