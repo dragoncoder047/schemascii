@@ -1,18 +1,24 @@
 from __future__ import annotations
 
+import abc
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import ClassVar
 
+import schemascii.data as _data
+import schemascii.errors as _errors
 import schemascii.grid as _grid
+import schemascii.net as _net
 import schemascii.refdes as _rd
 import schemascii.utils as _utils
 import schemascii.wire as _wire
 
 
 @dataclass
-class Component:
+class Component(abc.ABC):
+    """An icon representing a single electronic component."""
     all_components: ClassVar[dict[str, type[Component]]] = {}
+    human_name: ClassVar[str] = ""
 
     rd: _rd.RefDes
     blobs: list[list[complex]]  # to support multiple parts.
@@ -20,11 +26,19 @@ class Component:
 
     @classmethod
     def from_rd(cls, rd: _rd.RefDes, grid: _grid.Grid) -> Component:
+        """Find the outline of the component and its terminals
+        on the grid, starting with the location of the reference designator.
+
+        Will raise an error if the reference designator's letters do not
+        have a corresponding renderer implemented.
+        """
         # find the right component class
         for cname in cls.all_components:
             if cname == rd.letter:
                 cls = cls.all_components[cname]
                 break
+        else:
+            raise _errors.UnsupportedComponentError(rd.letter)
 
         # now flood-fill to find the blobs
         blobs: list[list[complex]] = []
@@ -75,31 +89,66 @@ class Component:
                     if any(t.pt == poss_term_pt for t in terminals):
                         # already found this one
                         continue
+                    terminal_side = _utils.Side.from_phase(d)
                     if _wire.Wire.is_wire_character(ch):
                         if not any(c == -d for c in _wire.Wire.start_dirs[ch]):
                             # the terminal wire is not really connecting!
                             continue
                         # it is just a connected wire, not a flag
                         ch = None
-                    terminals.append(_utils.Terminal(
-                        poss_term_pt, ch, _utils.Side.from_phase(d)))
+                    else:
+                        # mask the special character to be a normal wire so the
+                        # wire will reach the terminal
+                        if terminal_side in (_utils.Side.LEFT,
+                                             _utils.Side.RIGHT):
+                            mask_ch = "-"
+                        else:
+                            mask_ch = "|"
+                        grid.setmask(poss_term_pt, mask_ch)
+                    terminals.append(
+                        _utils.Terminal(poss_term_pt, ch, terminal_side))
         # done
         return cls(rd, blobs, terminals)
 
-    def __init_subclass__(cls, names: list[str]):
+    def __init_subclass__(cls, ids: list[str], id_letters: str | None = None):
         """Register the component subclass in the component registry."""
-        for name in names:
-            if not (name.isalpha() and name.upper() == name):
+        for id_letters in ids:
+            if not (id_letters.isalpha() and id_letters.upper() == id_letters):
                 raise ValueError(
-                    f"invalid reference designator letters: {name!r}")
-            if name in cls.all_components:
+                    f"invalid reference designator letters: {id_letters!r}")
+            if id_letters in cls.all_components:
                 raise ValueError(
-                    f"duplicate reference designator letters: {name!r}")
-            cls.all_components[name] = cls
+                    f"duplicate reference designator letters: {id_letters!r}")
+            cls.all_components[id_letters] = cls
+        cls.human_name = id_letters or cls.__name__
+
+    def to_xml_string(self, options: _data.Data) -> str:
+        """Render this component to a string of SVG XML."""
+        return _utils.XML.g(
+            self.render(options.get_values_for(self.rd.name)),
+            class_=f"component {self.rd.letter}")
+
+    @abc.abstractmethod
+    def render(self, options: dict) -> str:
+        """Render this component to a string of XML using the options.
+        Component subclasses should implement this method.
+
+        This is a private method and should not be called directly. Instead,
+        use the `to_xml_string` method which performs a few more
+        transformations and wraps the output in a nicely formatted `<g>`.
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def process_nets(self, nets: list[_net.Net]):
+        """Hook method called to do stuff with the nets that this
+        component type connects to. By itself it does nothing.
+        """
+        pass
 
 
 if __name__ == '__main__':
-    class FooComponent(Component, names=["U", "FOO"]):
+    class FooComponent(Component, ids=["U", "FOO"]):
         pass
     print(Component.all_components)
     testgrid = _grid.Grid("test_data/stresstest.txt")
@@ -111,3 +160,4 @@ if __name__ == '__main__':
         for blob in c.blobs:
             testgrid.spark(*blob)
         testgrid.spark(*(t.pt for t in c.terminals))
+    Component(None, None, None)
