@@ -11,7 +11,8 @@ REFDES_PAT = re.compile(r"([A-Z_]+)(\d*)([A-Z_\d]*)")
 class RefDes:
     """Object representing a component reference designator;
     i.e. the letter+number+suffix combination uniquely identifying
-    the component on the diagram."""
+    the component on the diagram.
+    """
 
     letter: str
     number: int
@@ -21,6 +22,9 @@ class RefDes:
 
     @classmethod
     def find_all(cls, grid: _grid.Grid) -> list[RefDes]:
+        """Finds all of the reference designators present in the
+        grid.
+        """
         out = []
         for row, line in enumerate(grid.lines):
             for match in REFDES_PAT.finditer(line):
@@ -34,6 +38,10 @@ class RefDes:
                     complex(left_col, row),
                     complex(right_col - 1, row)))
         return out
+
+    @property
+    def name(self) -> str:
+        return f"{self.letter}{self.number}{self.suffix}"
 
 
 if __name__ == '__main__':

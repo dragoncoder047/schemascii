@@ -10,7 +10,8 @@ import schemascii.grid as _grid
 class AnnotationLine:
     """Class that implements the ability to
     draw annotation lines on the drawing
-    without having to use a disconnected wire."""
+    without having to use a disconnected wire.
+    """
 
     directions: ClassVar[
         defaultdict[str, defaultdict[complex, list[complex]]]] = defaultdict(
@@ -48,16 +49,21 @@ class AnnotationLine:
 
     @classmethod
     def get_from_grid(cls, grid: _grid.Grid, start: complex) -> AnnotationLine:
+        """Return an AnnotationLine that starts at the specified point."""
         points = _utils.flood_walk(
             grid, [start], cls.start_dirs, cls.directions, set())
         return cls(points)
 
     @classmethod
     def is_annoline_character(cls, ch: str) -> bool:
+        """Return true if ch is a valid character
+        to make up an AnnotationLine.
+        """
         return ch in cls.start_dirs
 
     @classmethod
     def find_all(cls, grid: _grid.Grid) -> list[AnnotationLine]:
+        """Return all of the annotation lines found in the grid."""
         seen_points: set[complex] = set()
         all_lines: list[cls] = []
 
@@ -78,7 +84,7 @@ if __name__ == '__main__':
              -----------   .~~~|~~~~~~.
                     |      :   |      :
              -------*------:---*---*  :
-                           :   |   |  :
+            ~~~~~~~~~~~~~~~:~~~|~~~~~~~~~~~~~
              *-------------:---*---*  '~~~~.
              |             :               :
                            '~~~~~~~~~~~~~~~'

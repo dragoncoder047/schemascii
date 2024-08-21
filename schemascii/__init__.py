@@ -7,7 +7,8 @@ from .components_render import render_component
 from .wires import get_wires
 from .utils import XML
 from .errors import (Error, DiagramSyntaxError, TerminalsError,
-                     BOMError, UnsupportedComponentError, ArgumentError)
+                     BOMError, UnsupportedComponentError, NoDataError,
+                     DataTypeError)
 
 __version__ = "0.3.2"
 

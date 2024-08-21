@@ -3,9 +3,11 @@ from __future__ import annotations
 import fnmatch
 import re
 from dataclasses import dataclass
+from typing import Any, TypeVar
 
 import schemascii.errors as _errors
 
+T = TypeVar("T")
 TOKEN_PAT = re.compile("|".join([
     r"[\n{};=]",  # special one-character
     "%%",  # comment marker
@@ -14,6 +16,7 @@ TOKEN_PAT = re.compile("|".join([
     r"""(?:(?!["\s{};=]).)+""",  # anything else
 ]))
 SPECIAL = {";", "\n", "%%", "{", "}"}
+_NOT_SET = object()
 
 
 def tokenize(stuff: str) -> list[str]:
@@ -43,6 +46,11 @@ class Data:
 
     @classmethod
     def parse_from_string(cls, text: str, startline=1, filename="") -> Data:
+        """Parses the data from the text.
+
+        startline and filename are only used when throwing an error
+        message. Otherwise, returns the Data instance.
+        """
         tokens = tokenize(text)
         lines = (text + "\n").splitlines()
         col = line = index = 0
@@ -131,9 +139,8 @@ class Data:
 
         def expect_not(disallowed: set[str]):
             got = look()
-            if got not in disallowed:
-                return
-            complain(f"unexpected {got!r}")
+            if got in disallowed:
+                complain(f"unexpected {got!r}")
 
         def parse_section() -> Section:
             expect_not(SPECIAL)
@@ -196,15 +203,29 @@ class Data:
             sections.append(parse_section())
         return cls(sections)
 
-    def get_values_for(self, name: str) -> dict:
+    def get_values_for(self, namespace: str) -> dict:
         out = {}
         for section in self.sections:
-            if section.matches(name):
+            if section.matches(namespace):
                 out |= section.data
         return out
 
-    def global_options(self) -> dict:
-        return self.get_values_for("*")
+    def getopt(self, namespace: str, name: str, default: T = _NOT_SET) -> T:
+        values = self.get_values_for(namespace)
+        value = values.get(name, _NOT_SET)
+        if value is _NOT_SET:
+            if default is _NOT_SET:
+                raise _errors.NoDataError(
+                    f"value for {namespace}.{name} is required")
+            return default
+        return value
+
+    def __or__(self, other: Data | dict[str, Any] | Any) -> Data:
+        if isinstance(other, dict):
+            other = Data([Section("*", other)])
+        if not isinstance(other, Data):
+            return NotImplemented
+        return Data(self.sections + other.sections)
 
 
 if __name__ == '__main__':
@@ -225,8 +246,10 @@ R* {tolerance = .05; wattage = 0.25}
 R1 {
     resistance = 0 - 10k;
     %% trailing comment
+    %% foo = "bar\n\tnop"
 }
 """
     my_data = Data.parse_from_string(text)
     pprint.pprint(my_data)
     pprint.pprint(my_data.get_values_for("R1"))
+    print(my_data.getopt("R1", "foo"))

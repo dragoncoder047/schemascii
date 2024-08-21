@@ -18,7 +18,8 @@ class WireTag:
     direction information flows.
 
     Wire tags currently only support horizontal connections
-    as of right now."""
+    as of right now.
+    """
 
     name: str
     position: complex
@@ -28,6 +29,7 @@ class WireTag:
 
     @classmethod
     def find_all(cls, grid: _grid.Grid) -> list[WireTag]:
+        """Find all of the wire tags present in the grid."""
         out: list[cls] = []
         for y, line in enumerate(grid.lines):
             for match in WIRE_TAG_PAT.finditer(line):

@@ -1,22 +1,26 @@
 class Error(Exception):
-    "A generic Schemascii error."
+    """A generic Schemascii error."""
 
 
 class DiagramSyntaxError(SyntaxError, Error):
-    "Bad formatting in Schemascii diagram syntax."
+    """Bad formatting in Schemascii diagram syntax."""
 
 
 class TerminalsError(TypeError, Error):
-    "Incorrect usage of terminals on this component."
+    """Incorrect usage of terminals on this component."""
 
 
 class BOMError(ValueError, Error):
-    "Problem with BOM data for a component."
+    """Problem with BOM data for a component."""
 
 
 class UnsupportedComponentError(NameError, Error):
-    "Component type is not supported."
+    """Component type is not supported."""
 
 
-class ArgumentError(ValueError, Error):
-    "Invalid config argument value."
+class NoDataError(NameError, Error):
+    """Data item is required, but not present."""
+
+
+class DataTypeError(ValueError, Error):
+    """Invalid data value."""

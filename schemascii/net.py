@@ -10,12 +10,15 @@ import schemascii.wire_tag as _wt
 @dataclass
 class Net:
     """Grouping of wires that are
-    electrically connected."""
+    electrically connected.
+    """
 
     wires: list[_wire.Wire]
 
     @classmethod
     def find_all(cls, grid: _grid.Grid) -> list[Net]:
+        """Return a list of all the wire nets found on the grid.
+        """
         seen_points: set[complex] = set()
         all_nets: list[cls] = []
         all_tags = _wt.WireTag.find_all(grid)

@@ -10,10 +10,13 @@ ENG_NUMBER = re.compile(r"^(\d*\.?\d+)[Ee]?([+-]?\d*)$")
 
 def exponent_to_multiplier(exponent: int) -> str | None:
     """Turns the 10-power into a Metric multiplier.
-    E.g.  3 --> "k" (kilo)
-    E.g.  0 --> ""  (no multiplier)
-    E.g. -6 --> "u" (micro)
-    If it is not a multiple of 3, returns None."""
+
+    * 3 --> "k" (kilo)
+    * 0 --> ""  (no multiplier)
+    * -6 --> "u" (micro)
+
+    If it is not a multiple of 3, returns None.
+    """
     if exponent % 3 != 0:
         return None
     index = (exponent // 3) + 4  # pico is -12 --> 0
@@ -23,9 +26,11 @@ def exponent_to_multiplier(exponent: int) -> str | None:
 
 def multiplier_to_exponent(multiplier: str) -> int:
     """Turns the Metric multiplier into its exponent.
-    E.g. "k" -->  3 (kilo)
-    E.g. " " -->  0 (no multiplier)
-    E.g. "u" --> -6 (micro)"""
+
+    * "k" -->  3 (kilo)
+    * " " -->  0 (no multiplier)
+    * "u" --> -6 (micro)
+    """
     if multiplier in (" ", ""):
         return 0
     if multiplier == "µ":
@@ -39,10 +44,10 @@ def multiplier_to_exponent(multiplier: str) -> int:
 
 def best_exponent(num: Decimal, six: bool) -> tuple[str, int]:
     """Finds the best exponent for the number.
-    Returns a tuple (digits, best_exponent)"""
+    Returns a tuple (digits, best_exponent)
+    """
     res = ENG_NUMBER.match(num.to_eng_string())
-    if not res:
-        raise RuntimeError("blooey!")  # cSpell: ignore blooey
+    assert res
     digits, exp = Decimal(res.group(1)), int(res.group(2) or "0")
     assert exp % 3 == 0, "failed to make engineering notation"
     possibilities = []
@@ -64,13 +69,13 @@ def best_exponent(num: Decimal, six: bool) -> tuple[str, int]:
     return sorted(
         possibilities, key=lambda x: ((10 * len(x[0]))
                                       + (2 * ("." in x[0]))
-                                      + (5 * (x[1] != 0)))
-    )[0]
+                                      + (5 * (x[1] != 0))))[0]
 
 
 def normalize_metric(num: str, six: bool, unicode: bool) -> tuple[str, str]:
     """Parses the metric number, normalizes the unit, and returns
-    a tuple (normalized_digits, metric_multiplier)."""
+    a tuple (normalized_digits, metric_multiplier).
+    """
     match = METRIC_NUMBER.match(num)
     if not match:
         return num, None
@@ -96,7 +101,8 @@ def format_metric_unit(
     * If there is a range of numbers, formats each number in the range
       and adds the unit afterwards.
     * If there is no number in num, returns num unchanged.
-    * If unicode is True, uses 'µ' for micro instead of 'u'."""
+    * If unicode is True, uses 'µ' for micro instead of 'u'.
+    """
     num = num.strip()
     match = METRIC_RANGE.match(num)
     if match:

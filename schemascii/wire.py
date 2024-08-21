@@ -12,7 +12,9 @@ import schemascii.wire_tag as _wt
 
 @dataclass
 class Wire:
-    """List of grid points along a wire."""
+    """List of grid points along a wire that are
+    electrically connected.
+    """
 
     # This is a map of the direction coming into the cell
     # to the set of directions coming "out" of the cell.
@@ -44,7 +46,10 @@ class Wire:
     @classmethod
     def get_from_grid(cls, grid: _grid.Grid,
                       start: complex, tags: list[_wt.WireTag]) -> Wire:
-        """tags will be mutated"""
+        """Return the wire starting at the grid point specified.
+
+        tags will be mutated if any of the tags connects to this wire.
+        """
         points = _utils.flood_walk(
             grid, [start], cls.start_dirs, cls.directions, set())
         self_tag = None

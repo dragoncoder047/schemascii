@@ -1,6 +1,7 @@
 class Grid:
     """Helper class for managing a 2-D
-    grid of ASCII art."""
+    grid of ASCII art.
+    """
 
     def __init__(self, filename: str, data: str | None = None):
         if data is None:
@@ -19,29 +20,31 @@ class Grid:
         self.height = len(self.data)
 
     def validbounds(self, p: complex) -> bool:
-        "Returns true if the point is within the bounds of this grid."
+        """Returns true if the point is within the bounds of this grid."""
         return 0 <= p.real < self.width and 0 <= p.imag < self.height
 
     def get(self, p: complex) -> str:
         """Returns the current character at that point --
         space if out of bounds,
         the mask character if it was set,
-        otherwise the original character."""
+        otherwise the original character.
+        """
         if not self.validbounds(p):
             return " "
         return self.getmask(p) or self.data[int(p.imag)][int(p.real)]
 
     @property
     def lines(self) -> tuple[str]:
-        "The current contents, with masks applied."
+        """The current contents, with masks applied."""
         return tuple([
             "".join(self.get(complex(x, y)) for x in range(self.width))
             for y in range(self.height)
         ])
 
     def getmask(self, p: complex) -> str | bool:
-        """Sees the mask applied to the specified point;
-        False if it was not set."""
+        """Return the mask applied to the specified point
+        (False if it was not set).
+        """
         if not self.validbounds(p):
             return False
         return self.masks[int(p.imag)][int(p.real)]
@@ -53,17 +56,18 @@ class Grid:
         self.masks[int(p.imag)][int(p.real)] = mask
 
     def clrmask(self, p: complex):
-        "Shortcut for `self.setmask(p, False)`"
+        """Shortcut for `self.setmask(p, False)`"""
         self.setmask(p, False)
 
     def clrall(self):
-        "Clears all the masks at once."
+        """Clears all the masks at once."""
         self.masks = [[False for _ in range(self.width)]
                       for _ in range(self.height)]
 
     def clip(self, p1: complex, p2: complex):
         """Returns a sub-grid with the contents bounded by the p1 and p2 box.
-        Masks are not copied."""
+        Masks are not copied.
+        """
         ls = slice(int(p1.real), int(p2.real))
         cs = slice(int(p1.imag), int(p2.imag) + 1)
         d = "\n".join("".join(ln[ls]) for ln in self.data[cs])
@@ -71,7 +75,8 @@ class Grid:
 
     def shrink(self):
         """Shrinks self so that there is not any space between the edges and
-        the next non-printing character. Takes masks into account."""
+        the next non-printing character. Takes masks into account.
+        """
         # clip the top lines
         while all(self.get(complex(x, 0)).isspace()
                   for x in range(self.width)):
@@ -116,7 +121,12 @@ class Grid:
     __str__ = __repr__
 
     def spark(self, *points):
-        "print the grid highliting the specified points"
+        """Print the grid highliting the specified points.
+        (Used for debugging.)
+
+        This won't work in IDLE since it relies on
+        ANSI terminal escape sequences.
+        """
         for y in range(self.height):
             for x in range(self.width):
                 point = complex(x, y)
