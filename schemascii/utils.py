@@ -27,6 +27,10 @@ IDENTITY: dict[complex, list[complex]] = {
 
 
 class Cbox(typing.NamedTuple):
+    """Component bounding box. Also holds the letter
+    and number of the reference designator.
+    """
+    # XXX is this still used?
     p1: complex
     p2: complex
     type: str
@@ -34,25 +38,28 @@ class Cbox(typing.NamedTuple):
 
 
 class BOMData(typing.NamedTuple):
+    """Data to link the BOM data entry with the reference designator."""
     type: str
     id: str
     data: str
 
 
 class Flag(typing.NamedTuple):
+    """Data indicating the non-wire character next to a component."""
     pt: complex
     char: str
     side: Side
 
 
 class Terminal(typing.NamedTuple):
+    """Data indicating what and where wires connect to the component."""
     pt: complex
     flag: str | None
     side: Side
 
 
 class Side(enum.Enum):
-    "Which edge the flag was found on."
+    """One of the four cardinal directions."""
     RIGHT = 0
     TOP = -pi / 2
     LEFT = pi
@@ -60,6 +67,9 @@ class Side(enum.Enum):
 
     @classmethod
     def from_phase(cls, pt: complex) -> Side:
+        """Return the side that is closest to pt, if it is interpreted as
+        a vector originating from the origin.
+        """
         ops = {
             -pi: Side.LEFT,
             pi: Side.LEFT,
@@ -85,11 +95,12 @@ def flood_walk(
         directions: defaultdict[str, defaultdict[
             complex, list[complex] | None]],
         seen: set[complex]) -> list[complex]:
-    """Flood-fills the area on the grid starting from seed, only following
-    connections in the directions allowed by start_dirs and directions.
+    """Flood-fill the area on the grid starting from seed, only following
+    connections in the directions allowed by start_dirs and directions, and
+    return the list of reached points.
 
-    Updates the set seen for points that were walked into
-    and returns the list of walked-into points."""
+    Also updates the set seen for points that were walked into.
+    """
     points: list[complex] = []
     stack: list[tuple[complex, list[complex]]] = [
         (p, start_dirs[grid.get(p)])
@@ -108,14 +119,16 @@ def flood_walk(
                 next_pt = point + dir
                 next_dirs = directions[grid.get(next_pt)]
                 if next_dirs is None:
+                    # shortcut
                     next_dirs = defaultdict(lambda: None)
                 stack.append((next_pt, next_dirs[dir]))
     return points
 
 
 def perimeter(pts: list[complex]) -> list[complex]:
-    """The set of points that are on the boundary of
-    the grid-aligned set pts."""
+    """Return the set of points that are on the boundary of
+    the grid-aligned set pts.
+    """
     out = []
     for pt in pts:
         for d in ORTHAGONAL + DIAGONAL:
@@ -133,29 +146,32 @@ def centroid(pts: list[complex]) -> complex:
 
 def sort_counterclockwise(pts: list[complex],
                           center: complex | None = None) -> list[complex]:
-    """Returns pts sorted so that the points
+    """Return pts sorted so that the points
     progress clockwise around the center, starting with the
-    rightmost point."""
+    rightmost point.
+    """
     if center is None:
         center = centroid(pts)
     return sorted(pts, key=lambda p: phase(p - center))
 
 
 def colinear(*points: complex) -> bool:
-    "Returns true if all the points are in the same line."
+    """Return true if all the points are in the same line."""
     return len(set(phase(p - points[0]) for p in points[1:])) == 1
 
 
 def force_int(p: complex) -> complex:
-    "Force the coordinates of the complex number to lie on the integer grid."
+    """Return p with the coordinates rounded to lie on the integer grid."""
     return complex(round(p.real), round(p.imag))
 
 
 def sharpness_score(points: list[complex]) -> float:
-    """Returns a number indicating how twisty the line is -- higher means
-    the corners are sharper."""
+    """Return a number indicating how twisty the line is -- higher means
+    the corners are sharper. The result is 0 if the line is degenerate or
+    has no corners.
+    """
     if len(points) < 3:
-        return float("nan")
+        return 0
     score = 0
     prev_pt = points[1]
     prev_ph = phase(points[1] - points[0])
@@ -167,8 +183,12 @@ def sharpness_score(points: list[complex]) -> float:
     return score
 
 
-def intersecting(a: complex, b: complex, p: complex, q: complex):
-    """Return true if colinear line segments AB and PQ intersect."""
+def intersecting(a: complex, b: complex, p: complex, q: complex) -> bool:
+    """Return true if colinear line segments AB and PQ intersect.
+
+    If the line segments are not colinear, the result is undefined and
+    unpredictable.
+    """
     a, b, p, q = a.real, b.real, p.real, q.real
     sort_a, sort_b = min(a, b), max(a, b)
     sort_p, sort_q = min(p, q), max(p, q)
@@ -177,8 +197,9 @@ def intersecting(a: complex, b: complex, p: complex, q: complex):
 
 def take_next_group(links: list[tuple[complex, complex]]) -> list[
         tuple[complex, complex]]:
-    """Pops the longest possible path off of the `links` list and returns it,
-    mutating the input list."""
+    """Pop the longest possible continuous path off of the `links` list and
+    return it, mutating the input list.
+    """
     best = [links.pop()]
     while True:
         for pair in links:
@@ -200,9 +221,11 @@ def take_next_group(links: list[tuple[complex, complex]]) -> list[
 
 
 def merge_colinear(links: list[tuple[complex, complex]]):
-    "Merges line segments that are colinear. Mutates the input list."
+    """Merge adjacent line segments that are colinear, mutating the input
+    list.
+    """
     i = 1
-    while True:
+    while links:
         if i >= len(links):
             break
         elif links[i][0] == links[i][1]:
@@ -216,9 +239,13 @@ def merge_colinear(links: list[tuple[complex, complex]]):
 
 
 def iterate_line(p1: complex, p2: complex, step: float = 1.0):
-    "Yields complex points along a line."
-    # this isn't Bresenham's algorithm but I only use it for vertical or
-    # horizontal lines, so it works well enough
+    """Yield complex points along a line. Like range() but for complex
+    numbers.
+
+    This isn't Bresenham's algorithm but I only use it for perfectly vertical
+    or perfectly horizontal lines, so it works well enough. If the line is
+    diagonal then weird stuff happens.
+    """
     vec = p2 - p1
     point = p1
     while abs(vec) > abs(point - p1):
@@ -229,8 +256,11 @@ def iterate_line(p1: complex, p2: complex, step: float = 1.0):
 
 def deep_transform(data, origin: complex, theta: float):
     """Transform the point or points first by translating by origin,
-    then rotating by theta. Returns an identical data structure,
-    but with the transformed points substituted."""
+    then rotating by theta. Return an identical data structure,
+    but with the transformed points substituted.
+
+    TODO: add type statements for the data argument. This is really weird.
+    """
     if isinstance(data, list | tuple):
         return [deep_transform(d, origin, theta) for d in data]
     if isinstance(data, complex):
@@ -246,7 +276,9 @@ def deep_transform(data, origin: complex, theta: float):
 
 def fix_number(n: float) -> str:
     """If n is an integer, remove the trailing ".0".
-    Otherwise round it to 2 digits."""
+    Otherwise round it to 2 digits, and return the stringified
+    number.
+    """
     if n.is_integer():
         return str(int(n))
     n = round(n, 2)
@@ -282,8 +314,9 @@ del XMLClass
 
 
 def points2path(points: list[complex], close: bool = False) -> str:
-    """Converts list of points into SVG <path> commands
-    to draw the set of lines."""
+    """Convert the list of points into SVG <path> commands
+    to draw the set of lines.
+    """
     def fix(number: float) -> float | int:
         return int(number) if number.is_integer() else number
 
@@ -318,7 +351,8 @@ def polylinegon(
     """Turn the list of points into a line or filled area.
 
     If is_polygon is true, stroke color is used as fill color instead
-    and stroke width is ignored."""
+    and stroke width is ignored.
+    """
     scaled_pts = [x * scale for x in points]
     if is_polygon:
         return XML.path(d=points2path(scaled_pts, True),
@@ -329,7 +363,7 @@ def polylinegon(
 
 
 def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
-    "Finds all the points where there are 4 or more connecting wires."
+    """Find all the points where there are 4 or more connecting wires."""
     seen = {}
     for p1, p2 in points:
         if p1 == p2:
@@ -349,8 +383,9 @@ def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
 def bunch_o_lines(
         pairs: list[tuple[complex, complex]],
         *, scale: int, stroke_width: int, stroke: str) -> str:
-    """Collapse the pairs of points and return
-    the smallest number of <polyline>s."""
+    """Combine the pairs (p1, p2) into a set of SVG <path> commands
+    to draw all of the lines.
+    """
     lines = []
     while pairs:
         group = take_next_group(pairs)
@@ -378,7 +413,7 @@ def id_text(
     scale: int,
     stroke: str
 ) -> str:
-    "Format the component ID and value around the point."
+    """Format the component ID and value around the point."""
     if nolabels:
         return ""
     if point is None:
@@ -426,7 +461,7 @@ def id_text(
 
 def make_text_point(t1: complex, t2: complex,
                     *, scale: int, offset_scale: int = 1) -> complex:
-    "Compute the scaled coordinates of the text anchor point."
+    """Compute the scaled coordinates of the text anchor point."""
     quad_angle = phase(t1 - t2) + pi / 2
     text_pt = (t1 + t2) * scale / 2
     offset = rect(scale / 2 * offset_scale, quad_angle)
@@ -436,7 +471,7 @@ def make_text_point(t1: complex, t2: complex,
 
 def make_plus(terminals: list[Terminal], center: complex,
               theta: float, **options) -> str:
-    "Make a + sign if the terminals indicate the component is polarized."
+    """Make a + sign if the terminals indicate the component is polarized."""
     if all(t.flag != "+" for t in terminals):
         return ""
     return XML.g(
@@ -453,7 +488,7 @@ def make_plus(terminals: list[Terminal], center: complex,
 
 
 def arrow_points(p1: complex, p2: complex) -> list[tuple[complex, complex]]:
-    "Return points to make an arrow from p1 pointing to p2."
+    """Return points to make an arrow from p1 pointing to p2."""
     angle = phase(p2 - p1)
     tick_len = min(0.5, abs(p2 - p1))
     return [
@@ -465,7 +500,7 @@ def arrow_points(p1: complex, p2: complex) -> list[tuple[complex, complex]]:
 
 def make_variable(center: complex, theta: float,
                   is_variable: bool = True, **options) -> str:
-    "Draw a 'variable' arrow across the component."
+    """Draw a 'variable' arrow across the component."""
     if not is_variable:
         return ""
     return bunch_o_lines(deep_transform(arrow_points(-1, 1),
@@ -476,7 +511,8 @@ def make_variable(center: complex, theta: float,
 
 def light_arrows(center: complex, theta: float, out: bool, **options):
     """Draw arrows towards or away from the component
-    (i.e. light-emitting or light-dependent)."""
+    (i.e. light-emitting or light-dependent).
+    """
     a, b = 1j, 0.3 + 0.3j
     if out:
         a, b = b, a
@@ -491,7 +527,7 @@ def light_arrows(center: complex, theta: float, out: bool, **options):
 
 def sort_terminals_counterclockwise(
         terminals: list[Terminal]) -> list[Terminal]:
-    "Sort the terminals in counterclockwise order."
+    """Sort the terminals in counterclockwise order."""
     partitioned = {
         side: list(filtered_terminals)
         for side, filtered_terminals in itertools.groupby(
@@ -508,7 +544,7 @@ def sort_terminals_counterclockwise(
 
 
 def is_clockwise(terminals: list[Terminal]) -> bool:
-    "Return true if the terminals are clockwise order."
+    """Return true if the terminals are clockwise order."""
     sort = sort_terminals_counterclockwise(terminals)
     for _ in range(len(sort)):
         if sort == terminals:
@@ -520,7 +556,8 @@ def is_clockwise(terminals: list[Terminal]) -> bool:
 def sort_for_flags(terminals: list[Terminal],
                    box: Cbox, *flags: list[str]) -> list[Terminal]:
     """Sorts out the terminals in the specified order using the flags.
-    Raises and error if the flags are absent."""
+    Raises an error if the flags are absent.
+    """
     out = ()
     for flag in flags:
         matching_terminals = list(filter(lambda t: t.flag == flag, terminals))
@@ -536,7 +573,8 @@ def sort_for_flags(terminals: list[Terminal],
             )
         (terminal,) = matching_terminals
         out = *out, terminal
-        terminals.remove(terminal)
+        # terminals.remove(terminal)
+        # is this necessary with the checks above?
     return out
 
 
