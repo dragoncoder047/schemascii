@@ -56,9 +56,11 @@ class Data:
     @classmethod
     def define_option(cls, ns: str, opt: _dc.Option):
         if ns in cls.allowed_options:
-            if any(eo.name == opt.name for eo in cls.allowed_options[ns]):
+            if any(eo.name == opt.name and eo != opt
+                   for eo in cls.allowed_options[ns]):
                 raise ValueError(f"duplicate option name {opt.name!r}")
-            cls.allowed_options[ns].append(opt)
+            if opt not in cls.allowed_options[ns]:
+                cls.allowed_options[ns].append(opt)
         else:
             cls.allowed_options[ns] = [opt]
 
