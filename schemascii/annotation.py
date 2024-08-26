@@ -34,7 +34,7 @@ class Annotation(_dc.DataConsumer, namespaces=(":annotation",)):
                 out.append(cls(complex(x, y), text))
         return out
 
-    def render(self, scale, font) -> str:
+    def render(self, data, scale, font) -> str:
         return _utils.XML.text(
             html.escape(self.content),
             x=self.position.real * scale,
