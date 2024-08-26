@@ -54,31 +54,33 @@ class DataConsumer(abc.ABC):
                     and issubclass(b, DataConsumer)
                     and b.options is cls.options):
                 # if we literally just inherit the attribute,
-                # don't bother reprocessing it
-                return
+                # don't bother reprocessing it - just assign it in the
+                # namespaces
+                break
+        else:
+            def coalesce_options(cls: type[DataConsumer]) -> list[Option]:
+                if DataConsumer not in cls.mro():
+                    return []
+                seen_inherit = False
+                opts = []
+                for opt in cls.options:
+                    if opt == "inherit":
+                        if seen_inherit:
+                            raise ValueError("can't use 'inherit' twice")
 
-        def coalesce_options(cls: type[DataConsumer]) -> list[Option]:
-            if DataConsumer not in cls.mro():
-                return []
-            seen_inherit = False
-            opts = []
-            for opt in cls.options:
-                if opt == "inherit":
-                    if seen_inherit:
-                        raise ValueError("can't use 'inherit' twice")
+                        seen_inherit = True
+                    elif isinstance(opt, tuple):
+                        for base in cls.__bases__:
+                            opts.extend(o for o in coalesce_options(base)
+                                        if o.name in opt)
+                    elif isinstance(opt, Option):
+                        opts.append(opt)
+                    else:
+                        raise TypeError(f"unknown option definition: {opt!r}")
+                return opts
 
-                    seen_inherit = True
-                elif isinstance(opt, tuple):
-                    for base in cls.__bases__:
-                        opts.extend(o for o in coalesce_options(base)
-                                    if o.name in opt)
-                elif isinstance(opt, Option):
-                    opts.append(opt)
-                else:
-                    raise TypeError(f"unknown option definition: {opt!r}")
-            return opts
+            cls.options = coalesce_options(cls)
 
-        cls.options = coalesce_options(cls)
         for ns in namespaces:
             for option in cls.options:
                 _data.Data.define_option(ns, option)
