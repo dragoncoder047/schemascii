@@ -113,8 +113,10 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
         # done
         return cls(rd, blobs, terminals)
 
-    def __init_subclass__(cls, ids: list[str], id_letters: str | None = None):
+    def __init_subclass__(
+            cls, ids: list[str], id_letters: str | None = None, **kwargs):
         """Register the component subclass in the component registry."""
+        super().__init_subclass__(**kwargs)
         for id_letters in ids:
             if not (id_letters.isalpha() and id_letters.upper() == id_letters):
                 raise ValueError(
