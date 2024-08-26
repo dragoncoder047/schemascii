@@ -41,6 +41,10 @@ class RefDes:
 
     @property
     def name(self) -> str:
+        return f"{self.short_name}{self.suffix}"
+
+    @property
+    def short_name(self) -> str:
         return f"{self.letter}{self.number}{self.suffix}"
 
 

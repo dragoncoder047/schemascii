@@ -5,16 +5,19 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import ClassVar
 
+import schemascii.data_consumer as _dc
 import schemascii.grid as _grid
 import schemascii.utils as _utils
 import schemascii.wire_tag as _wt
 
 
 @dataclass
-class Wire:
+class Wire(_dc.DataConsumer, namespaces=(":wire",)):
     """List of grid points along a wire that are
     electrically connected.
     """
+
+    css_class = "wire"
 
     # This is a map of the direction coming into the cell
     # to the set of directions coming "out" of the cell.
@@ -60,13 +63,14 @@ class Wire:
                 break
         return cls(points, self_tag)
 
-    def to_xml_string(self, **options) -> str:
+    def render(self, data, **options) -> str:
         # create lines for all of the neighbor pairs
         links = []
         for p1, p2 in itertools.combinations(self.points, 2):
             if abs(p1 - p2) == 1:
                 links.append((p1, p2))
-        return _utils.bunch_o_lines(links, **options)
+        return (_utils.bunch_o_lines(links, **options)
+                + (self.tag.to_xml_string(data) if self.tag else ""))
 
     @classmethod
     def is_wire_character(cls, ch: str) -> bool:

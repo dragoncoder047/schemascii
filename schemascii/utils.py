@@ -347,7 +347,7 @@ def points2path(points: list[complex], close: bool = False) -> str:
 
 def polylinegon(
         points: list[complex], is_polygon: bool = False,
-        *, scale: int, stroke_width: int, stroke: str) -> str:
+        *, scale: float, stroke_width: float, stroke: str) -> str:
     """Turn the list of points into a line or filled area.
 
     If is_polygon is true, stroke color is used as fill color instead
@@ -382,7 +382,7 @@ def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
 
 def bunch_o_lines(
         pairs: list[tuple[complex, complex]],
-        *, scale: int, stroke_width: int, stroke: str) -> str:
+        *, scale: float, stroke_width: float, stroke: str) -> str:
     """Combine the pairs (p1, p2) into a set of SVG <path> commands
     to draw all of the lines.
     """
@@ -402,17 +402,16 @@ def bunch_o_lines(
 
 
 def id_text(
-    box: Cbox,
-    bom_data: BOMData,
-    terminals: list[Terminal],
-    unit: str | list[str] | None,
-    point: complex | None = None,
-    *,
-    label: typing.Literal["L", "V", "LV"],
-    nolabels: bool,
-    scale: int,
-    stroke: str
-) -> str:
+        box: Cbox,
+        bom_data: BOMData,
+        terminals: list[Terminal],
+        unit: str | list[str] | None,
+        point: complex | None = None,
+        *,
+        label: typing.Literal["L", "V", "LV"],
+        nolabels: bool,
+        scale: float,
+        stroke: str) -> str:
     """Format the component ID and value around the point."""
     if nolabels:
         return ""
@@ -460,7 +459,7 @@ def id_text(
 
 
 def make_text_point(t1: complex, t2: complex,
-                    *, scale: int, offset_scale: int = 1) -> complex:
+                    *, scale: float, offset_scale: float) -> complex:
     """Compute the scaled coordinates of the text anchor point."""
     quad_angle = phase(t1 - t2) + pi / 2
     text_pt = (t1 + t2) * scale / 2
@@ -558,7 +557,7 @@ def sort_for_flags(terminals: list[Terminal],
     """Sorts out the terminals in the specified order using the flags.
     Raises an error if the flags are absent.
     """
-    out = ()
+    out = []
     for flag in flags:
         matching_terminals = list(filter(lambda t: t.flag == flag, terminals))
         if len(matching_terminals) > 1:
@@ -571,9 +570,8 @@ def sort_for_flags(terminals: list[Terminal],
                 f"Need a terminal with the flag {flag} "
                 f"on component {box.type}{box.id}"
             )
-        (terminal,) = matching_terminals
-        out = *out, terminal
-        # terminals.remove(terminal)
+        out.append(matching_terminals[0])
+        # terminals.remove(matching_terminals[0])
         # is this necessary with the checks above?
     return out
 

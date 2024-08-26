@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import abc
+import typing
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import ClassVar
 
-import schemascii.data as _data
+import schemascii.data_consumer as _dc
 import schemascii.errors as _errors
 import schemascii.grid as _grid
 import schemascii.net as _net
@@ -15,14 +14,18 @@ import schemascii.wire as _wire
 
 
 @dataclass
-class Component(abc.ABC):
+class Component(_dc.DataConsumer, namespaces=(":component",)):
     """An icon representing a single electronic component."""
-    all_components: ClassVar[dict[str, type[Component]]] = {}
-    human_name: ClassVar[str] = ""
+    all_components: typing.ClassVar[dict[str, type[Component]]] = {}
+    human_name: typing.ClassVar[str] = ""
 
     rd: _rd.RefDes
     blobs: list[list[complex]]  # to support multiple parts.
     terminals: list[_utils.Terminal]
+
+    @property
+    def namespaces(self) -> tuple[str, ...]:
+        return self.rd.name, self.rd.short_name, self.rd.letter, ":component"
 
     @classmethod
     def from_rd(cls, rd: _rd.RefDes, grid: _grid.Grid) -> Component:
@@ -122,27 +125,17 @@ class Component(abc.ABC):
             cls.all_components[id_letters] = cls
         cls.human_name = id_letters or cls.__name__
 
-    def to_xml_string(self, options: _data.Data) -> str:
-        """Render this component to a string of SVG XML."""
-        return _utils.XML.g(
-            self.render(options.get_values_for(self.rd.name)),
-            class_=f"component {self.rd.letter}")
-
-    @abc.abstractmethod
-    def render(self, options: dict) -> str:
-        """Render this component to a string of XML using the options.
-        Component subclasses should implement this method.
-
-        This is a private method and should not be called directly. Instead,
-        use the `to_xml_string` method which performs a few more
-        transformations and wraps the output in a nicely formatted `<g>`.
-        """
-        raise NotImplementedError
+    @property
+    def css_class(self) -> str:
+        return f"component {self.rd.letter}"
 
     @classmethod
     def process_nets(self, nets: list[_net.Net]):
         """Hook method called to do stuff with the nets that this
         component type connects to. By itself it does nothing.
+
+        If a subclass implements this method to do something, it should
+        mutate the list in-place and return None.
         """
         pass
 

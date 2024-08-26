@@ -1,17 +1,21 @@
 import re
 from dataclasses import dataclass
 
+import schemascii.data_consumer as _dc
 import schemascii.grid as _grid
+import schemascii.utils as _utils
 
 ANNOTATION_RE = re.compile(r"\[([^\]]+)\]")
 
 
 @dataclass
-class Annotation:
+class Annotation(_dc.DataConsumer, namespaces=(":annotation",)):
     """A chunk of text that will be rendered verbatim in the output SVG."""
 
     position: complex
     content: str
+
+    css_class = "annotation"
 
     @classmethod
     def find_all(cls, grid: _grid.Grid):
@@ -23,3 +27,7 @@ class Annotation:
                 text = match.group(1)
                 out.append(cls(complex(x, y), text))
         return out
+
+    def render(self, **options) -> str:
+        raise NotImplementedError
+        return _utils.XML.text()

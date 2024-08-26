@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
+import schemascii.data_consumer as _dc
 import schemascii.grid as _grid
 import schemascii.utils as _utils
 import schemascii.wire as _wire
@@ -12,7 +13,7 @@ WIRE_TAG_PAT = re.compile(r"<([^\s=]+)=|=([^\s>]+)>")
 
 
 @dataclass
-class WireTag:
+class WireTag(_dc.DataConsumer, namespaces=(":wire-tag",)):
     """A wire tag is a named flag on the end of the
     wire, that gives it a name and also indicates what
     direction information flows.
@@ -20,6 +21,8 @@ class WireTag:
     Wire tags currently only support horizontal connections
     as of right now.
     """
+
+    css_class = "wire-tag"
 
     name: str
     position: complex
@@ -54,6 +57,9 @@ class WireTag:
                 out.append(cls(name, position, attach_side,
                                point_dir, connect_pt))
         return out
+
+    def render(self, data) -> str:
+        raise NotImplementedError
 
 
 if __name__ == '__main__':

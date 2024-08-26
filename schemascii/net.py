@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import schemascii.data_consumer as _dc
 import schemascii.grid as _grid
 import schemascii.wire as _wire
 import schemascii.wire_tag as _wt
 
 
 @dataclass
-class Net:
+class Net(_dc.DataConsumer, namespaces=(":net",)):
     """Grouping of wires that are
     electrically connected.
     """
@@ -42,6 +43,9 @@ class Net:
                         all_nets.append(cls([wire]))
                     seen_points.update(wire.points)
         return all_nets
+
+    def render(self, data) -> str:
+        return "".join(w.to_xml_string(data) for w in self.wires)
 
 
 if __name__ == '__main__':

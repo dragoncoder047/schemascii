@@ -1,5 +1,5 @@
 class Error(Exception):
-    """A generic Schemascii error."""
+    """A generic Schemascii error encountered when rendering a drawing."""
 
 
 class DiagramSyntaxError(SyntaxError, Error):

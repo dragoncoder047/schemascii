@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import typing
 from dataclasses import dataclass
 
+import schemascii.data_consumer as _dc
 import schemascii.annoline as _annoline
 import schemascii.annotation as _a
 import schemascii.component as _component
@@ -14,8 +16,14 @@ import schemascii.utils as _utils
 
 
 @dataclass
-class Drawing:
+class Drawing(_dc.DataConsumer, namespaces=(":root",)):
     """A Schemascii drawing document."""
+
+    options = [
+        ("scale",),
+        _dc.Option("padding", float,
+                   "Margin around the border of the drawing", 10),
+    ]
 
     nets: list[_net.Net]
     components: list[_component.Component]
@@ -50,6 +58,7 @@ class Drawing:
                 f"(current data-marker is: {data_marker!r})") from e
         drawing_area = "\n".join(lines[:marker_pos])
         data_area = "\n".join(lines[marker_pos+1:])
+        # find everything
         grid = _grid.Grid(filename, drawing_area)
         nets = _net.Net.find_all(grid)
         components = [_component.Component.from_rd(r, grid)
@@ -58,19 +67,36 @@ class Drawing:
         annotation_lines = _annoline.AnnotationLine.find_all(grid)
         data = _data.Data.parse_from_string(
             data_area, marker_pos, filename)
+        # process nets
+        for comp in components:
+            comp.process_nets(nets)
         grid.clrall()
         return cls(nets, components, annotations, annotation_lines, data, grid)
 
-    def to_xml_string(self, fudge: _data.Data | None = None) -> str:
+    def to_xml_string(
+            self,
+            fudge: _data.Data | dict[str, typing.Any] | None = None) -> str:
         """Render the entire diagram to a string and return the <svg> element.
         """
         data = self.data
         if fudge:
             data |= fudge
-        scale = data.getopt("*", "scale", 10)
-        padding = data.getopt("*", "padding", 10)
-        content = ""
-        raise NotImplementedError
+        return super().to_xml_string(data)
+
+    def render(self, data, scale: float, padding: float) -> str:
+        # render everything
+        content = _utils.XML.g(
+            _utils.XML.g(
+                *(net.to_xml_string(data) for net in self.nets),
+                class_="wires"),
+            _utils.XML.g(
+                *(comp.to_xml_string(data) for comp in self.components),
+                class_="components"),
+            class_="electrical")
+        content += _utils.XML.g(
+            *(line.to_xml_string(data) for line in self.annotation_lines),
+            *(anno.to_xml_string(data) for anno in self.annotations),
+            class_="annotations")
         return _utils.XML.svg(
             content,
             width=self.grid.width * scale + padding * 2,

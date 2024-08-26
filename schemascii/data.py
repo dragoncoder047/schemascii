@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import fnmatch
 import re
+import typing
 from dataclasses import dataclass
-from typing import Any, TypeVar
 
+import schemascii.data_consumer as _dc
 import schemascii.errors as _errors
 
-T = TypeVar("T")
+T = typing.TypeVar("T")
 TOKEN_PAT = re.compile("|".join([
     r"[\n{};=]",  # special one-character
     "%%",  # comment marker
@@ -16,7 +17,6 @@ TOKEN_PAT = re.compile("|".join([
     r"""(?:(?!["\s{};=]).)+""",  # anything else
 ]))
 SPECIAL = {";", "\n", "%%", "{", "}"}
-_NOT_SET = object()
 
 
 def tokenize(stuff: str) -> list[str]:
@@ -40,9 +40,27 @@ class Section(dict):
 
 @dataclass
 class Data:
-    """Class that holds the data of a drawing."""
+    """Class that manages data defining drawing parameters.
+
+    The class object itself manages what data options are allowed for
+    what namespaces (e.g. to generate a help message) and can parse the data.
+
+    Instances of this class represent a collection of data sections that were
+    found in a drawing.
+    """
 
     sections: list[Section]
+
+    allowed_options: typing.ClassVar[dict[str, list[_dc.Option]]] = {}
+
+    @classmethod
+    def define_option(cls, ns: str, opt: _dc.Option):
+        if ns in cls.allowed_options:
+            if any(eo.name == opt.name for eo in cls.allowed_options[ns]):
+                raise ValueError(f"duplicate option name {opt.name!r}")
+            cls.allowed_options[ns].append(opt)
+        else:
+            cls.allowed_options[ns] = [opt]
 
     @classmethod
     def parse_from_string(cls, text: str, startline=1, filename="") -> Data:
@@ -54,7 +72,7 @@ class Data:
         tokens = tokenize(text)
         lines = (text + "\n").splitlines()
         col = line = index = 0
-        lastsig = (0, 0, 0)
+        lastsig: tuple[int, int, int] = (0, 0, 0)
 
         def complain(msg):
             raise _errors.DiagramSyntaxError(
@@ -96,7 +114,7 @@ class Data:
         def save():
             return (index, line, col)
 
-        def restore(dat):
+        def restore(dat: tuple[int, int, int]):
             nonlocal index
             nonlocal line
             nonlocal col
@@ -210,17 +228,7 @@ class Data:
                 out |= section.data
         return out
 
-    def getopt(self, namespace: str, name: str, default: T = _NOT_SET) -> T:
-        values = self.get_values_for(namespace)
-        value = values.get(name, _NOT_SET)
-        if value is _NOT_SET:
-            if default is _NOT_SET:
-                raise _errors.NoDataError(
-                    f"value for {namespace}.{name} is required")
-            return default
-        return value
-
-    def __or__(self, other: Data | dict[str, Any] | Any) -> Data:
+    def __or__(self, other: Data | dict[str, typing.Any] | typing.Any) -> Data:
         if isinstance(other, dict):
             other = Data([Section("*", other)])
         if not isinstance(other, Data):

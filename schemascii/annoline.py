@@ -1,19 +1,26 @@
 from __future__ import annotations
+
+import itertools
+import typing
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import ClassVar
-import schemascii.utils as _utils
+
+import schemascii.data_consumer as _dc
 import schemascii.grid as _grid
+import schemascii.utils as _utils
 
 
 @dataclass
-class AnnotationLine:
+class AnnotationLine(_dc.DataConsumer,
+                     namespaces=(":annotation", ":annotation-line")):
     """Class that implements the ability to
     draw annotation lines on the drawing
     without having to use a disconnected wire.
     """
 
-    directions: ClassVar[
+    css_class = "annotation annotation-line"
+
+    directions: typing.ClassVar[
         defaultdict[str, defaultdict[complex, list[complex]]]] = defaultdict(
         lambda: None, {
             # allow jumps over actual wires
@@ -36,7 +43,7 @@ class AnnotationLine:
                 1: [-1j, -1]
             }
         })
-    start_dirs: ClassVar[
+    start_dirs: typing.ClassVar[
         defaultdict[str, list[complex]]] = defaultdict(
         lambda: None, {
             "~": _utils.LEFT_RIGHT,
@@ -45,6 +52,7 @@ class AnnotationLine:
             "'": (-1, 1, 1j),
         })
 
+    # the sole member
     points: list[complex]
 
     @classmethod
@@ -77,6 +85,15 @@ class AnnotationLine:
                     seen_points.update(line.points)
         return all_lines
 
+    def render(self, **options) -> str:
+        # copy-pasted from wire.py except class changed at bottom
+        # create lines for all of the neighbor pairs
+        links = []
+        for p1, p2 in itertools.combinations(self.points, 2):
+            if abs(p1 - p2) == 1:
+                links.append((p1, p2))
+        return _utils.bunch_o_lines(links, **options)
+
 
 if __name__ == '__main__':
     x = _grid.Grid("", """
@@ -90,6 +107,6 @@ if __name__ == '__main__':
                            '~~~~~~~~~~~~~~~'
 
 """)
-    line = AnnotationLine.get_from_grid(x, 30+2j)
+    line, = AnnotationLine.find_all(x)
     print(line)
     x.spark(*line.points)
