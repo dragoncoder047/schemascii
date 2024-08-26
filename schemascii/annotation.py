@@ -1,3 +1,4 @@
+import html
 import re
 from dataclasses import dataclass
 
@@ -11,6 +12,11 @@ ANNOTATION_RE = re.compile(r"\[([^\]]+)\]")
 @dataclass
 class Annotation(_dc.DataConsumer, namespaces=(":annotation",)):
     """A chunk of text that will be rendered verbatim in the output SVG."""
+
+    options = [
+        ("scale",),
+        _dc.Option("font", str, "Text font", "monospace"),
+    ]
 
     position: complex
     content: str
@@ -28,6 +34,10 @@ class Annotation(_dc.DataConsumer, namespaces=(":annotation",)):
                 out.append(cls(complex(x, y), text))
         return out
 
-    def render(self, **options) -> str:
-        raise NotImplementedError
-        return _utils.XML.text()
+    def render(self, scale, font) -> str:
+        return _utils.XML.text(
+            html.escape(self.content),
+            x=self.position.real * scale,
+            y=self.position.imag * scale,
+            style=f"font-family:{font}",
+            alignment__baseline="middle")
