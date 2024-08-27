@@ -64,13 +64,24 @@ class Wire(_dc.DataConsumer, namespaces=(":wire",)):
         return cls(points, self_tag)
 
     def render(self, data, **options) -> str:
+        scale = options["scale"]
+        linewidth = options["linewidth"]
         # create lines for all of the neighbor pairs
         links = []
         for p1, p2 in itertools.combinations(self.points, 2):
             if abs(p1 - p2) == 1:
                 links.append((p1, p2))
+        # find dots
+        dots = ""
+        for dot_pt in _utils.find_dots(links):
+            dots += _utils.XML.circle(
+                cx=scale * dot_pt.real,
+                cy=scale * dot_pt.real,
+                r=linewidth,
+                class_="dot")
         return (_utils.bunch_o_lines(links, **options)
-                + (self.tag.to_xml_string(data) if self.tag else ""))
+                + (self.tag.to_xml_string(data) if self.tag else "")
+                + dots)
 
     @classmethod
     def is_wire_character(cls, ch: str) -> bool:
