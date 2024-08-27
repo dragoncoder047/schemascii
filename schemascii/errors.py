@@ -6,7 +6,7 @@ class DiagramSyntaxError(SyntaxError, Error):
     """Bad formatting in Schemascii diagram syntax."""
 
 
-class TerminalsError(TypeError, Error):
+class TerminalsError(ValueError, Error):
     """Incorrect usage of terminals on this component."""
 
 
@@ -22,5 +22,5 @@ class NoDataError(NameError, Error):
     """Data item is required, but not present."""
 
 
-class DataTypeError(ValueError, Error):
-    """Invalid data value."""
+class DataTypeError(TypeError, Error):
+    """Invalid data type in data section."""

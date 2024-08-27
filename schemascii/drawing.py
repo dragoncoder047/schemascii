@@ -83,7 +83,7 @@ class Drawing(_dc.DataConsumer, namespaces=(":root",)):
             data |= fudge
         return super().to_xml_string(data)
 
-    def render(self, data, scale: float, padding: float) -> str:
+    def render(self, data, scale: float, padding: float, **options) -> str:
         # render everything
         content = _utils.XML.g(
             _utils.XML.g(

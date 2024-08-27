@@ -94,7 +94,8 @@ def format_metric_unit(
         num: str,
         unit: str = "",
         six: bool = False,
-        unicode: bool = True) -> str:
+        unicode: bool = True,
+        allow_range: bool = True) -> str:
     """Normalizes the Metric multiplier on the number, then adds the unit.
 
     * If there is a suffix on num, moves it to after the unit.
@@ -106,6 +107,8 @@ def format_metric_unit(
     num = num.strip()
     match = METRIC_RANGE.match(num)
     if match:
+        if not allow_range:
+            raise ValueError("range not allowed")
         # format the range by calling recursively
         num0, num1 = match.group(1), match.group(2)
         suffix = num[match.span()[1]:]

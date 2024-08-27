@@ -85,7 +85,7 @@ class AnnotationLine(_dc.DataConsumer,
                     seen_points.update(line.points)
         return all_lines
 
-    def render(self, data, **options) -> str:
+    def render(self, **options) -> str:
         # copy-pasted from wire.py except class changed at bottom
         # create lines for all of the neighbor pairs
         links = []

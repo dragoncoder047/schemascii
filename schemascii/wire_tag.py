@@ -58,7 +58,7 @@ class WireTag(_dc.DataConsumer, namespaces=(":wire-tag",)):
                                point_dir, connect_pt))
         return out
 
-    def render(self, data) -> str:
+    def render(self, **options) -> str:
         raise NotImplementedError
 
 

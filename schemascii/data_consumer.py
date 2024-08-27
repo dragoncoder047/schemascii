@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import typing
+import warnings
 from dataclasses import dataclass
 
 import schemascii.data as _data
@@ -29,7 +30,7 @@ class DataConsumer(abc.ABC):
     to be rendered. This class registers the options that the class
     declares with Data so that they can be checked, automatically pulls
     the needed options when to_xml_string() is called, and passes the dict of
-    options to render().
+    options to render() as keyword arguments.
     """
 
     options: typing.ClassVar[list[Option
@@ -40,14 +41,25 @@ class DataConsumer(abc.ABC):
         Option("linewidth", float, "Width of drawn lines", 2),
         Option("color", str, "black", "Default color for everything"),
     ]
-    namepaces: tuple[str, ...]
     css_class: typing.ClassVar[str] = ""
 
-    def __init_subclass__(cls, namespaces: tuple[str, ...] = ("*",)):
+    @property
+    def namespaces(self) -> tuple[str, ...]:
+        # base case to stop recursion
+        return ()
+
+    def __init_subclass__(cls, namespaces: tuple[str, ...] = None):
+
+        if not namespaces:
+            # allow anonymous helper subclasses
+            return
 
         if not hasattr(cls, "namespaces"):
-            # don't clobber it if a subclass defines it as a @property!
-            cls.namespaces = namespaces
+            # don't clobber it if a subclass already overrides it!
+            @property
+            def __namespaces(self) -> tuple[str, ...]:
+                return super(type(self), self).namespaces + namespaces
+            cls.namepaces = __namespaces
 
         for b in cls.mro():
             if (b is not cls
@@ -97,14 +109,14 @@ class DataConsumer(abc.ABC):
             if opt.name not in values:
                 if opt.default is _NOT_SET:
                     raise _errors.NoDataError(
-                        f"value for {self.namespaces[0]}.{name} is required")
+                        f"missing value for {self.namespaces[0]}.{name}")
                 values[opt.name] = opt.default
                 continue
             if isinstance(opt.type, list):
                 if values[opt.name] not in opt.type:
-                    raise _errors.DataTypeError(
-                        f"option {self.namespaces[0]}.{opt.name}: "
-                        f"invalid choice: {values[opt.name]} "
+                    raise _errors.BOMError(
+                        f"{self.namespaces[0]}.{opt.name}: "
+                        f"invalid choice: {values[opt.name]!r} "
                         f"(valid options are "
                         f"{', '.join(map(repr, opt.type))})")
                 continue
@@ -114,7 +126,13 @@ class DataConsumer(abc.ABC):
                 raise _errors.DataTypeError(
                     f"option {self.namespaces[0]}.{opt.name}: "
                     f"invalid {opt.type.__name__} value: "
-                    f"{values[opt.name]}") from err
+                    f"{values[opt.name]!r}") from err
+        for key in values:
+            if any(opt.name == key for opt in self.options):
+                continue
+            warnings.warn(
+                f"unknown data key {key!r} for styling {self.namespaces[0]}",
+                stacklevel=2)
         # render
         result = self.render(**values, data=data)
         if self.css_class:

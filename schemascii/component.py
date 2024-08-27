@@ -17,7 +17,15 @@ import schemascii.wire as _wire
 class Component(_dc.DataConsumer, namespaces=(":component",)):
     """An icon representing a single electronic component."""
     all_components: typing.ClassVar[dict[str, type[Component]]] = {}
-    human_name: typing.ClassVar[str] = ""
+
+    options = [
+        "inherit",
+        _dc.Option("offset_scale", float,
+                   "How far to offset the label from the center of the "
+                   "component. Relative to the global scale option.", 1),
+        _dc.Option("font", str, "Text font for labels", "monospace"),
+
+    ]
 
     rd: _rd.RefDes
     blobs: list[list[complex]]  # to support multiple parts.
@@ -113,10 +121,13 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
         # done
         return cls(rd, blobs, terminals)
 
-    def __init_subclass__(
-            cls, ids: list[str], id_letters: str | None = None, **kwargs):
+    def __init_subclass__(cls, ids: tuple[str, ...] = None,
+                          namespaces: tuple[str, ...] = None, **kwargs):
         """Register the component subclass in the component registry."""
-        super().__init_subclass__(**kwargs)
+        super().__init_subclass__(namespaces=(namespaces or ()), **kwargs)
+        if not ids:
+            # allow anonymous helper classes
+            return
         for id_letters in ids:
             if not (id_letters.isalpha() and id_letters.upper() == id_letters):
                 raise ValueError(
@@ -125,7 +136,6 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
                 raise ValueError(
                     f"duplicate reference designator letters: {id_letters!r}")
             cls.all_components[id_letters] = cls
-        cls.human_name = id_letters or cls.__name__
 
     @property
     def css_class(self) -> str:
@@ -134,25 +144,34 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
     @classmethod
     def process_nets(self, nets: list[_net.Net]):
         """Hook method called to do stuff with the nets that this
-        component type connects to. By itself it does nothing.
+        component type connects to. By default it does nothing.
 
         If a subclass implements this method to do something, it should
-        mutate the list in-place and return None.
+        mutate the list in-place (the return value is ignored).
         """
         pass
 
+    def get_terminals(
+            self, *flags_names: str) -> list[_utils.Terminal]:
+        """Return the component's terminals sorted so that the terminals with
+        the specified flags appear first in the order specified and the
+        remaining terminals come after.
 
-if __name__ == '__main__':
-    class FooComponent(Component, ids=["U", "FOO"]):
-        pass
-    print(Component.all_components)
-    testgrid = _grid.Grid("test_data/stresstest.txt")
-    # this will erroneously search the DATA section too but that's OK
-    # for this test
-    for rd in _rd.RefDes.find_all(testgrid):
-        c = Component.from_rd(rd, testgrid)
-        print(c)
-        for blob in c.blobs:
-            testgrid.spark(*blob)
-        testgrid.spark(*(t.pt for t in c.terminals))
-    Component(None, None, None)
+        Raises an error if a terminal with the specified flag could not be
+        found, or there were multiple terminals with the requested flag
+        (ambiguous).
+        """
+        out = []
+        for flag in flags_names:
+            matching_terminals = [t for t in self.terminals if t.flag == flag]
+            if len(matching_terminals) > 1:
+                raise _errors.TerminalsError(
+                    f"{self.rd.name}: multiple terminals with the "
+                    f"same flag {flag!r}")
+            if len(matching_terminals) == 0:
+                raise _errors.TerminalsError(
+                    f"{self.rd.name}: need a terminal with flag {flag!r}")
+            out.append(matching_terminals[0])
+        out.extend(t for t in self.terminals if t.flag not in flags_names)
+        assert set(self.terminals) == set(out)
+        return out

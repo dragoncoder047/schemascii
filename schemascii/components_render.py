@@ -100,38 +100,6 @@ def polarized(func: Callable) -> Callable:
     return sort_terminals
 
 
-@component("R", "RV", "VR")
-@n_terminal(2)
-@no_ambiguous
-def resistor(box: Cbox, terminals: list[Terminal],
-             bom_data: BOMData, **options):
-    """Resistor, Variable resistor, etc.
-    bom:ohms[,watts]"""
-    t1, t2 = terminals[0].pt, terminals[1].pt
-    vec = t1 - t2
-    mid = (t1 + t2) / 2
-    length = abs(vec)
-    angle = phase(vec)
-    quad_angle = angle + pi / 2
-    points = [t1]
-    for i in range(1, 4 * int(length)):
-        points.append(t1 - rect(i / 4, angle) + pow(-1, i)
-                      * rect(1, quad_angle) / 4)
-    points.append(t2)
-    return (
-        polylinegon(points, **options)
-        + make_variable(mid, angle, "V" in box.type, **options)
-        + id_text(
-            box,
-            bom_data,
-            terminals,
-            (("Ω", False), ("W", False)),
-            make_text_point(t1, t2, **options),
-            **options,
-        )
-    )
-
-
 @component("C", "CV", "VC")
 @n_terminal(2)
 @no_ambiguous

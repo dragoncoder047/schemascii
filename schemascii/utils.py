@@ -313,6 +313,10 @@ XML = XMLClass()
 del XMLClass
 
 
+def _get_sss(options: dict) -> tuple[float, float, str]:
+    return options["scale"], options["stroke_width"], options["stroke"]
+
+
 def points2path(points: list[complex], close: bool = False) -> str:
     """Convert the list of points into SVG <path> commands
     to draw the set of lines.
@@ -346,13 +350,13 @@ def points2path(points: list[complex], close: bool = False) -> str:
 
 
 def polylinegon(
-        points: list[complex], is_polygon: bool = False,
-        *, scale: float, stroke_width: float, stroke: str) -> str:
+        points: list[complex], is_polygon: bool = False, **options) -> str:
     """Turn the list of points into a line or filled area.
 
     If is_polygon is true, stroke color is used as fill color instead
     and stroke width is ignored.
     """
+    scale, stroke_width, stroke = _get_sss(options)
     scaled_pts = [x * scale for x in points]
     if is_polygon:
         return XML.path(d=points2path(scaled_pts, True),
@@ -380,12 +384,11 @@ def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
     return [pt for pt, count in seen.items() if count > 3]
 
 
-def bunch_o_lines(
-        pairs: list[tuple[complex, complex]],
-        *, scale: float, stroke_width: float, stroke: str) -> str:
+def bunch_o_lines(pairs: list[tuple[complex, complex]], **options) -> str:
     """Combine the pairs (p1, p2) into a set of SVG <path> commands
     to draw all of the lines.
     """
+    scale, stroke_width, stroke = _get_sss(options)
     lines = []
     while pairs:
         group = take_next_group(pairs)
@@ -402,37 +405,39 @@ def bunch_o_lines(
 
 
 def id_text(
-        box: Cbox,
-        bom_data: BOMData,
+        cname: str,
         terminals: list[Terminal],
-        unit: str | list[str] | None,
+        value: str | list[tuple[str, str]
+                          | tuple[str, str, bool]
+                          | tuple[str, str, bool, bool]],
         point: complex | None = None,
-        *,
-        label: typing.Literal["L", "V", "LV"],
-        nolabels: bool,
-        scale: float,
-        stroke: str) -> str:
+        **options) -> str:
     """Format the component ID and value around the point."""
+    nolabels, label = options["nolabels"], options["label"]
+    scale, stroke = options["scale"], options["stroke"]
+    font = options["font"]
     if nolabels:
         return ""
-    if point is None:
+    if not point:
         point = sum(t.pt for t in terminals) / len(terminals)
     data = ""
-    if bom_data is not None:
-        text = bom_data.data
-        classy = "part-num"
-        if unit is None:
-            pass
-        elif isinstance(unit, str):
-            text = _metric.format_metric_unit(text, unit)
-            classy = "cmp-value"
-        else:
-            text = " ".join(
-                _metric.format_metric_unit(x, y, six)
-                for x, (y, six) in zip(text.split(","), unit)
-            )
-            classy = "cmp-value"
-        data = XML.tspan(text, class_=classy)
+    if isinstance(value, str):
+        data = value
+        data_css_class = "part-num"
+    else:
+        for tp in value:
+            match tp:
+                case (n, unit) if n:
+                    data += _metric.format_metric_unit(n, unit)
+                case (n, unit, six) if n:
+                    data += _metric.format_metric_unit(n, unit, six)
+                case (n, unit, six, allow_range) if n:
+                    data += _metric.format_metric_unit(
+                        n, unit, six, allow_range=allow_range)
+                case _:
+                    raise ValueError(
+                        f"bad values tuple: {tp!r}")
+        data_css_class = "cmp-value"
     if len(terminals) > 1:
         textach = (
             "start"
@@ -446,21 +451,20 @@ def id_text(
         textach = "middle" if terminals[0].side in (
             Side.TOP, Side.BOTTOM) else "start"
     return XML.text(
-        (XML.tspan(f"{box.type}{box.id}", class_="cmp-id")
-         * bool("L" in label)),
-        " " * (bool(data) and "L" in label),
-        data * bool("V" in label),
+        XML.tspan(cname, class_="cmp-id") if "L" in label else "",
+        " " if data and "L" in label else "",
+        XML.tspan(data, class_=data_css_class) if "V" in label else "",
         x=point.real,
         y=point.imag,
         text__anchor=textach,
         font__size=scale,
         fill=stroke,
-    )
+        style=f"font-family:{font}")
 
 
-def make_text_point(t1: complex, t2: complex,
-                    *, scale: float, offset_scale: float) -> complex:
+def make_text_point(t1: complex, t2: complex, **options) -> complex:
     """Compute the scaled coordinates of the text anchor point."""
+    scale, offset_scale = options["scale"], options["offset_scale"]
     quad_angle = phase(t1 - t2) + pi / 2
     text_pt = (t1 + t2) * scale / 2
     offset = rect(scale / 2 * offset_scale, quad_angle)
@@ -497,11 +501,8 @@ def arrow_points(p1: complex, p2: complex) -> list[tuple[complex, complex]]:
     ]
 
 
-def make_variable(center: complex, theta: float,
-                  is_variable: bool = True, **options) -> str:
+def make_variable(center: complex, theta: float, **options) -> str:
     """Draw a 'variable' arrow across the component."""
-    if not is_variable:
-        return ""
     return bunch_o_lines(deep_transform(arrow_points(-1, 1),
                                         center,
                                         (theta % pi) + pi / 4),

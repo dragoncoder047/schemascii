@@ -15,7 +15,7 @@ class Annotation(_dc.DataConsumer, namespaces=(":annotation",)):
 
     options = [
         ("scale",),
-        _dc.Option("font", str, "Text font", "monospace"),
+        _dc.Option("font", str, "Text font", "sans-serif"),
     ]
 
     position: complex
@@ -34,7 +34,7 @@ class Annotation(_dc.DataConsumer, namespaces=(":annotation",)):
                 out.append(cls(complex(x, y), text))
         return out
 
-    def render(self, data, scale, font) -> str:
+    def render(self, scale, font, **options) -> str:
         return _utils.XML.text(
             html.escape(self.content),
             x=self.position.real * scale,
