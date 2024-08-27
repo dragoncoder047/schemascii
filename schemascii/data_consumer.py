@@ -67,7 +67,8 @@ class DataConsumer(abc.ABC):
                     if opt == "inherit":
                         if seen_inherit:
                             raise ValueError("can't use 'inherit' twice")
-
+                        for base in cls.__bases__:
+                            opts.extend(coalesce_options(base))
                         seen_inherit = True
                     elif isinstance(opt, tuple):
                         for base in cls.__bases__:
