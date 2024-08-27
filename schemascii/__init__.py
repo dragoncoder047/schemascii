@@ -1,20 +1,11 @@
-from .inline_config import get_inline_configs
-from .configs import apply_config_defaults
-from .grid import Grid
-from .components import find_all
-from .edgemarks import find_edge_marks
-from .components_render import render_component
-from .wires import get_wires
-from .utils import XML
-from .errors import (Error, DiagramSyntaxError, TerminalsError,
-                     BOMError, UnsupportedComponentError, NoDataError,
-                     DataTypeError)
+
 
 __version__ = "0.3.2"
 
 
 def render(filename: str, text: str | None = None, **options) -> str:
     "Render the Schemascii diagram to an SVG string."
+    raise NotImplementedError
     if text is None:
         with open(filename, encoding="ascii") as f:
             text = f.read()
