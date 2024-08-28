@@ -1,56 +1,32 @@
+import importlib
+import os
 
+import schemascii.components as _comp
+import schemascii.drawing as _drawing
 
 __version__ = "0.3.2"
 
 
-def render(filename: str, text: str | None = None, **options) -> str:
-    "Render the Schemascii diagram to an SVG string."
-    raise NotImplementedError
-    if text is None:
-        with open(filename, encoding="ascii") as f:
-            text = f.read()
-    # get everything
-    grid = Grid(filename, text)
-    # Passed-in options override diagram inline options
-    options = apply_config_defaults(
-        options | get_inline_configs(
-            grid) | options.get("override_options", {})
-    )
-    components, bom_data = find_all(grid)
-    terminals = {c: find_edge_marks(grid, c) for c in components}
-    fixed_bom_data = {
-        c: [b for b in bom_data if b.id == c.id and b.type == c.type]
-        for c in components
-    }
-    # get some options
-    padding = options["padding"]
-    scale = options["scale"]
+def import_all_components():
+    for f in os.scandir(os.path.dirname(_comp.__file__)):
+        if f.is_file():
+            importlib.import_module(
+                f"{_comp.__package__}.{f.name.removesuffix('.py')}")
 
-    wires = get_wires(grid, **options)
-    components_strs = (
-        render_component(c, terminals[c], fixed_bom_data[c], **options)
-        for c in components
-    )
-    return XML.svg(
-        wires,
-        *components_strs,
-        width=grid.width * scale + padding * 2,
-        height=grid.height * scale + padding * 2,
-        viewBox=f"{-padding} {-padding} "
-        f"{grid.width * scale + padding * 2} "
-        f"{grid.height * scale + padding * 2}",
-        xmlns="http://www.w3.org/2000/svg",
-        class_="schemascii",
-    )
+
+import_all_components()
+del import_all_components
+
+
+def render(filename: str, text: str | None = None, **options) -> str:
+    """Render the Schemascii diagram to an SVG string."""
+    return _drawing.Drawing.from_file(filename, text).to_xml_string(options)
 
 
 if __name__ == "__main__":
-    print(
-        render(
-            "test_data/test_resistors.txt",
-            scale=20,
-            padding=20,
-            stroke_width=2,
-            stroke="black",
-        )
-    )
+    print(render(
+        "test_data/test_resistors.txt",
+        scale=20,
+        padding=20,
+        stroke_width=2,
+        stroke="black"))

@@ -4,8 +4,6 @@ from dataclasses import dataclass
 import schemascii.component as _c
 import schemascii.errors as _errors
 
-# TODO: import all of the component subclasses to register them
-
 
 @dataclass
 class NTerminalComponent(_c.Component):
