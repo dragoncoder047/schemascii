@@ -419,7 +419,7 @@ def id_text(
     if nolabels:
         return ""
     if not point:
-        point = sum(t.pt for t in terminals) / len(terminals)
+        point = centroid(t.pt for t in terminals)
     data = ""
     if isinstance(value, str):
         data = value
@@ -441,12 +441,9 @@ def id_text(
     if len(terminals) > 1:
         textach = (
             "start"
-            if (
-                any(Side.BOTTOM == t.side for t in terminals)
-                or any(Side.TOP == t.side for t in terminals)
-            )
-            else "middle"
-        )
+            if (any(Side.BOTTOM == t.side for t in terminals)
+                or any(Side.TOP == t.side for t in terminals))
+            else "middle")
     else:
         textach = "middle" if terminals[0].side in (
             Side.TOP, Side.BOTTOM) else "start"
@@ -472,22 +469,15 @@ def make_text_point(t1: complex, t2: complex, **options) -> complex:
     return text_pt
 
 
-def make_plus(terminals: list[Terminal], center: complex,
-              theta: float, **options) -> str:
-    """Make a + sign if the terminals indicate the component is polarized."""
-    if all(t.flag != "+" for t in terminals):
-        return ""
+def make_plus(center: complex, theta: float, **options) -> str:
+    """Make a '+' sign for indicating polarity."""
     return XML.g(
         bunch_o_lines(
             deep_transform(
                 deep_transform([(0.125, -0.125), (0.125j, -0.125j)], 0, theta),
-                center + deep_transform(0.33 + 0.75j, 0, theta),
-                0,
-            ),
-            **options,
-        ),
-        class_="plus",
-    )
+                center + deep_transform(0.33 + 0.75j, 0, theta), 0),
+            **options),
+        class_="plus")
 
 
 def arrow_points(p1: complex, p2: complex) -> list[tuple[complex, complex]]:
@@ -497,16 +487,16 @@ def arrow_points(p1: complex, p2: complex) -> list[tuple[complex, complex]]:
     return [
         (p2, p1),
         (p2, p2 - rect(tick_len, angle + pi / 5)),
-        (p2, p2 - rect(tick_len, angle - pi / 5)),
-    ]
+        (p2, p2 - rect(tick_len, angle - pi / 5))]
 
 
 def make_variable(center: complex, theta: float, **options) -> str:
-    """Draw a 'variable' arrow across the component."""
-    return bunch_o_lines(deep_transform(arrow_points(-1, 1),
-                                        center,
-                                        (theta % pi) + pi / 4),
-                         **options)
+    """Draw a "variable" arrow across the component."""
+    return XML.g(bunch_o_lines(deep_transform(arrow_points(-1, 1),
+                                              center,
+                                              (theta % pi) + pi / 4),
+                               **options),
+                 class_="variable")
 
 
 def light_arrows(center: complex, theta: float, out: bool, **options):
@@ -516,13 +506,13 @@ def light_arrows(center: complex, theta: float, out: bool, **options):
     a, b = 1j, 0.3 + 0.3j
     if out:
         a, b = b, a
-    return bunch_o_lines(
+    return XML.g(bunch_o_lines(
         deep_transform(arrow_points(a, b),
                        center, theta - pi / 2)
         + deep_transform(arrow_points(a - 0.5, b - 0.5),
                          center, theta - pi / 2),
-        **options
-    )
+        **options),
+        class_="light-emitting" if out else "light-dependent")
 
 
 def sort_terminals_counterclockwise(

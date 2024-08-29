@@ -1,17 +1,17 @@
 import importlib
 import os
 
-import schemascii.components as _comp
+import schemascii.components as _c
 import schemascii.drawing as _drawing
 
 __version__ = "0.3.2"
 
 
 def import_all_components():
-    for f in os.scandir(os.path.dirname(_comp.__file__)):
+    for f in os.scandir(os.path.dirname(_c.__file__)):
         if f.is_file():
             importlib.import_module(
-                f"{_comp.__package__}.{f.name.removesuffix('.py')}")
+                f"{_c.__package__}.{f.name.removesuffix('.py')}")
 
 
 import_all_components()
@@ -24,9 +24,5 @@ def render(filename: str, text: str | None = None, **options) -> str:
 
 
 if __name__ == "__main__":
-    print(render(
-        "test_data/test_resistors.txt",
-        scale=20,
-        padding=20,
-        stroke_width=2,
-        stroke="black"))
+    import schemascii.component as _comp
+    print(_comp.Component.all_components)

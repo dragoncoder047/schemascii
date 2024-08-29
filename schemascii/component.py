@@ -16,6 +16,7 @@ import schemascii.wire as _wire
 @dataclass
 class Component(_dc.DataConsumer, namespaces=(":component",)):
     """An icon representing a single electronic component."""
+
     all_components: typing.ClassVar[dict[str, type[Component]]] = {}
 
     options = [
@@ -132,9 +133,12 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
             if not (id_letters.isalpha() and id_letters.upper() == id_letters):
                 raise ValueError(
                     f"invalid reference designator letters: {id_letters!r}")
-            if id_letters in cls.all_components:
+            if (id_letters in cls.all_components
+                    and cls.all_components[id_letters] is not cls):
                 raise ValueError(
-                    f"duplicate reference designator letters: {id_letters!r}")
+                    f"duplicate reference designator letters: {id_letters!r} "
+                    f"(trying to register {cls!r}, already "
+                    f"occupied by {cls.all_components[id_letters]!r})")
             cls.all_components[id_letters] = cls
 
     @property
