@@ -54,8 +54,7 @@ def n_terminal(n_terminals: int) -> Callable:
             if len(terminals) != n_terminals:
                 raise TerminalsError(
                     f"{box.type}{box.id} component can only "
-                    f"have {n_terminals} terminals"
-                )
+                    f"have {n_terminals} terminals")
             return func(box, terminals, bom_data, **options)
 
         return n_check
@@ -90,54 +89,16 @@ def polarized(func: Callable) -> Callable:
             bom_data: list[BOMData], **options):
         if len(terminals) != 2:
             raise TerminalsError(
-                f"{box.type}{box.id} component can only " f"have 2 terminals"
-            )
+                f"{box.type}{box.id} component can only have 2 terminals")
         if terminals[1].flag == "+":
             terminals[0], terminals[1] = terminals[1], terminals[0]
         return func(box, terminals, bom_data, **options)
 
-    sort_terminals.__doc__ = func.__doc__
     return sort_terminals
 
 
-@component("C", "CV", "VC")
-@n_terminal(2)
-@no_ambiguous
-def capacitor(box: Cbox, terminals: list[Terminal],
-              bom_data: BOMData, **options):
-    """Draw a capacitor, variable capacitor, etc.
-    bom:farads[,volts]
-    flags:+=positive"""
-    t1, t2 = terminals[0].pt, terminals[1].pt
-    mid = (t1 + t2) / 2
-    angle = phase(t1 - t2)
-    lines = [
-        (t1, mid + rect(0.25, angle)),
-        (t2, mid + rect(-0.25, angle)),
-    ] + deep_transform(
-        [
-            (complex(0.4, 0.25), complex(-0.4, 0.25)),
-            (complex(0.4, -0.25), complex(-0.4, -0.25)),
-        ],
-        mid,
-        angle,
-    )
-    return (
-        bunch_o_lines(lines, **options)
-        + make_plus(terminals, mid, angle, **options)
-        + make_variable(mid, angle, "V" in box.type, **options)
-        + id_text(
-            box,
-            bom_data,
-            terminals,
-            (("F", True), ("V", False)),
-            make_text_point(t1, t2, **options),
-            **options,
-        )
-    )
-
-
 @component("L", "VL", "LV")
+@n_terminal(2)
 @no_ambiguous
 def inductor(box: Cbox, terminals: list[Terminal],
              bom_data: BOMData, **options):

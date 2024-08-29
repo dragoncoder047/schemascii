@@ -3,9 +3,8 @@ from cmath import phase, pi, rect
 import schemascii.components as _c
 import schemascii.data_consumer as _dc
 import schemascii.utils as _utils
-import schemascii.errors as _errors
 
-# TODO: IEC rectangular symbol
+# TODO: IEC rectangular symbol, other variable markings?
 # see here: https://eepower.com/resistor-guide/resistor-standards-and-codes/resistor-symbols/  # noqa: E501
 
 
@@ -22,7 +21,8 @@ def _ansi_resistor_squiggle(t1: complex, t2: complex) -> list[complex]:
     return points
 
 
-class Resistor(_c.TwoTerminalComponent, ids=("R",), namespaces=(":resistor",)):
+class Resistor(_c.TwoTerminalComponent, _c.SimpleComponent,
+               ids=("R",), namespaces=(":resistor",)):
     options = [
         "inherit",
         _dc.Option("value", str, "Resistance in ohms"),
@@ -30,22 +30,17 @@ class Resistor(_c.TwoTerminalComponent, ids=("R",), namespaces=(":resistor",)):
                    "(i.e. size of the resistor)", None)
     ]
 
-    is_variable = False
+    @property
+    def value_format(self):
+        return [("value", "Ω", False, self.is_variable),
+                ("power", "W", False)]
 
-    def render(self, value: str, power: str, **options) -> str:
+    def render(self, **options) -> str:
         t1, t2 = self.terminals[0].pt, self.terminals[1].pt
         points = _ansi_resistor_squiggle(t1, t2)
-        try:
-            id_text = _utils.id_text(self.rd.name, self.terminals,
-                                     ((value, "Ω", False, self.is_variable),
-                                      (power, "W", False)),
-                                     _utils.make_text_point(t1, t2, **options),
-                                     **options)
-        except ValueError as e:
-            raise _errors.BOMError(
-                f"{self.rd.name}: Range of values not allowed "
-                "on fixed resistor") from e
-        return _utils.polylinegon(points, **options) + id_text
+        return (_utils.polylinegon(points, **options)
+                + self.format_id_text(
+                    _utils.make_text_point(t1, t2, **options), **options))
 
 
 class VariableResistor(Resistor, ids=("VR", "RV")):
@@ -58,7 +53,3 @@ class VariableResistor(Resistor, ids=("VR", "RV")):
                     (t1 + t2) / 2, phase(t1 - t2), **options))
 
 # TODO: potentiometers
-
-
-if __name__ == "__main__":
-    print(Resistor.all_components)
