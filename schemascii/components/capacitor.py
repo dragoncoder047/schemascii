@@ -26,8 +26,8 @@ class Capacitor(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
             (t1, mid + rect(1/4, angle)),
             (t2, mid + rect(-1/4, angle)),
             *_utils.deep_transform([
-                (complex(2/5, 1/4), complex(-2/5, 1/4)),
-                (complex(2/5, -1/4), complex(-2/5, -1/4)),
+                (.4+.25j, -.4+.25j),
+                (.4-.25j, -.4-.25j)
             ], mid, angle)
         ]
         return (_utils.bunch_o_lines(lines, **options)

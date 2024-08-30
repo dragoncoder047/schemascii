@@ -27,10 +27,10 @@ class Battery(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
             (t2, mid + rect(-0.5, angle)),
             *_utils.deep_transform(
                 [
-                    (complex(0.5, 0.5), complex(-0.5, 0.5)),
-                    (complex(0.25, 0.16), complex(-0.25, 0.16)),
-                    (complex(0.5, -0.16), complex(-0.5, -0.16)),
-                    (complex(0.25, -0.5), complex(-0.25, -0.5)),
+                    (.5+.5j, -.5+.5j),
+                    (.25+.16j, -.25+.16j),
+                    (.5-.16j, -.5-.16j),
+                    (.25-.5j, -.25-.5j),
                 ],
                 mid,
                 angle)
