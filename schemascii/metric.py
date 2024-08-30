@@ -15,7 +15,7 @@ def exponent_to_multiplier(exponent: int) -> str | None:
     * 0 --> ""  (no multiplier)
     * -6 --> "u" (micro)
 
-    If it is not a multiple of 3, returns None.
+    If it is not a multiple of 3, return None.
     """
     if exponent % 3 != 0:
         return None
@@ -25,11 +25,13 @@ def exponent_to_multiplier(exponent: int) -> str | None:
 
 
 def multiplier_to_exponent(multiplier: str) -> int:
-    """Turns the Metric multiplier into its exponent.
+    """Turn the Metric multiplier into its 10^exponent.
 
     * "k" -->  3 (kilo)
     * " " -->  0 (no multiplier)
     * "u" --> -6 (micro)
+
+    If it is not a valid Metric multiplier, raises an error.
     """
     if multiplier in (" ", ""):
         return 0
@@ -38,8 +40,11 @@ def multiplier_to_exponent(multiplier: str) -> int:
     if multiplier == "K":
         multiplier = multiplier.lower()
         # special case (preferred is lowercase)
-    i = "pnum kMGT".index(multiplier)
-    return (i - 4) * 3
+    try:
+        return 3 * ("pnum kMGT".index(multiplier) - 4)
+    except IndexError as e:
+        raise ValueError(
+            f"unknown metric multiplier: {multiplier!r}") from e
 
 
 def best_exponent(num: Decimal, six: bool) -> tuple[str, int]:
@@ -60,16 +65,17 @@ def best_exponent(num: Decimal, six: bool) -> tuple[str, int]:
             # we're trying to avoid getting exponential notation here
             continue
         if "." in new_digits:
+            # rarely are significant figures important in component values
             new_digits = new_digits.rstrip("0").removesuffix(".")
         possibilities.append((new_digits, new_exp))
     # heuristics:
     #   * shorter is better
-    #   * prefer no decimal point
     #   * prefer no Metric multiplier if possible
+    #   * prefer no decimal point
     return sorted(
         possibilities, key=lambda x: ((10 * len(x[0]))
-                                      + (2 * ("." in x[0]))
-                                      + (5 * (x[1] != 0))))[0]
+                                      + (5 * (x[1] != 0))
+                                      + (2 * ("." in x[0]))))[0]
 
 
 def normalize_metric(num: str, six: bool, unicode: bool) -> tuple[str, str]:
@@ -114,11 +120,11 @@ def format_metric_unit(
         suffix = num[match.span()[1]:]
         digits0, exp0 = normalize_metric(num0, six, unicode)
         digits1, exp1 = normalize_metric(num1, six, unicode)
-        if exp0 != exp1:
+        if exp0 != exp1 and digits0 != "0":
             # different multiplier so use multiplier and unit on both
             return (f"{digits0} {exp0}{unit} - "
                     f"{digits1} {exp1}{unit} {suffix}").rstrip()
-        return f"{digits0}-{digits1} {exp0}{unit} {suffix}".rstrip()
+        return f"{digits0}-{digits1} {exp1}{unit} {suffix}".rstrip()
     match = METRIC_NUMBER.match(num)
     if not match:
         return num
@@ -133,7 +139,8 @@ if __name__ == "__main__":
         print(repr(format_metric_unit(*args)))
     test("2.5-3500", "V")
     test("50n", "F", True)
-    test("50M-1000000000000000000000p", "Hz")
+    test("50M-100000000000000000000p", "Hz")
     test(".1", "Ω")
     test("2200u", "F", True)
+    test("0-100k", "V")
     test("Gain", "Ω")
