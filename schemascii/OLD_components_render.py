@@ -15,13 +15,10 @@ from .utils import (
     make_text_point,
     bunch_o_lines,
     deep_transform,
-    make_plus,
-    make_variable,
     sort_terminals_counterclockwise,
     light_arrows,
     sort_for_flags,
-    is_clockwise,
-)
+    is_clockwise)
 from .errors import TerminalsError, BOMError, UnsupportedComponentError
 
 # pylint: disable=unbalanced-tuple-unpacking
@@ -95,42 +92,6 @@ def polarized(func: Callable) -> Callable:
         return func(box, terminals, bom_data, **options)
 
     return sort_terminals
-
-
-@component("L", "VL", "LV")
-@n_terminal(2)
-@no_ambiguous
-def inductor(box: Cbox, terminals: list[Terminal],
-             bom_data: BOMData, **options):
-    """Draw an inductor (coil, choke, etc)
-    bom:henries"""
-    t1, t2 = terminals[0].pt, terminals[1].pt
-    vec = t1 - t2
-    mid = (t1 + t2) / 2
-    length = abs(vec)
-    angle = phase(vec)
-    scale = options["scale"]
-    data = f"M{t1.real * scale} {t1.imag * scale}"
-    dxdy = rect(scale, angle)
-    for _ in range(int(length)):
-        data += f"a1 1 0 01 {-dxdy.real} {dxdy.imag}"
-    return (
-        XML.path(
-            d=data,
-            stroke=options["stroke"],
-            fill="transparent",
-            stroke__width=options["stroke_width"],
-        )
-        + make_variable(mid, angle, "V" in box.type, **options)
-        + id_text(
-            box,
-            bom_data,
-            terminals,
-            (("H", False),),
-            make_text_point(t1, t2, **options),
-            **options,
-        )
-    )
 
 
 @component("B", "BT", "BAT")

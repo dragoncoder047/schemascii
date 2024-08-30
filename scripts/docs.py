@@ -2,13 +2,9 @@
 import re
 import os
 from itertools import groupby
-from schemascii.components_render import RENDERERS
 
-# pylint: disable=unspecified-encoding,missing-function-docstring,invalid-name
-# pylint: disable=not-an-iterable
-# cSpell:ignore siht etareneg redner iicsa stpircs nettirwrevo ylpmis segnahc
-# cSpell:ignore mehcs daetsn detareneg yllacitamotua codc stnenopmoc lliw ruo
-# cSpell:ignore sgnirtscod
+raise NotImplementedError("TODO: re-write docs generator script "
+                          "after I re-do the cmdline help text")
 
 TOP = ("# Supported Schemascii Components\n\n<!--\n"
        + "".join(reversed("/stpircs nur dna\nyp.redner_stnenopmoc/iicsa"
