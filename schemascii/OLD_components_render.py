@@ -94,40 +94,6 @@ def polarized(func: Callable) -> Callable:
     return sort_terminals
 
 
-@component("B", "BT", "BAT")
-@polarized
-@no_ambiguous
-def battery(box: Cbox, terminals: list[Terminal],
-            bom_data: BOMData, **options):
-    """Draw a battery cell.
-    bom:volts[,amp-hours]
-    flags:+=positive"""
-    t1, t2 = terminals[0].pt, terminals[1].pt
-    mid = (t1 + t2) / 2
-    angle = phase(t1 - t2)
-    lines = [
-        (t1, mid + rect(0.5, angle)),
-        (t2, mid + rect(-0.5, angle)),
-    ] + deep_transform(
-        [
-            (complex(0.5, 0.5), complex(-0.5, 0.5)),
-            (complex(0.25, 0.16), complex(-0.25, 0.16)),
-            (complex(0.5, -0.16), complex(-0.5, -0.16)),
-            (complex(0.25, -0.5), complex(-0.25, -0.5)),
-        ],
-        mid,
-        angle,
-    )
-    return id_text(
-        box,
-        bom_data,
-        terminals,
-        (("V", False), ("Ah", False)),
-        make_text_point(t1, t2, **options),
-        **options,
-    ) + bunch_o_lines(lines, **options)
-
-
 @component("D", "LED", "CR", "IR")
 @polarized
 @no_ambiguous
