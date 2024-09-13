@@ -39,7 +39,7 @@ class DataConsumer(abc.ABC):
         Option("scale", float, "Scale by which to enlarge the "
                "entire diagram by", 15),
         Option("linewidth", float, "Width of drawn lines", 2),
-        Option("color", str, "black", "Default color for everything"),
+        Option("color", str, "Default color for everything", "black"),
     ]
     css_class: typing.ClassVar[str] = ""
 
