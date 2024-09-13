@@ -2,9 +2,9 @@ import re
 from decimal import Decimal
 
 METRIC_NUMBER = re.compile(
-    r"(\d*\.?\d+)([pnumKkMGT]?)")  # cSpell:ignore pnum
+    r"(\d*\.?\d+)\s*([pnumKkMGT]?)")  # cSpell:ignore pnum
 METRIC_RANGE = re.compile(
-    r"(\d*\.?\d+[pnumKkMGT]?)-(\d*\.?\d+[pnumKkMGT]?)")
+    r"(\d*\.?\d+\s*[pnumKkMGT]?)-(\d*\.?\d+\s*[pnumKkMGT]?)")
 ENG_NUMBER = re.compile(r"^(\d*\.?\d+)[Ee]?([+-]?\d*)$")
 
 
@@ -102,7 +102,8 @@ def format_metric_unit(
         six: bool = False,
         unicode: bool = True,
         allow_range: bool = True) -> str:
-    """Normalizes the Metric multiplier on the number, then adds the unit.
+    """Normalizes the Metric multiplier on the number, then adds the unit
+    if the unit was not used.
 
     * If there is a suffix on num, moves it to after the unit.
     * If there is a range of numbers, formats each number in the range
@@ -117,7 +118,7 @@ def format_metric_unit(
             raise ValueError("range not allowed")
         # format the range by calling recursively
         num0, num1 = match.group(1), match.group(2)
-        suffix = num[match.span()[1]:]
+        suffix = num[match.span()[1]:].lstrip().removeprefix(unit)
         digits0, exp0 = normalize_metric(num0, six, unicode)
         digits1, exp1 = normalize_metric(num1, six, unicode)
         if exp0 != exp1 and digits0 != "0":
@@ -128,7 +129,7 @@ def format_metric_unit(
     match = METRIC_NUMBER.match(num)
     if not match:
         return num
-    suffix = num[match.span(0)[1]:]
+    suffix = num[match.span(0)[1]:].lstrip().removeprefix(unit)
     digits, exp = normalize_metric(match.group(), six, unicode)
     return f"{digits} {exp}{unit} {suffix}".rstrip()
 
@@ -138,9 +139,12 @@ if __name__ == "__main__":
         print(">>> format_metric_unit", args, sep="")
         print(repr(format_metric_unit(*args)))
     test("2.5-3500", "V")
-    test("50n", "F", True)
+    test("0.33m", "H", True)
     test("50M-100000000000000000000p", "Hz")
     test(".1", "Ω")
     test("2200u", "F", True)
+    test("2200uF", "F", True)
+    test("2200u F", "F", True)
+    test("2200 uF", "F", True)
     test("0-100k", "V")
     test("Gain", "Ω")
