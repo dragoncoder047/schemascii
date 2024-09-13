@@ -254,14 +254,32 @@ def iterate_line(p1: complex, p2: complex, step: float = 1.0):
     yield point
 
 
-def deep_transform(data, origin: complex, theta: float):
+# __future__ annotations does no good here if we
+# don't have 3.12's type statement!!
+_DT_Struct = list["_DT_Struct"] | tuple["_DT_Struct"] | complex
+
+
+@typing.overload
+def deep_transform(data: list[_DT_Struct], origin: complex,
+                   theta: float) -> list[_DT_Struct]: ...
+
+
+@typing.overload
+def deep_transform(data: tuple[_DT_Struct], origin: complex,
+                   theta: float) -> tuple[_DT_Struct]: ...
+
+
+@typing.overload
+def deep_transform(data: complex, origin: complex,
+                   theta: float) -> complex: ...
+
+
+def deep_transform(data: _DT_Struct, origin: complex, theta: float):
     """Transform the point or points first by translating by origin,
     then rotating by theta. Return an identical data structure,
     but with the transformed points substituted.
-
-    TODO: add type statements for the data argument. This is really weird.
     """
-    if isinstance(data, list | tuple):
+    if isinstance(data, (list, tuple)):
         return [deep_transform(d, origin, theta) for d in data]
     if isinstance(data, complex):
         return (origin
@@ -574,3 +592,4 @@ if __name__ == '__main__':
     for x in range(n):
         pts.append(force_int(rect(n, 2 * pi * x / n)))
     pprint.pprint(sort_counterclockwise(pts))
+    print(_DT_Struct)
