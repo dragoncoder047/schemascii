@@ -51,18 +51,19 @@ class Data:
 
     sections: list[Section]
 
-    allowed_options: typing.ClassVar[dict[str, list[_dc.Option]]] = {}
+    # mapping of scope name to list of available options
+    available_options: typing.ClassVar[dict[str, list[_dc.Option]]] = {}
 
     @classmethod
     def define_option(cls, ns: str, opt: _dc.Option):
-        if ns in cls.allowed_options:
+        if ns in cls.available_options:
             if any(eo.name == opt.name and eo != opt
-                   for eo in cls.allowed_options[ns]):
+                   for eo in cls.available_options[ns]):
                 raise ValueError(f"duplicate option name {opt.name!r}")
-            if opt not in cls.allowed_options[ns]:
-                cls.allowed_options[ns].append(opt)
+            if opt not in cls.available_options[ns]:
+                cls.available_options[ns].append(opt)
         else:
-            cls.allowed_options[ns] = [opt]
+            cls.available_options[ns] = [opt]
 
     @classmethod
     def parse_from_string(cls, text: str, startline=1, filename="") -> Data:
