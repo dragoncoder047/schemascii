@@ -76,6 +76,8 @@ Lines are allowed to cross wires. They are crossed the same way that wires cross
 
 Every drawing is required to have a "data section" appended after it. The data section contains mappings of values to tell Schemascii how to render each component (e.g. how thick to make the lines, what the components' values are, etc.)
 
+The data section is separated from the actual circuit by a line containing `---` and nothing else. This is REQUIRED and Schemascii will complain if it doesn't find any line containing `---` and nothing else, even if there is no data after it.
+
 Here is some example data:
 
 ```txt
