@@ -4,6 +4,7 @@
         "clrall",
         "clrmask",
         "MOSFET",
+        "nanofarads",
         "NFET",
         "PFET",
         "polylinegon",
