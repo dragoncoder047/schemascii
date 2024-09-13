@@ -1,28 +1,11 @@
 #! /usr/bin/env python3
 import argparse
-import os
 import re
 import sys
 
-# pylint: disable=unspecified-encoding,missing-function-docstring
+from scriptutils import cmd, slurp, spit
 
-
-def cmd(sh_line):
-    print(sh_line)
-    if code := os.system(sh_line):
-        print("*** Error", code, file=sys.stderr)
-        sys.exit(code)
-
-
-def slurp(file):
-    with open(file) as f:
-        return f.read()
-
-
-def spit(file, text):
-    with open(file, "w") as f:
-        f.write(text)
-
+# pylint: disable=unspecified-encoding
 
 a = argparse.ArgumentParser()
 a.add_argument("version", help="release tag")
