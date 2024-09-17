@@ -1,69 +1,59 @@
 svg.schemascii {
     background: black;
-}
 
-svg.schemascii .wire polyline {
-    stroke: var(--sch-color, blue);
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    transition-duration: 0.2s;
-    fill: transparent;
-}
-
-svg.schemascii .wire circle {
-    fill: var(--sch-color, blue);
-    transition-duration: 0.2s;
-}
-
-svg.schemascii :is(.wire, .component):hover {
-    --sch-color: lime;
-}
-
-svg.schemascii .component :is(polyline, path, line, polygon, rect, circle):not(.filled) {
-    stroke: var(--sch-color, red);
-    stroke-width: 2;
-    stroke-linecap: round;
-    transition-duration: 0.2s;
-    fill: transparent;
-}
-
-svg.schemascii .component :is(polyline, path, line, polygon, rect, circle).filled {
-    fill: var(--sch-color, red);
-    stroke: none;
-    transition-duration: 0.2s;
-}
-
-
-svg.schemascii .component .plus :is(polyline, path, line) {
-    stroke-width: 1;
-}
-
-svg.schemascii .component polygon {
-    fill: var(--sch-color, red);
-}
-
-svg.schemascii .component text {
-    fill: white;
-    transition-duration: 0.2s;
-}
-
-svg.schemascii .component:hover text {
-    font-weight: bold;
-}
-
-svg.schemascii .component tspan:is(.cmp-value, .part-num) {
-    opacity: 50%;
+    & .wire polyline  {
+        stroke: var(--sch-color, blue);
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        transition-duration: 0.2s;
+        fill: transparent;
+    }
+    & .wire circle {
+        fill: var(--sch-color, blue);
+        transition-duration: 0.2s;
+    }
+    & :is(.wire, .component):hover {
+        --sch-color: lime;
+    }
+    & .component :is(polyline, path, line, polygon, rect, circle):not(.filled) {
+        stroke: var(--sch-color, red);
+        stroke-width: 2;
+        stroke-linecap: round;
+        transition-duration: 0.2s;
+        fill: transparent;
+    }
+    & .component :is(polyline, path, line, polygon, rect, circle).filled {
+        fill: var(--sch-color, red);
+        stroke: none;
+        transition-duration: 0.2s;
+    }
+    & .component .plus :is(polyline, path, line) {
+        stroke-width: 1;
+    }
+    & .component polygon {
+        fill: var(--sch-color, red);
+    }
+    & .component text {
+        fill: white;
+        transition-duration: 0.2s;
+    }
+    & .component:hover text {
+        font-weight: bold;
+    }
+    & .component tspan:is(.cmp-value, .part-num) {
+        opacity: 50%;
+    }
 }
 
 @media all and (prefers-color-scheme: light) {
     svg.schemascii {
         background: white;
-    }
-    svg.schemascii .component text {
-        fill: black;
-    }
-    svg.schemascii :is(.wire, .component):hover {
-        --sch-color: lime;
+        & .component text {
+            fill: black;
+        }
+        & :is(.wire, .component):hover {
+            --sch-color: lime;
+        }
     }
 }
