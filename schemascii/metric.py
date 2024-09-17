@@ -1,73 +1,150 @@
 import re
 from decimal import Decimal
 
-METRIC_NUMBER = re.compile(r"^(\d*\.?\d+)([pnumKkMG]?)$")  # cSpell:ignore pnum
+METRIC_NUMBER = re.compile(
+    r"(\d*\.?\d+)\s*([pnumKkMGT]?)")  # cSpell:ignore pnum
+METRIC_RANGE = re.compile(
+    r"(\d*\.?\d+\s*[pnumKkMGT]?)-(\d*\.?\d+\s*[pnumKkMGT]?)")
 ENG_NUMBER = re.compile(r"^(\d*\.?\d+)[Ee]?([+-]?\d*)$")
 
 
-def exponent_to_prefix(exponent: int) -> str | None:
-    """Turns the 10-power into a Metric prefix.
-    E.g.  3 --> "k" (kilo)
-    E.g.  0 --> ""  (no prefix)
-    E.g. -6 --> "u" (micro)
-    If it is not a multiple of 3, returns None."""
+def exponent_to_multiplier(exponent: int) -> str | None:
+    """Turns the 10-power into a Metric multiplier.
+
+    * 3 --> "k" (kilo)
+    * 0 --> ""  (no multiplier)
+    * -6 --> "u" (micro)
+
+    If it is not a multiple of 3, return None.
+    """
     if exponent % 3 != 0:
         return None
     index = (exponent // 3) + 4  # pico is -12 --> 0
     # cSpell:ignore pico
-    return "pnum kMG"[index].strip()
+    return "pnum kMGT"[index].strip()
 
 
-def prefix_to_exponent(prefix: int) -> str:
-    """Turns the Metric prefix into its exponent.
-    E.g. "k" -->  3 (kilo)
-    E.g. " " -->  0 (no prefix)
-    E.g. "u" --> -6 (micro)"""
-    if prefix in (" ", ""):
+def multiplier_to_exponent(multiplier: str) -> int:
+    """Turn the Metric multiplier into its 10^exponent.
+
+    * "k" -->  3 (kilo)
+    * " " -->  0 (no multiplier)
+    * "u" --> -6 (micro)
+
+    If it is not a valid Metric multiplier, raises an error.
+    """
+    if multiplier in (" ", ""):
         return 0
-    if prefix == "µ":
-        prefix = "u"  # allow unicode
-    if prefix == "K":
-        prefix = prefix.lower()  # special case (preferred is lowercase)
-    i = "pnum kMG".index(prefix)
-    return (i - 4) * 3
+    if multiplier == "µ":
+        multiplier = "u"  # allow unicode
+    if multiplier == "K":
+        multiplier = multiplier.lower()
+        # special case (preferred is lowercase)
+    try:
+        return 3 * ("pnum kMGT".index(multiplier) - 4)
+    except IndexError as e:
+        raise ValueError(
+            f"unknown metric multiplier: {multiplier!r}") from e
 
 
-def format_metric_unit(num: str, unit: str = "", six: bool = False) -> str:
-    "Normalizes the Metric unit on the number."
-    num = num.strip()
-    match = METRIC_NUMBER.match(num)
-    if not match:
-        return num
-    digits_str, prefix = match.group(1), match.group(2)
-    digits_decimal = Decimal(digits_str)
-    digits_decimal *= Decimal("10") ** Decimal(prefix_to_exponent(prefix))
-    res = ENG_NUMBER.match(digits_decimal.to_eng_string())
-    if not res:
-        raise RuntimeError
+def best_exponent(num: Decimal, six: bool) -> tuple[str, int]:
+    """Finds the best exponent for the number.
+    Returns a tuple (digits, best_exponent)
+    """
+    res = ENG_NUMBER.match(num.to_eng_string())
+    assert res
     digits, exp = Decimal(res.group(1)), int(res.group(2) or "0")
     assert exp % 3 == 0, "failed to make engineering notation"
     possibilities = []
-    for d_e in range(-6, 9, 3):
-        if (exp + d_e) % 6 == 0 or not six:
-            new_exp = exp - d_e
-            new_digits = str(digits * (Decimal("10") ** Decimal(d_e)))
-            if "e" in new_digits.lower():
-                continue
-            if "." in new_digits:
-                new_digits = new_digits.rstrip("0").removesuffix(".")
-            possibilities.append((new_exp, new_digits))
-    # heuristic: shorter is better, prefer no decimal point
-    exp, digits = sorted(
-        possibilities, key=lambda x: len(x[1]) + (0.5 * ("." in x[1]))
-    )[0]
-    out = digits + " " + exponent_to_prefix(exp) + unit
-    return out.replace(" u", " µ")
+    for push in range(-12, 9, 3):
+        if six and (exp + push) % 6 != 0:
+            continue
+        new_exp = exp - push
+        new_digits = str(digits * (Decimal(10) ** Decimal(push)))
+        if "e" in new_digits.lower():
+            # we're trying to avoid getting exponential notation here
+            continue
+        if "." in new_digits:
+            # rarely are significant figures important in component values
+            new_digits = new_digits.rstrip("0").removesuffix(".")
+        possibilities.append((new_digits, new_exp))
+    # heuristics:
+    #   * shorter is better
+    #   * prefer no Metric multiplier if possible
+    #   * prefer no decimal point
+    return sorted(
+        possibilities, key=lambda x: ((10 * len(x[0]))
+                                      + (5 * (x[1] != 0))
+                                      + (2 * ("." in x[0]))))[0]
+
+
+def normalize_metric(num: str, six: bool, unicode: bool) -> tuple[str, str]:
+    """Parses the metric number, normalizes the unit, and returns
+    a tuple (normalized_digits, metric_multiplier).
+    """
+    match = METRIC_NUMBER.match(num)
+    if not match:
+        return num, None
+    digits_str, multiplier = match.group(1), match.group(2)
+    digits_decimal = Decimal(digits_str)
+    digits_decimal *= Decimal(10) ** Decimal(
+        multiplier_to_exponent(multiplier))
+    digits, exp = best_exponent(digits_decimal, six)
+    unit = exponent_to_multiplier(exp)
+    if unicode and unit == "u":
+        unit = "µ"
+    return digits, unit
+
+
+def format_metric_unit(
+        num: str,
+        unit: str = "",
+        six: bool = False,
+        unicode: bool = True,
+        allow_range: bool = True) -> str:
+    """Normalizes the Metric multiplier on the number, then adds the unit
+    if the unit was not used.
+
+    * If there is a suffix on num, moves it to after the unit.
+    * If there is a range of numbers, formats each number in the range
+      and adds the unit afterwards.
+    * If there is no number in num, returns num unchanged.
+    * If unicode is True, uses 'µ' for micro instead of 'u'.
+    """
+    num = num.strip()
+    match = METRIC_RANGE.match(num)
+    if match:
+        if not allow_range:
+            raise ValueError("range not allowed")
+        # format the range by calling recursively
+        num0, num1 = match.group(1), match.group(2)
+        suffix = num[match.span()[1]:].lstrip().removeprefix(unit)
+        digits0, exp0 = normalize_metric(num0, six, unicode)
+        digits1, exp1 = normalize_metric(num1, six, unicode)
+        if exp0 != exp1 and digits0 != "0":
+            # different multiplier so use multiplier and unit on both
+            return (f"{digits0} {exp0}{unit} - "
+                    f"{digits1} {exp1}{unit} {suffix}").rstrip()
+        return f"{digits0}-{digits1} {exp1}{unit} {suffix}".rstrip()
+    match = METRIC_NUMBER.match(num)
+    if not match:
+        return num
+    suffix = num[match.span(0)[1]:].lstrip().removeprefix(unit)
+    digits, exp = normalize_metric(match.group(), six, unicode)
+    return f"{digits} {exp}{unit} {suffix}".rstrip()
 
 
 if __name__ == "__main__":
-    print(">>", format_metric_unit("2.5", "V"))
-    print(">>", format_metric_unit("50n", "F", True))
-    print(">>", format_metric_unit("1234", "&ohm;"))
-    print(">>", format_metric_unit("2200u", "F", True))
-    print(">>", format_metric_unit("Gain", "&ohm;"))
+    def test(*args):
+        print(">>> format_metric_unit", args, sep="")
+        print(repr(format_metric_unit(*args)))
+    test("2.5-3500", "V")
+    test("0.33m", "H", True)
+    test("50M-100000000000000000000p", "Hz")
+    test(".1", "Ω")
+    test("2200u", "F", True)
+    test("2200uF", "F", True)
+    test("2200u F", "F", True)
+    test("2200 uF", "F", True)
+    test("0-100k", "V")
+    test("Gain", "Ω")

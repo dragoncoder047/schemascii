@@ -1,26 +1,25 @@
 import argparse
 import sys
 import warnings
-from . import render, __version__
-from .errors import Error
-from .configs import add_config_arguments
+
+import schemascii
+import schemascii.errors as _errors
 
 
 def cli_main():
     ap = argparse.ArgumentParser(
-        prog="schemascii", description="Render ASCII-art schematics into SVG."
-    )
+        prog="schemascii", description="Render ASCII-art schematics into SVG.")
     ap.add_argument(
-        "-V", "--version", action="version", version="%(prog)s " + __version__
-    )
+        "-V", "--version", action="version",
+        version="%(prog)s " + schemascii.__version__)
     ap.add_argument("in_file", help="File to process.")
     ap.add_argument(
         "-o",
         "--out",
         default=None,
         dest="out_file",
-        help="Output SVG file. (default input file plus .svg)",
-    )
+        help="Output SVG file. (default input file plus .svg)")
+    # TODO: implement this
     add_config_arguments(ap)
     args = ap.parse_args()
     if args.out_file is None:
@@ -31,8 +30,8 @@ def cli_main():
         args.in_file = "<stdin>"
     try:
         with warnings.catch_warnings(record=True) as captured_warnings:
-            result_svg = render(args.in_file, text, **vars(args))
-    except Error as err:
+            result_svg = schemascii.render(args.in_file, text, **vars(args))
+    except _errors.Error as err:
         print(type(err).__name__ + ":", err, file=sys.stderr)
         sys.exit(1)
     if captured_warnings:
