@@ -110,6 +110,10 @@ class Drawing(_dc.DataConsumer, namespaces=(":root",)):
 
 if __name__ == '__main__':
     import pprint
+    print("All components: ", end="")
+    pprint.pprint(_component.Component.all_components)
+    print("All namespaces: ", end="")
+    pprint.pprint(_data.Data.available_options)
     d = Drawing.from_file("test_data/stresstest.txt")
     pprint.pprint(d)
     print(d.to_xml_string())

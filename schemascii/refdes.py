@@ -55,6 +55,7 @@ C1
             BAT3V3
         U3A
                     Q1G1
+                    R.Heater
     GND
 """)
     rds = RefDes.find_all(gg)

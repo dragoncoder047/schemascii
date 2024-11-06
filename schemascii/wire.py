@@ -92,20 +92,15 @@ if __name__ == '__main__':
     x = _grid.Grid("", """
 .
 
- *    -------------------------*
- |                             |
- *----------||||----*   -------*----=foo>
-                    |          |
-             -----------       |
-                    |          |
-             -------*----------*---*
-                               |   |
-             *-----------------*---*
-             |
+                   |   [TODO: this loop-de-loop causes problems]
+                   |   [is it worth fixing?]
+---------------------------------*
+                   |             |
+                   |             |
+                   *-------------*
 
 .
 """.strip())
     wire = Wire.get_from_grid(x, 2+4j, _wt.WireTag.find_all(x))
     print(wire)
     x.spark(*wire.points)
-    print(wire.to_xml_string(scale=10, stroke_width=2, stroke="black"))
