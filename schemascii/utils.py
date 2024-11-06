@@ -310,8 +310,8 @@ def fix_number(n: float) -> str:
 
 class XMLClass:
     def __getattr__(self, tag: str) -> typing.Callable:
-        def mk_tag(*contents: str, **attrs: str) -> str:
-            out = f"<{tag} "
+        def mk_tag(*contents: str, **attrs: str | bool | float | int) -> str:
+            out = f"<{tag}"
             for k, v in attrs.items():
                 if v is False:
                     continue
@@ -323,8 +323,8 @@ class XMLClass:
                 # elif isinstance(v, str):
                 #     v = re.sub(r"\b\d+(\.\d+)\b",
                 #                lambda m: fix_number(float(m.group())), v)
-                out += f'{k.removesuffix("_").replace("__", "-")}="{v}" '
-            out = out.rstrip() + ">" + "".join(contents)
+                out += f' {k.removesuffix("_").replace("__", "-")}="{v}"'
+            out = out + ">" + "".join(contents)
             return out + f"</{tag}>"
 
         return mk_tag
@@ -393,15 +393,10 @@ def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
     for p1, p2 in points:
         if p1 == p2:
             # Skip zero-length wires
+            # XXX: there shouldn't be any of these anymore?
             continue
-        if p1 not in seen:
-            seen[p1] = 1
-        else:
-            seen[p1] += 1
-        if p2 not in seen:
-            seen[p2] = 1
-        else:
-            seen[p2] += 1
+        seen[p1] = seen.get(p1, 0) + 1
+        seen[p2] = seen.get(p2, 0) + 1
     return [pt for pt, count in seen.items() if count > 3]
 
 
