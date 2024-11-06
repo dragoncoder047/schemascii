@@ -1,6 +1,7 @@
-import cmath
+import collections as _collections
 
-s = """
+strings = [
+    """
 #
 ###
 #####
@@ -8,44 +9,82 @@ s = """
 #####
 ###
 #
-"""
-pts = [complex(c, r)
-       for (r, rt) in enumerate(s.splitlines())
-       for (c, ch) in enumerate(rt)
-       if ch == "#"]
+""",
+    """
+#
+#
+#
+##
+##
+##
+###
+##
+##
+##
+#
+#
+#
+""",
+    """
+#
+#
+#
+##
+##
+##
+###
+######
+#########
+######
+###
+##
+##
+##
+#
+#
+#
+""",
+    """
+#
+ #
+  #
+  #
+  #
+ #
+#"""]
 
 
-def centroid(pts: list[complex]) -> complex:
-    return sum(pts) / len(pts)
-
-
-def sort_counterclockwise(pts: list[complex],
-                          center: complex | None = None) -> list[complex]:
-    if center is None:
-        center = centroid(pts)
-    return sorted(pts, key=lambda p: cmath.phase(p - center))
-
-
-def perimeter(pts: list[complex]) -> list[complex]:
+def sinker(pts: list[complex]) -> list[complex]:
+    last = None
     out = []
-    for pt in pts:
-        for d in (-1, 1, -1j, 1j, -1+1j, 1+1j, -1-1j, 1-1j):
-            xp = pt + d
-            if xp not in pts:
-                out.append(pt)
-                break
-    return sort_counterclockwise(out, centroid(pts))
+    for p in pts:
+        if not last or last.real != p.real:
+            out.append(p)
+            last = p
+    out.append(p)
+    return out
+
+
+def get_outline_points(pts: list[complex]) -> list[complex]:
+    by_y = _collections.defaultdict(list)
+    for p in pts:
+        by_y[p.imag].append(p.real)
+    left_side = sinker([complex(min(row), y)
+                       for y, row in sorted(by_y.items())])
+    right_side = sinker([complex(max(row), y)
+                         for y, row in sorted(by_y.items(), reverse=True)])
+
+    return left_side + right_side
 
 
 def example(all_points: list[complex], scale: float = 20) -> str:
-    p = perimeter(all_points)
-    p.append(p[0])
-    vbx = max(map(lambda x: x.real, p)) + 1
-    vby = max(map(lambda x: x.imag, p)) + 1
+    p = get_outline_points(all_points)
+    vbx = max(map(lambda x: x.real, p))
+    vby = max(map(lambda x: x.imag, p))
     return f"""<svg
-    viewBox="-1 -1 {vbx} {vby}"
+    viewBox="-1 -1 {vbx + 1} {vby + 1}"
     width="{vbx * scale}"
-    height="{vbx * scale}">
+    height="{vby * scale}">
     <polyline
     fill="none"
     stroke="black"
@@ -54,4 +93,9 @@ def example(all_points: list[complex], scale: float = 20) -> str:
     </polyline></svg>"""
 
 
-print(example(pts))
+for s in strings:
+    pts = [complex(c, r)
+           for (r, rt) in enumerate(s.splitlines())
+           for (c, ch) in enumerate(rt)
+           if ch == "#"]
+    print(example(pts))
