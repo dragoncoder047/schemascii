@@ -99,7 +99,10 @@ def flood_walk(
     connections in the directions allowed by start_dirs and directions, and
     return the list of reached points.
 
-    Also updates the set seen for points that were walked into.
+    seen is the set of points that are already accounted for and should not be
+    walked into; the function updates the set seen for points that were
+    walked into. Thus, if this function is called twice with the same
+    arguments, the second call will always return nothing.
     """
     points: list[complex] = []
     stack: list[tuple[complex, list[complex]]] = [
