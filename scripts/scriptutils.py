@@ -10,7 +10,7 @@ T = typing.TypeVar("T")
 def cmd(sh_line: str, say: bool = True):
     if say:
         print(sh_line)
-    if code := os.system(sh_line):
+    if code := os.system(sh_line):  # nosec start_process_with_a_shell
         print("*** Error", code, file=sys.stderr)
         sys.exit(code)
 
