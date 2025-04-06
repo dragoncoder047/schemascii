@@ -53,6 +53,20 @@ strings = [
  #
 #"""]
 
+"""
+idea for new algorithm
+* find all of the edge points
+* sort them by clockwise order around the perimeter
+* handle the shapes that have holes in them by treating
+  each edge as a separate shape, then merging the svgs
+* find all of the points that are concave
+* find all of the straight line points
+* assign each straight line point a distance from the nearest
+  concave point
+* remove the concave points and straight line points that are closer
+  than a threshold
+"""
+
 
 def sinker(pts: list[complex]) -> list[complex]:
     last = None
