@@ -19,6 +19,16 @@ def cli_main():
         default=None,
         dest="out_file",
         help="Output SVG file. (default input file plus .svg)")
+    ap.add_argument(
+        "-w",
+        "--warnings-are-errors",
+        action="store_true",
+        help="Treat warnings as errors. (default: False)")
+    ap.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Print verbose logging output. (default: False)")
     # TODO: implement this
     add_config_arguments(ap)
     args = ap.parse_args()
@@ -35,13 +45,18 @@ def cli_main():
         print(type(err).__name__ + ":", err, file=sys.stderr)
         sys.exit(1)
     if captured_warnings:
-        for warn in captured_warnings:
-            print("warning:", warn.message, file=sys.stderr)
+        for warning in captured_warnings:
+            print("Warning:", warning.message, file=sys.stderr)
+        if args.warnings_are_errors:
+            print("Error: warnings were treated as errors", file=sys.stderr)
+            sys.exit(1)
     if args.out_file == "-":
         print(result_svg)
     else:
         with open(args.out_file, "w", encoding="utf-8") as out:
             out.write(result_svg)
+        if args.verbose:
+            print("Wrote SVG to", args.out_file)
 
 
 if __name__ == "__main__":

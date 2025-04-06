@@ -21,7 +21,7 @@ class Net(_dc.DataConsumer, namespaces=(":net",)):
         """Return a list of all the wire nets found on the grid.
         """
         seen_points: set[complex] = set()
-        all_nets: list[cls] = []
+        all_nets: list[Net] = []
         all_tags = _wt.WireTag.find_all(grid)
 
         for y, line in enumerate(grid.lines):

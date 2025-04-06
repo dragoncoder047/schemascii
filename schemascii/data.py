@@ -28,14 +28,14 @@ class Section(dict):
     """Section of data relevant to one portion of the drawing."""
 
     header: str
-    data: dict
+    data: dict[str, typing.Any]
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str):
         return self.data[key]
 
-    def matches(self, name) -> bool:
+    def matches(self, name: str) -> bool:
         """True if self.header matches the name."""
-        return fnmatch.fnmatch(name, self.header)
+        return fnmatch.fnmatch(name.lower(), self.header.lower())
 
 
 @dataclass
@@ -80,22 +80,22 @@ class Data:
         def complain(msg):
             raise _errors.DiagramSyntaxError(
                 f"{filename} line {line+startline}: {msg}\n"
-                f"  {lines[line]}\n"
-                f"  {' ' * col}{'^'*len(look())}".lstrip())
+                f"{line} | {lines[line]}\n"
+                f"{' ' * len(str(line))} | {' ' * col}{'^'*len(look())}")
 
         def complain_eof():
             restore(lastsig)
             skip_space(True)
             if index >= len(tokens):
                 complain("unexpected EOF")
-            complain("cannot parse after this")
+            complain("unknown parse error")
 
-        def look():
+        def look() -> str:
             if index >= len(tokens):
                 return "\0"
             return tokens[index]
 
-        def eat():
+        def eat() -> str:
             nonlocal line
             nonlocal col
             nonlocal index
@@ -150,7 +150,7 @@ class Data:
                     if not skip_space():
                         return
 
-        def expect(expected: set[str]):
+        def expect_and_eat(expected: set[str]):
             got = look()
             if got in expected:
                 eat()
@@ -169,7 +169,7 @@ class Data:
             # print("** starting section", repr(name))
             mark_used()
             skip_i()
-            expect({"{"})
+            expect_and_eat({"{"})
             data = {}
             while look() != "}":
                 data |= parse_kv_pair()
@@ -177,7 +177,7 @@ class Data:
             skip_i()
             return Section(name, data)
 
-        def parse_kv_pair() -> dict:
+        def parse_kv_pair() -> dict[str, int | float | str]:
             skip_i()
             if look() == "}":
                 # handle case of ";}"
@@ -187,7 +187,7 @@ class Data:
             key = eat()
             mark_used()
             skip_i()
-            expect({"="})
+            expect_and_eat({"="})
             skip_space()
             expect_not(SPECIAL)
             value = ""
@@ -214,7 +214,7 @@ class Data:
                     pass
             # don't eat the ending "}"
             if look() != "}":
-                expect({"\n", ";"})
+                expect_and_eat({"\n", ";"})
             # print("*** got KV", repr(key), repr(value))
             return {key: value}
 
@@ -263,4 +263,3 @@ R1 {
     my_data = Data.parse_from_string(text)
     pprint.pprint(my_data)
     pprint.pprint(my_data.get_values_for("R1"))
-    print(my_data.getopt("R1", "foo"))

@@ -33,7 +33,7 @@ class WireTag(_dc.DataConsumer, namespaces=(":wire-tag",)):
     @classmethod
     def find_all(cls, grid: _grid.Grid) -> list[WireTag]:
         """Find all of the wire tags present in the grid."""
-        out: list[cls] = []
+        out: list[WireTag] = []
         for y, line in enumerate(grid.lines):
             for match in WIRE_TAG_PAT.finditer(line):
                 left_grp, right_grp = match.groups()

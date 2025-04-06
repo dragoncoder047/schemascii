@@ -75,7 +75,7 @@ class Grid:
 
     def shrink(self):
         """Shrinks self so that there is not any space between the edges and
-        the next non-printing character. Takes masks into account.
+        the next non-whitespace character. Takes masks into account.
         """
         # clip the top lines
         while all(self.get(complex(x, 0)).isspace()
@@ -95,6 +95,7 @@ class Grid:
             this_indent = len(line) - len(line.lstrip())
             min_indent = min(min_indent, this_indent)
         # chop the space
+        # TODO: for left and right, need to take into account the mask array
         if min_indent > 0:
             self.width -= min_indent
             for line in self.data:

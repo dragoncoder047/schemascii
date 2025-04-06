@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import html
 import re
 from dataclasses import dataclass
@@ -24,9 +26,9 @@ class Annotation(_dc.DataConsumer, namespaces=(":annotation",)):
     css_class = "annotation"
 
     @classmethod
-    def find_all(cls, grid: _grid.Grid):
+    def find_all(cls, grid: _grid.Grid) -> list[Annotation]:
         """Return all of the text annotations present in the grid."""
-        out: list[cls] = []
+        out: list[Annotation] = []
         for y, line in enumerate(grid.lines):
             for match in ANNOTATION_RE.finditer(line):
                 x = match.span()[0]

@@ -70,6 +70,8 @@ class Side(enum.Enum):
         """Return the side that is closest to pt, if it is interpreted as
         a vector originating from the origin.
         """
+        # TODO: fix this so it compares the components,
+        # instead of this distance mess
         ops = {
             -pi: Side.LEFT,
             pi: Side.LEFT,

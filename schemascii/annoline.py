@@ -73,7 +73,7 @@ class AnnotationLine(_dc.DataConsumer,
     def find_all(cls, grid: _grid.Grid) -> list[AnnotationLine]:
         """Return all of the annotation lines found in the grid."""
         seen_points: set[complex] = set()
-        all_lines: list[cls] = []
+        all_lines: list[AnnotationLine] = []
 
         for y, line in enumerate(grid.lines):
             for x, ch in enumerate(line):

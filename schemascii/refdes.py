@@ -56,6 +56,8 @@ C1
         U3A
                     Q1G1
                     R.Heater
+                    ^
+                    this one is invalid; only the "R" and "H" are gotten
     GND
 """)
     rds = RefDes.find_all(gg)
