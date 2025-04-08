@@ -12,7 +12,5 @@
         "schemascii",
         "tspan"
     ],
-    "python.linting.pylintEnabled": false,
-    "python.linting.flake8Enabled": false,
-    "python.linting.enabled": true
+    "python.analysis.typeCheckingMode": "strict"
 }

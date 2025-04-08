@@ -1,4 +1,5 @@
 import enum
+import typing
 
 strings = [
     """
@@ -109,7 +110,10 @@ def points_to_edges(
     return edges
 
 
-def cir(list: list[complex], is_forward: bool) -> list[complex]:
+T = typing.TypeVar("T")
+
+
+def cir(list: list[T], is_forward: bool) -> list[T]:
     if is_forward:
         return list[1:] + [list[0]]
     else:
@@ -118,7 +122,7 @@ def cir(list: list[complex], is_forward: bool) -> list[complex]:
 
 def cull_disallowed_edges(
         all_points: list[complex],
-        edges: dict[complex, set[complex]]) -> dict[complex, list[set]]:
+        edges: dict[complex, set[complex]]) -> dict[complex, set[complex]]:
     # each point can only have 1 to 3 unique directions coming out of it
     # if there are more, find the "outside" direction and remove the inner
     # links
@@ -156,8 +160,6 @@ def walk_graph_to_loop(
         print(debug_singular_polyline_in_svg(out, current))
         # log the direction we came from
         swd_into.setdefault(current, set()).add(current_dir)
-        # prefer counterclockwise (3 directions),
-        # then clockwise (3 directions), then forwards, then backwards
         choices_directions = (rot(current_dir, i)
                               for i in (0, 1, -1, 2, -2, 3, -3, 4))
         bt_d = None
@@ -223,7 +225,7 @@ def get_outline_points(pts: list[complex]) -> list[list[complex]]:
     return [process_group(g, pts) for g in loop_groups]
 
 
-def dots(points: list[complex], edges: dict[complex, list[complex]],
+def dots(points: list[complex], edges: dict[complex, set[complex]],
          scale: float = 20) -> str:
     vbx = max(x.real for x in points) + 1
     vby = max(x.imag for x in points) + 1
