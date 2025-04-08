@@ -63,6 +63,14 @@ strings = [
  #
 #""",
     """
+######
+ ########
+  #########
+  ##########
+  #########
+ ########
+######""",
+    """
   ###########
  #############
 ###############
@@ -72,7 +80,14 @@ strings = [
 ####       ####
 ###############
  #############
-  ###########"""]
+  ###########""",
+    """
+###############
+          ###################""",
+    """
+###############
+          ###################
+###############"""]
 
 """
 idea for new algorithm
@@ -133,6 +148,11 @@ def triples(v: list[T]) -> list[tuple[T, T, T]]:
     return list(zip(cir(v, False), v, cir(v, True)))
 
 
+def fiveles(v: list[T]) -> list[tuple[T, T, T]]:
+    x, y, z = cir(v, False), v, cir(v, True)
+    return list(zip(cir(x, False), x, y, z, cir(z, True)))
+
+
 def cull_disallowed_edges(
         all_points: list[complex],
         edges: dict[complex, set[complex]]) -> dict[complex, set[complex]]:
@@ -147,16 +167,18 @@ def cull_disallowed_edges(
         # if there are multiple directions out of here, find the gaps and
         # only keep the ones on the sides of the gaps
         gaps = [p1 + d in all_points for d in DIRECTIONS]
-        tran_5 = list(zip(
-            cir(cir(gaps, False), False),
-            cir(gaps, False),
-            gaps,
-            cir(gaps, True),
-            cir(cir(gaps, True), True)))
+        tran_5 = fiveles(gaps)
         # im not quite sure what this is doing
         fixed_edges[p1] = set(p1 + d for (d, (q, a, b, c, w))
                               in zip(DIRECTIONS, tran_5)
                               if b and not ((a and c) or (q and w)))
+    # ensure there are no one way "trap" edges
+    # (the above algorithm has some weird edge cases where it may produce
+    # one-way edges on accident)
+    # XXX This causes issues when it is enabled, why?
+    for p1 in all_points:
+        for p2 in fixed_edges.setdefault(p1, set()):
+            fixed_edges.setdefault(p2, set()).add(p1)
     return fixed_edges
 
 
@@ -174,7 +196,7 @@ def walk_graph_to_loop(
         # log the direction we came from
         swd_into.setdefault(current, set()).add(current_dir)
         choices_directions = (rot(current_dir, i)
-                              for i in (-1, 1, -2, 2, -3, 3, 0, 4))
+                              for i in (-1, -2, -3, 0, 1, 2, 3, 4))
         bt_d = None
         for d in choices_directions:
             # if allowed to walk that direction
@@ -202,13 +224,21 @@ def walk_graph_to_loop(
     return out
 
 
+def is_mid_maxima(a: int | None, b: int | None, c: int | None) -> bool:
+    return all(x is not None for x in (a, b, c)) and a < b and c < b
+
+
 def remove_unnecessary(pts: list[complex],
-                       edges, maxslope=2) -> list[complex]:
+                       edges: dict[complex, set[complex]],
+                       maxslope=2) -> list[complex]:
     triples_pts = list(triples(pts))
     dirs = [(b-a, c-b) for a, b, c in triples_pts]
     signos = [a.real * b.imag - a.imag * b.real
               + (abs(b - a) if a == b or a == -b else 0) for a, b in dirs]
     # signos: 0 if straightline, negative if concave, positive if convex
+    dotnos = [a.real * b.real + a.imag * b.imag for a, b in dirs]
+    # dotnos: a measure of pointedness - 0 = right angle, positive = pointy,
+    # negative = blunt
     distances = [None if s >= 0 else 0 for s in signos]
     # distances: None if it's a convex or straight un-analyzed,
     # number if it's a concave or counted straight
@@ -236,46 +266,71 @@ def remove_unnecessary(pts: list[complex],
     # at this point, distances should contain:
     # None for the convex points
     # numbers for all others
-    points_to_keep = set(p for p, s, (a, b, c) in zip(
-        pts, signos, triples(distances))
-        if (b is None and s != 0)  # keep all convex points
-        or ((a is not None and a < b)  # keep all the local maxima
-            and (c is not None and c < b))
-        or (b is not None and b > maxslope))  # keep ones that are flat enough
-    assert len(points_to_keep) > 0
+    maxima = [is_mid_maxima(a, b, c) for (a, b, c) in triples(distances)]
+    points_to_maybe_discard = set(
+        pt for (pt, dist, maxima) in zip(pts, distances, maxima)
+        # keep all the local maxima
+        # keep ones that are flat enough
+        # --> remove the ones that are not sloped enough
+        #     and are not local maxima
+        if ((dist is not None and dist < maxslope)
+            and not maxima))
+    # the ones to definitely keep are the convex ones
+    # as well as concave ones that are adjacent to only straight ones that
+    # are being deleted
+    points_to_def_keep = set(p for p, s in zip(pts, signos)
+                             if s > 0
+                             or (s < 0 and all(
+                                 signos[z := pts.index(q)] == 0
+                                 and q in points_to_maybe_discard
+                                 for q in edges[p])))
+    # special case: keep concave ones that are 2-near at
+    # least one convex pointy point (where pointy additionally means that
+    # it isn't a 180)
+    points_to_def_keep |= set(
+        p for (
+            p,
+            (dot_2l, _, _, _, dot_2r),
+            (sig_2l, _, sig_m, _, sig_2r),
+            ((dd1_2l, dd2_2l), _, _, _, (dd1_2r, dd2_2r))
+        ) in zip(pts, fiveles(dotnos), fiveles(signos), fiveles(dirs))
+        if sig_m < 0 and (
+            (sig_2l > 0 and dot_2l < 0 and dd1_2l != -dd2_2l)
+            or (sig_2r > 0 and dot_2r < 0 and dd1_2r != -dd2_2r)))
     # for debugging
     a = dots([], edges)
     i = a.replace("</svg>", "".join(f"""<circle cx="{
         p.real
     }" cy="{
         p.imag
-    }" r="{
-        q / 5 if isinstance(q, int)
-        else 0
-    }" fill="{
+    }" r="0.5" fill="{
         "red" if r > 0
         else "blue" if r < 0
         else "black"
     }" opacity="50%"></circle>"""
-        for p, q, r in zip(pts, distances, signos)) + "</svg>")
+        for p, q, r in zip(pts, distances, dotnos)) + "</svg>")
     z = a.replace("</svg>", "".join(f"""<circle cx="{
         p.real
     }" cy="{
         p.imag
     }" r="0.5" fill="red" opacity="50%"></circle>"""
-        for p in points_to_keep) + "</svg>")
+        for p in (points_to_maybe_discard - points_to_def_keep)) + "</svg>")
     print("begin conc", i, "end conc")
-    print("begin keep", z, "end keep")
+    print("begin discard", z, "end discard")
     # end debugging
-    return [p for p in pts if p in points_to_keep]
+    return [p for p in pts
+            if p not in points_to_maybe_discard
+            or p in points_to_def_keep]
 
 
 def process_group(g: list[complex], all_pts: list[complex]) -> list[complex]:
     edges = cull_disallowed_edges(all_pts, points_to_edges(g))
     print(dots(g, edges))
+    start = min(g, key=lambda x: x.real * 65536 + x.imag)
+    next = min(edges[start], key=lambda x: x.real * 65536 - x.imag)
     g = walk_graph_to_loop(
-        start=min(g, key=lambda x: x.real * 65536 + x.imag),
-        start_dir=1j,
+        start=start,
+        start_dir=next - start,
         edges=edges)
     g = remove_unnecessary(g, edges)
     return g
