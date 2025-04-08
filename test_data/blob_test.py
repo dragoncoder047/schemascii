@@ -191,7 +191,7 @@ def process_group(g: list[complex], all_pts: list[complex]) -> list[complex]:
     edges = cull_disallowed_edges(all_pts, points_to_edges(g))
     print(dots(g, edges))
     g = walk_graph_to_loop(
-        start=max(g, key=lambda x: x.real * 65536 - x.imag),
+        start=min(g, key=lambda x: x.real * 65536 + x.imag),
         start_dir=1j,
         edges=edges)
     return g
