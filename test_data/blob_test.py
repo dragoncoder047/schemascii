@@ -151,7 +151,7 @@ def walk_graph_to_loop(
     current = start
     current_dir = start_dir
     swd_into: dict[complex, set[complex]] = {}
-    while not out or current != start:
+    while not all(e in out for e in edges) or current != start:
         out.append(current)
         print(debug_singular_polyline_in_svg(out, current))
         # log the direction we came from
@@ -173,7 +173,7 @@ def walk_graph_to_loop(
                     break
                 # otherwise, if we've been there before, but haven't
                 # come from this direction, then save it for later
-                if d not in swd_into.get(nxt, set()) and bt_d is not None:
+                if d not in swd_into.get(nxt, set()) and bt_d is None:
                     bt_d = d
                     print("saving", d)
         else:
@@ -271,6 +271,7 @@ def example(all_points: list[complex], scale: float = 20) -> str:
     {polylines}</svg>"""
 
 
+print("<style>svg { border: 1px solid black}body{white-space: pre}</style>")
 for s in strings:
     print(f"""<pre>{s}</pre>""")
     pts = [complex(c, r)
