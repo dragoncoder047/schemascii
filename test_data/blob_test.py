@@ -112,12 +112,6 @@ VN_DIRECTIONS: list[complex] = [1, 1j, -1, -1j]
 DIRECTIONS: list[complex] = [1, 1+1j, 1j, -1+1j, -1, -1-1j, -1j, 1-1j]
 
 
-class VertexType(enum.Enum):
-    STRAIGHT = 1
-    CONCAVE = 2
-    CONVEX = 3
-
-
 def rot(d: complex, n: int) -> complex:
     # 1 step is 45 degrees
     return DIRECTIONS[(DIRECTIONS.index(d) + n + len(DIRECTIONS))
