@@ -11,6 +11,5 @@
         "rendec",
         "schemascii",
         "tspan"
-    ],
-    "python.analysis.typeCheckingMode": "strict"
+    ]
 }

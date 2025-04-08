@@ -13,6 +13,15 @@ strings = [
 """,
     """
 #
+######
+###########
+################
+###########
+######
+#
+""",
+    """
+#
 #
 #
 ##
@@ -120,6 +129,10 @@ def cir(list: list[T], is_forward: bool) -> list[T]:
         return [list[-1]] + list[:-1]
 
 
+def triples(v: list[T]) -> list[tuple[T, T, T]]:
+    return list(zip(cir(v, False), v, cir(v, True)))
+
+
 def cull_disallowed_edges(
         all_points: list[complex],
         edges: dict[complex, set[complex]]) -> dict[complex, set[complex]]:
@@ -161,7 +174,7 @@ def walk_graph_to_loop(
         # log the direction we came from
         swd_into.setdefault(current, set()).add(current_dir)
         choices_directions = (rot(current_dir, i)
-                              for i in (0, 1, -1, 2, -2, 3, -3, 4))
+                              for i in (-1, 1, -2, 2, -3, 3, 0, 4))
         bt_d = None
         for d in choices_directions:
             # if allowed to walk that direction
@@ -189,6 +202,74 @@ def walk_graph_to_loop(
     return out
 
 
+def remove_unnecessary(pts: list[complex],
+                       edges, maxslope=2) -> list[complex]:
+    triples_pts = list(triples(pts))
+    dirs = [(b-a, c-b) for a, b, c in triples_pts]
+    signos = [a.real * b.imag - a.imag * b.real
+              + (abs(b - a) if a == b or a == -b else 0) for a, b in dirs]
+    # signos: 0 if straightline, negative if concave, positive if convex
+    distances = [None if s >= 0 else 0 for s in signos]
+    # distances: None if it's a convex or straight un-analyzed,
+    # number if it's a concave or counted straight
+
+    # there ought to be a better way to do this
+    changing = True
+    while changing:
+        changing = False
+        for j in range(len(distances)):
+            i = j - 1
+            k = (j + 1) % len(distances)
+            iNone = distances[i] is None
+            jNone = distances[j] is None
+            kNone = distances[k] is None
+            if jNone and signos[j] == 0:
+                if kNone and iNone:
+                    continue
+                changing = True
+                if kNone:
+                    distances[j] = distances[i] + 1
+                elif iNone:
+                    distances[j] = distances[k] + 1
+                else:
+                    distances[j] = min(distances[i], distances[k]) + 1
+    # at this point, distances should contain:
+    # None for the convex points
+    # numbers for all others
+    points_to_keep = set(p for p, s, (a, b, c) in zip(
+        pts, signos, triples(distances))
+        if (b is None and s != 0)  # keep all convex points
+        or ((a is not None and a < b)  # keep all the local maxima
+            and (c is not None and c < b))
+        or (b is not None and b > maxslope))  # keep ones that are flat enough
+    assert len(points_to_keep) > 0
+    # for debugging
+    a = dots([], edges)
+    i = a.replace("</svg>", "".join(f"""<circle cx="{
+        p.real
+    }" cy="{
+        p.imag
+    }" r="{
+        q / 5 if isinstance(q, int)
+        else 0
+    }" fill="{
+        "red" if r > 0
+        else "blue" if r < 0
+        else "black"
+    }" opacity="50%"></circle>"""
+        for p, q, r in zip(pts, distances, signos)) + "</svg>")
+    z = a.replace("</svg>", "".join(f"""<circle cx="{
+        p.real
+    }" cy="{
+        p.imag
+    }" r="0.5" fill="red" opacity="50%"></circle>"""
+        for p in points_to_keep) + "</svg>")
+    print("begin conc", i, "end conc")
+    print("begin keep", z, "end keep")
+    # end debugging
+    return [p for p in pts if p in points_to_keep]
+
+
 def process_group(g: list[complex], all_pts: list[complex]) -> list[complex]:
     edges = cull_disallowed_edges(all_pts, points_to_edges(g))
     print(dots(g, edges))
@@ -196,6 +277,7 @@ def process_group(g: list[complex], all_pts: list[complex]) -> list[complex]:
         start=min(g, key=lambda x: x.real * 65536 + x.imag),
         start_dir=1j,
         edges=edges)
+    g = remove_unnecessary(g, edges)
     return g
 
 
@@ -227,8 +309,8 @@ def get_outline_points(pts: list[complex]) -> list[list[complex]]:
 
 def dots(points: list[complex], edges: dict[complex, set[complex]],
          scale: float = 20) -> str:
-    vbx = max(x.real for x in points) + 1
-    vby = max(x.imag for x in points) + 1
+    vbx = max(x.real for x in (*points, *edges)) + 1
+    vby = max(x.imag for x in (*points, *edges)) + 1
     return f"""<svg viewBox="-1 -1 {vbx+2} {vby+2}" width="{
         vbx * scale}" height="{vby * scale}">{"".join(f"""<circle cx="{
             p.real
