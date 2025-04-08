@@ -1,7 +1,20 @@
-import enum
 import typing
 
 strings = [
+    """
+#########################
+#########################
+#########################
+#########################
+#########################
+#########################""",
+    """
+#########################
+#########################
+            #############
+#########################
+#########################
+""",
     """
 #
 ###
@@ -87,7 +100,42 @@ strings = [
     """
 ###############
           ###################
-###############"""]
+###############""",
+    """
+################
+ ################
+################
+ ################
+################
+ ################
+################
+ ################""",
+    """
+# # # # # # # #
+################
+################
+################
+################
+################
+ # # # # # # # #""",
+    """
+                   #
+                 ####
+               #######
+             ##########
+           #############
+         ################
+       ###################
+     ######################
+   #########################
+    ######################
+     ###################
+      ################
+       #############
+        ##########
+         #######
+          ####
+           #"""]
 
 """
 idea for new algorithm
@@ -170,9 +218,9 @@ def cull_disallowed_edges(
     # (the above algorithm has some weird edge cases where it may produce
     # one-way edges on accident)
     # XXX This causes issues when it is enabled, why?
-    for p1 in all_points:
-        for p2 in fixed_edges.setdefault(p1, set()):
-            fixed_edges.setdefault(p2, set()).add(p1)
+    for p, c in fixed_edges.items():
+        for q in c:
+            fixed_edges.setdefault(q, set()).add(p)
     return fixed_edges
 
 
@@ -186,7 +234,6 @@ def walk_graph_to_loop(
     swd_into: dict[complex, set[complex]] = {}
     while not all(e in out for e in edges) or current != start:
         out.append(current)
-        print(debug_singular_polyline_in_svg(out, current))
         # log the direction we came from
         swd_into.setdefault(current, set()).add(current_dir)
         choices_directions = (rot(current_dir, i)
@@ -198,7 +245,6 @@ def walk_graph_to_loop(
             if nxt in edges[current]:
                 if nxt not in swd_into.keys():
                     # if we haven't been there before, go there
-                    print("go new place")
                     current = nxt
                     current_dir = d
                     break
@@ -206,7 +252,6 @@ def walk_graph_to_loop(
                 # come from this direction, then save it for later
                 if d not in swd_into.get(nxt, set()) and bt_d is None:
                     bt_d = d
-                    print("saving", d)
         else:
             if bt_d is not None:
                 # if we have a saved direction to go, go that way
@@ -214,7 +259,8 @@ def walk_graph_to_loop(
                 current_dir = bt_d
             else:
                 raise RuntimeError
-    print("finished normally")
+    print("path clockwise is")
+    print(debug_singular_polyline_in_svg(out, current))
     return out
 
 
@@ -262,13 +308,14 @@ def remove_unnecessary(pts: list[complex],
     # numbers for all others
     maxima = [is_mid_maxima(a, b, c) for (a, b, c) in triples(distances)]
     points_to_maybe_discard = set(
-        pt for (pt, dist, maxima) in zip(pts, distances, maxima)
+        pt for pt, dist, maxima, pointy in zip(pts, distances, maxima, dotnos)
         # keep all the local maxima
         # keep ones that are flat enough
         # --> remove the ones that are not sloped enough
         #     and are not local maxima
         if ((dist is not None and dist < maxslope)
-            and not maxima))
+            and not maxima
+            and pointy != 0))
     # the ones to definitely keep are the convex ones
     # as well as concave ones that are adjacent to only straight ones that
     # are being deleted
@@ -281,7 +328,7 @@ def remove_unnecessary(pts: list[complex],
     # special case: keep concave ones that are 2-near at
     # least one convex pointy point (where pointy additionally means that
     # it isn't a 180)
-    points_to_def_keep |= set(
+    points_to_def_keep.update(set(
         p for (
             p,
             (dot_2l, _, _, _, dot_2r),
@@ -290,27 +337,33 @@ def remove_unnecessary(pts: list[complex],
         ) in zip(pts, fiveles(dotnos), fiveles(signos), fiveles(dirs))
         if sig_m < 0 and (
             (sig_2l > 0 and dot_2l < 0 and dd1_2l != -dd2_2l)
-            or (sig_2r > 0 and dot_2r < 0 and dd1_2r != -dd2_2r)))
+            or (sig_2r > 0 and dot_2r < 0 and dd1_2r != -dd2_2r))))
     # for debugging
     a = dots([], edges)
     i = a.replace("</svg>", "".join(f"""<circle cx="{
-        p.real
+        pt.real
     }" cy="{
-        p.imag
-    }" r="0.5" fill="{
-        "red" if r > 0
-        else "blue" if r < 0
+        pt.imag
+    }" r="{
+        0.5 if conc == 0
+        else 0.8 if conc > 0
+        else 0.2
+    }" fill="{
+        "red" if sharp > 0
+        else "blue" if sharp < 0
         else "black"
     }" opacity="50%"></circle>"""
-        for p, q, r in zip(pts, distances, dotnos)) + "</svg>")
+        for pt, sharp, conc in zip(pts, dotnos, signos)) + "</svg>")
     z = a.replace("</svg>", "".join(f"""<circle cx="{
         p.real
     }" cy="{
         p.imag
     }" r="0.5" fill="red" opacity="50%"></circle>"""
         for p in (points_to_maybe_discard - points_to_def_keep)) + "</svg>")
-    print("begin conc", i, "end conc")
-    print("begin discard", z, "end discard")
+    print("pointyness / concavity")
+    print(i)
+    print("will be discarded")
+    print(z)
     # end debugging
     return [p for p in pts
             if p not in points_to_maybe_discard
@@ -332,11 +385,12 @@ def process_group(g: list[complex], all_pts: list[complex]) -> list[complex]:
 
 def get_outline_points(pts: list[complex]) -> list[list[complex]]:
     # find the edge points
-    edge_points: list[complex] = []
+    edge_points: set[complex] = set()
     for p in pts:
-        if not all(p + d in pts for d in DIRECTIONS) and not all(
-                p + d in pts for d in VN_DIRECTIONS):
-            edge_points.append(p)
+        if not all(p + d in pts for d in DIRECTIONS):
+            if not all(
+                    p + d in pts for d in VN_DIRECTIONS):
+                edge_points.add(p)
     # find all of the disconnected loop groups
     loop_groups: list[list[complex]] = []
     while edge_points:
@@ -376,32 +430,28 @@ def debug_singular_polyline_in_svg(
         points: list[complex], current: complex, scale: float = 20) -> str:
     vbx = max(x.real for x in points) + 1
     vby = max(x.imag for x in points) + 1
-    return f"""<svg viewBox="-1 -1 {vbx+2} {vby+2}" width="{
-        vbx * scale}" height="{vby * scale}"><polyline
-    fill="none"
-    stroke="black"
-    stroke-width="0.1"
-    points="{" ".join(map(lambda x: f"{x.real},{x.imag}", points))}">
-    </polyline><circle cx="{current.real}" cy="{
+    return (f"""<svg viewBox="-1 -1 {vbx+2} {vby+2}" width="{
+        vbx * scale}" height="{vby * scale}"><polyline fill="none" """
+        f"""stroke="black" stroke-width="0.1" points="{
+            " ".join(map(lambda x: f"{x.real},{x.imag}", points))
+    }"></polyline><circle cx="{current.real}" cy="{
         current.imag
-    }" r="0.3" fill="blue" /></svg>"""
+    }" r="0.3" fill="blue" /></svg>""")
 
 
 def example(all_points: list[complex], scale: float = 20) -> str:
     ps = get_outline_points(all_points)
     vbx = max(x.real for p in ps for x in p) + 1
     vby = max(x.imag for p in ps for x in p) + 1
-    polylines = "".join(f"""<polyline
-    fill="none"
-    stroke="black"
-    stroke-width="0.1"
-    points="{" ".join(map(lambda x: f"{x.real},{x.imag}", p))}">
-    </polyline>""" for p in ps)
-    return f"""<svg
-    viewBox="-1 -1 {vbx + 2} {vby + 2}"
-    width="{vbx * scale}"
-    height="{vby * scale}">
-    {polylines}</svg>"""
+    polylines = "".join("""<polyline fill="none" stroke="black" """
+                        f"""stroke-width="0.1" points="{
+                            " ".join(map(lambda x: f"{x.real},{x.imag}",
+                                         p + [p[0]]))
+                        }"></polyline>""" for p in ps)
+    print("final")
+    return f"""<svg viewBox="-1 -1 {vbx + 2} {vby + 2}" width="{
+        vbx * scale
+    }" height="{vby * scale}">{polylines}</svg>"""
 
 
 print("<style>svg { border: 1px solid black}body{white-space: pre}</style>")
