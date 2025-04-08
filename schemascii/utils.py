@@ -350,7 +350,7 @@ def points2path(points: list[complex], close: bool = False) -> str:
     def pad(number: float | int) -> str:
         if number < 0:
             return str(number)
-        return " " + str(number)
+        return " " + str(number).removeprefix("0")
 
     if not points:
         return "z"
