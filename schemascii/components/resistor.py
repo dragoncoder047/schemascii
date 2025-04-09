@@ -26,14 +26,14 @@ class Resistor(_c.TwoTerminalComponent, _c.SimpleComponent,
     options = [
         "inherit",
         _dc.Option("value", str, "Resistance in ohms"),
-        _dc.Option("power", str, "Maximum power dissipation in watts "
+        _dc.Option("wattage", str, "Maximum power dissipation in watts "
                    "(i.e. size of the resistor)", None)
     ]
 
     @property
     def value_format(self):
         return [("value", "Ω", False, self.is_variable),
-                ("power", "W", False)]
+                ("wattage", "W", False)]
 
     def render(self, **options) -> str:
         t1, t2 = self.terminals[0].pt, self.terminals[1].pt

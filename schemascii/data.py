@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import fnmatch
 import re
 import typing
 from dataclasses import dataclass
@@ -23,6 +22,21 @@ def tokenize(stuff: str) -> list[str]:
     return TOKEN_PAT.findall(stuff)
 
 
+def parse_simple_value(value: str) -> str | float | int:
+    if value.startswith('"') and value.endswith('"'):
+        value = value[1:-1]
+        value = bytes(value, "utf-8").decode("unicode-escape")
+    else:
+        # try to make a number if possible
+        try:
+            temp = value
+            value = float(temp)
+            value = int(temp)
+        except ValueError:
+            pass
+    return value
+
+
 @dataclass
 class Section(dict):
     """Section of data relevant to one portion of the drawing."""
@@ -35,7 +49,7 @@ class Section(dict):
 
     def matches(self, name: str) -> bool:
         """True if self.header matches the name."""
-        return fnmatch.fnmatch(name.lower(), self.header.lower())
+        return re.match(re.escape(self.header).replace("@", ".+?"), name, re.I)
 
 
 @dataclass
@@ -80,8 +94,8 @@ class Data:
         def complain(msg):
             raise _errors.DiagramSyntaxError(
                 f"{filename} line {line+startline}: {msg}\n"
-                f"{line} | {lines[line]}\n"
-                f"{' ' * len(str(line))} | {' ' * col}{'^'*len(look())}")
+                f"{line + 1} | {lines[line]}\n"
+                f"{' ' * len(str(line + 1))} | {' ' * col}{'^'*len(look())}")
 
         def complain_eof():
             restore(lastsig)
@@ -201,17 +215,7 @@ class Data:
                 restore(here)
                 if ahead in SPECIAL:
                     break
-            if value.startswith('"') and value.endswith('"'):
-                value = value[1:-1]
-                value = bytes(value, "utf-8").decode("unicode-escape")
-            else:
-                # try to make a number if possible
-                try:
-                    temp = value
-                    value = float(temp)
-                    value = int(temp)
-                except ValueError:
-                    pass
+            value = parse_simple_value(value)
             # don't eat the ending "}"
             if look() != "}":
                 expect_and_eat({"\n", ";"})
@@ -233,7 +237,7 @@ class Data:
 
     def __or__(self, other: Data | dict[str, typing.Any] | typing.Any) -> Data:
         if isinstance(other, dict):
-            other = Data([Section("*", other)])
+            other = Data([Section("@", other)])
         if not isinstance(other, Data):
             return NotImplemented
         return Data(self.sections + other.sections)
@@ -243,7 +247,7 @@ if __name__ == '__main__':
     import pprint
     text = ""
     text = r"""
-* {
+@ {
     %% these are global config options
     color = black
     width = 2; padding = 20;
@@ -252,7 +256,7 @@ if __name__ == '__main__':
 }
 
 
-R* {tolerance = .05; wattage = 0.25}
+R@ {tolerance = .05; wattage = 0.25}
 
 R1 {
     resistance = 0 - 10k;
