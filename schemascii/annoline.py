@@ -21,7 +21,7 @@ class AnnotationLine(_dc.DataConsumer,
     css_class = "annotation annotation-line"
 
     directions: typing.ClassVar[
-        defaultdict[str, defaultdict[complex, list[complex]]]] = defaultdict(
+        defaultdict[str, defaultdict[complex, set[complex]]]] = defaultdict(
         lambda: None, {
             # allow jumps over actual wires
             "-": _utils.IDENTITY,
@@ -31,25 +31,25 @@ class AnnotationLine(_dc.DataConsumer,
             ":": _utils.IDENTITY,
             "~": _utils.IDENTITY,
             ".": {
-                -1: [1j, 1],
-                1j: [],
-                -1j: [-1, 1],
-                1: [1j, -1]
+                -1: {1j, 1},
+                1j: set(),
+                -1j: {-1, 1},
+                1: {1j, -1}
             },
             "'": {
-                -1: [-1j, 1],
-                -1j: [],
-                1j: [-1, 1],
-                1: [-1j, -1]
+                -1: {-1j, 1},
+                -1j: set(),
+                1j: {-1, 1},
+                1: {-1j, -1}
             }
         })
     start_dirs: typing.ClassVar[
-        defaultdict[str, list[complex]]] = defaultdict(
+        defaultdict[str, set[complex]]] = defaultdict(
         lambda: None, {
             "~": _utils.LEFT_RIGHT,
             ":": _utils.UP_DOWN,
-            ".": (-1, 1, -1j),
-            "'": (-1, 1, 1j),
+            ".": {-1, 1, -1j},
+            "'": {-1, 1, 1j},
         })
 
     # the sole member
@@ -59,7 +59,7 @@ class AnnotationLine(_dc.DataConsumer,
     def get_from_grid(cls, grid: _grid.Grid, start: complex) -> AnnotationLine:
         """Return an AnnotationLine that starts at the specified point."""
         points = _utils.flood_walk(
-            grid, [start], cls.start_dirs, cls.directions, set())
+            grid, {start}, cls.start_dirs, cls.directions, set())
         return cls(points)
 
     @classmethod

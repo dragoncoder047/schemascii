@@ -9,21 +9,17 @@ from collections import defaultdict
 import schemascii.errors as _errors
 import schemascii.grid as _grid
 import schemascii.metric as _metric
+import schemascii.svg_utils as _svg
 
-LEFT_RIGHT = (-1, 1)
-UP_DOWN = (-1j, 1j)
-ORTHAGONAL = LEFT_RIGHT + UP_DOWN
-DIAGONAL = (-1+1j, 1+1j, -1-1j, 1-1j)
-EVERYWHERE: defaultdict[complex, list[complex]] = defaultdict(
+LEFT_RIGHT = {-1+0j, 1+0j}
+UP_DOWN = {-1j, 1j}
+ORTHAGONAL = LEFT_RIGHT | UP_DOWN
+DIAGONAL = {-1+1j, 1+1j, -1-1j, 1-1j}
+EVERYWHERE: defaultdict[complex, set[complex]] = defaultdict(
     lambda: ORTHAGONAL)
-EVERYWHERE_MOORE: defaultdict[complex, list[complex]] = defaultdict(
+EVERYWHERE_MOORE: defaultdict[complex, set[complex]] = defaultdict(
     lambda: ORTHAGONAL + DIAGONAL)
-IDENTITY: dict[complex, list[complex]] = {
-    1: [1],
-    1j: [1j],
-    -1: [-1],
-    -1j: [-1j],
-}
+IDENTITY: dict[complex, set[complex]] = {x: set((x,)) for x in ORTHAGONAL}
 
 
 class Cbox(typing.NamedTuple):
@@ -92,10 +88,10 @@ class Side(enum.Enum):
 
 def flood_walk(
         grid: _grid.Grid,
-        seed: list[complex],
-        start_dirs: defaultdict[str, list[complex] | None],
+        seed: set[complex],
+        start_dirs: defaultdict[str, set[complex] | None],
         directions: defaultdict[str, defaultdict[
-            complex, list[complex] | None]],
+            complex, set[complex] | None]],
         seen: set[complex]) -> list[complex]:
     """Flood-fill the area on the grid starting from seed, only following
     connections in the directions allowed by start_dirs and directions, and
@@ -107,7 +103,7 @@ def flood_walk(
     arguments, the second call will always return nothing.
     """
     points: list[complex] = []
-    stack: list[tuple[complex, list[complex]]] = [
+    stack: list[tuple[complex, set[complex]]] = [
         (p, start_dirs[grid.get(p)])
         for p in seed]
     while stack:
@@ -130,26 +126,26 @@ def flood_walk(
     return points
 
 
-def perimeter(pts: list[complex]) -> list[complex]:
+def perimeter(pts: set[complex]) -> set[complex]:
     """Return the set of points that are on the boundary of
     the grid-aligned set pts.
     """
-    out = []
+    out = set()
     for pt in pts:
         for d in ORTHAGONAL + DIAGONAL:
             xp = pt + d
             if xp not in pts:
-                out.append(pt)
+                out.add(pt)
                 break
     return out  # sort_counterclockwise(out, centroid(pts))
 
 
-def centroid(pts: list[complex]) -> complex:
+def centroid(pts: set[complex]) -> complex:
     """Return the centroid of the set of points pts."""
     return sum(pts) / len(pts)
 
 
-def sort_counterclockwise(pts: list[complex],
+def sort_counterclockwise(pts: set[complex],
                           center: complex | None = None) -> list[complex]:
     """Return pts sorted so that the points
     progress clockwise around the center, starting with the
@@ -297,45 +293,6 @@ def deep_transform(data: _DT_Struct, origin: complex, theta: float):
                         type(data).__name__) from err
 
 
-def fix_number(n: float) -> str:
-    """If n is an integer, remove the trailing ".0".
-    Otherwise round it to 2 digits, and return the stringified
-    number.
-    """
-    if n.is_integer():
-        return str(int(n))
-    n = round(n, 2)
-    if n.is_integer():
-        return str(int(n))
-    return str(n)
-
-
-class XMLClass:
-    def __getattr__(self, tag: str) -> typing.Callable:
-        def mk_tag(*contents: str, **attrs: str | bool | float | int) -> str:
-            out = f"<{tag}"
-            for k, v in attrs.items():
-                if v is False:
-                    continue
-                if isinstance(v, float):
-                    v = fix_number(v)
-                # XXX: this gets called on every XML level
-                # XXX: which means that it will be called multiple times
-                # XXX: unnecessarily
-                # elif isinstance(v, str):
-                #     v = re.sub(r"\b\d+(\.\d+)\b",
-                #                lambda m: fix_number(float(m.group())), v)
-                out += f' {k.removesuffix("_").replace("__", "-")}="{v}"'
-            out = out + ">" + "".join(contents)
-            return out + f"</{tag}>"
-
-        return mk_tag
-
-
-XML = XMLClass()
-del XMLClass
-
-
 def _get_sss(options: dict) -> tuple[float, float, str]:
     return options["scale"], options["stroke_width"], options["stroke"]
 
@@ -382,11 +339,10 @@ def polylinegon(
     scale, stroke_width, stroke = _get_sss(options)
     scaled_pts = [x * scale for x in points]
     if is_polygon:
-        return XML.path(d=points2path(scaled_pts, True),
-                        fill=stroke, class_="filled")
-    return XML.path(
-        d=points2path(scaled_pts, False), fill="transparent",
-        stroke__width=stroke_width, stroke=stroke)
+        return _svg.path(points2path(scaled_pts, True), stroke,
+                         class_="filled")
+    return _svg.path(points2path(scaled_pts, False), "transparent",
+                     stroke_width, stroke)
 
 
 def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
@@ -417,9 +373,7 @@ def bunch_o_lines(pairs: list[tuple[complex, complex]], **options) -> str:
     data = ""
     for line in lines:
         data += points2path([x * scale for x in line], False)
-    return XML.path(
-        d=data, fill="transparent",
-        stroke__width=stroke_width, stroke=stroke)
+    return _svg.path(data, "transparent", stroke_width, stroke)
 
 
 def id_text(
@@ -465,10 +419,10 @@ def id_text(
     else:
         textach = "middle" if terminals[0].side in (
             Side.TOP, Side.BOTTOM) else "start"
-    return XML.text(
-        XML.tspan(cname, class_="cmp-id") if "L" in label else "",
+    return _svg.XML.text(
+        _svg.XML.tspan(cname, class_="cmp-id") if "L" in label else "",
         " " if data and "L" in label else "",
-        XML.tspan(data, class_=data_css_class) if "V" in label else "",
+        _svg.XML.tspan(data, class_=data_css_class) if "V" in label else "",
         x=point.real,
         y=point.imag,
         text__anchor=textach,
@@ -489,7 +443,7 @@ def make_text_point(t1: complex, t2: complex, **options) -> complex:
 
 def make_plus(center: complex, theta: float, **options) -> str:
     """Make a '+' sign for indicating polarity."""
-    return XML.g(
+    return _svg.group(
         bunch_o_lines(
             deep_transform(
                 deep_transform([(0.125, -0.125), (0.125j, -0.125j)], 0, theta),
@@ -510,11 +464,11 @@ def arrow_points(p1: complex, p2: complex) -> list[tuple[complex, complex]]:
 
 def make_variable(center: complex, theta: float, **options) -> str:
     """Draw a "variable" arrow across the component."""
-    return XML.g(bunch_o_lines(deep_transform(arrow_points(-1, 1),
-                                              center,
-                                              (theta % pi) + pi / 4),
-                               **options),
-                 class_="variable")
+    return _svg.group(bunch_o_lines(deep_transform(arrow_points(-1, 1),
+                                                   center,
+                                                   (theta % pi) + pi / 4),
+                                    **options),
+                      class_="variable")
 
 
 def light_arrows(center: complex, theta: float, out: bool, **options):
@@ -524,7 +478,7 @@ def light_arrows(center: complex, theta: float, out: bool, **options):
     a, b = 1j, 0.3 + 0.3j
     if out:
         a, b = b, a
-    return XML.g(bunch_o_lines(
+    return _svg.group(bunch_o_lines(
         deep_transform(arrow_points(a, b),
                        center, theta - pi / 2)
         + deep_transform(arrow_points(a - 0.5, b - 0.5),

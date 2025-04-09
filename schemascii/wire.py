@@ -7,6 +7,7 @@ from typing import ClassVar
 
 import schemascii.data_consumer as _dc
 import schemascii.grid as _grid
+import schemascii.svg_utils as _svg
 import schemascii.utils as _utils
 import schemascii.wire_tag as _wt
 
@@ -72,13 +73,9 @@ class Wire(_dc.DataConsumer, namespaces=(":wire",)):
             if abs(p1 - p2) == 1:
                 links.append((p1, p2))
         # find dots
-        dots = ""
+        dots: str = ""
         for dot_pt in _utils.find_dots(links):
-            dots += _utils.XML.circle(
-                cx=scale * dot_pt.real,
-                cy=scale * dot_pt.real,
-                r=linewidth,
-                class_="dot")
+            dots += _svg.circle(scale * dot_pt, linewidth, class_="dot")
         return (_utils.bunch_o_lines(links, **options)
                 + (self.tag.to_xml_string(data) if self.tag else "")
                 + dots)

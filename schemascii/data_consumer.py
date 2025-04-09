@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 import schemascii.data as _data
 import schemascii.errors as _errors
-import schemascii.utils as _utils
+import schemascii.svg_utils as _svg
 
 T = typing.TypeVar("T")
 _NOT_SET = object()
@@ -136,7 +136,7 @@ class DataConsumer(abc.ABC):
         # render
         result = self.render(**values, data=data)
         if self.css_class:
-            result = _utils.XML.g(result, class_=self.css_class)
+            result = _svg.group(result, class_=self.css_class)
         return result
 
     @abc.abstractmethod

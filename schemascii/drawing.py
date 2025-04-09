@@ -3,16 +3,16 @@ from __future__ import annotations
 import typing
 from dataclasses import dataclass
 
-import schemascii.data_consumer as _dc
 import schemascii.annoline as _annoline
 import schemascii.annotation as _a
 import schemascii.component as _component
 import schemascii.data as _data
+import schemascii.data_consumer as _dc
 import schemascii.errors as _errors
 import schemascii.grid as _grid
 import schemascii.net as _net
 import schemascii.refdes as _rd
-import schemascii.utils as _utils
+import schemascii.svg_utils as _svg
 
 
 @dataclass
@@ -54,8 +54,8 @@ class Drawing(_dc.DataConsumer, namespaces=(":root",)):
             marker_pos = lines.index(data_marker)
         except ValueError as e:
             raise _errors.DiagramSyntaxError(
-                "data-marker must be present in a drawing! "
-                f"(current data-marker is: {data_marker!r})") from e
+                "data_marker must be present in a drawing! "
+                f"(current data_marker is: {data_marker!r})") from e
         drawing_area = "\n".join(lines[:marker_pos])
         data_area = "\n".join(lines[marker_pos+1:])
         # find everything
@@ -85,19 +85,19 @@ class Drawing(_dc.DataConsumer, namespaces=(":root",)):
 
     def render(self, data, scale: float, padding: float, **options) -> str:
         # render everything
-        content = _utils.XML.g(
-            _utils.XML.g(
+        content = _svg.group(
+            _svg.group(
                 *(net.to_xml_string(data) for net in self.nets),
                 class_="wires"),
-            _utils.XML.g(
+            _svg.group(
                 *(comp.to_xml_string(data) for comp in self.components),
                 class_="components"),
             class_="electrical")
-        content += _utils.XML.g(
+        content += _svg.group(
             *(line.to_xml_string(data) for line in self.annotation_lines),
             *(anno.to_xml_string(data) for anno in self.annotations),
             class_="annotations")
-        return _utils.XML.svg(
+        return _svg.group(
             content,
             width=self.grid.width * scale + padding * 2,
             height=self.grid.height * scale + padding * 2,

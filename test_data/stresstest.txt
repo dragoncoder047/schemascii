@@ -27,14 +27,14 @@ J999999999999------
 
 
 ---
-* {
+@ {
     stroke-width = 2
 }
 C1 {
     value = 100u
 }
 
-* {
+@ {
     %% these are global config options
     color = black
     width = 2; padding = 20;
@@ -43,7 +43,7 @@ C1 {
 }
 
 
-R* {tolerance = .05; wattage = 0.25}
+R@ {tolerance = .05; wattage = 0.25}
 
 R1 {
     resistance = 0 - 10k;

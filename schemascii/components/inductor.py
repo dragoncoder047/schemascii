@@ -3,6 +3,7 @@ from cmath import phase, rect
 import schemascii.components as _c
 import schemascii.data_consumer as _dc
 import schemascii.utils as _utils
+import schemascii.svg_utils as _svg
 
 
 class Inductor(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
@@ -29,9 +30,8 @@ class Inductor(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
         for _ in range(int(length)):
             data += f"a1 1 0 01 {-d.real} {d.imag}"
         return (
-            _utils.XML.path(d=data, stroke=options["stroke"],
-                            fill="transparent",
-                            stroke__width=options["stroke_width"])
+            _svg.path(data, "transparent", options["stroke_width"],
+                      options["stroke"])
             + self.format_id_text(
                 _utils.make_text_point(t1, t2, **options), **options))
 

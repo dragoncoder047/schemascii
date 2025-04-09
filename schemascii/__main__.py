@@ -28,8 +28,8 @@ def cli_main():
     ap.add_argument(
         "-V", "--version", action="version",
         version="%(prog)s " + schemascii.__version__)
-    ap.add_argument("-i", "--in", help="File to process. (default: stdin)",
-                    dest="in_file", default="-")
+    ap.add_argument("in_file", help="File to process. (default: stdin)",
+                    default="-")
     ap.add_argument(
         "-o",
         "--out",

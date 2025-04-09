@@ -65,7 +65,7 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
 
         # add in the RD's bounds and find the main blob
         blobs.append(_utils.flood_walk(
-            grid, list(_utils.iterate_line(rd.left, rd.right)),
+            grid, set(_utils.iterate_line(rd.left, rd.right)),
             start_orth, cont_orth, seen))
         # now find all of the auxillary blobs
         for perimeter_pt in _utils.perimeter(blobs[0]):
@@ -75,7 +75,7 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
                         and grid.get(poss_aux_blob_pt) == "#"):
                     # we found another blob
                     blobs.append(_utils.flood_walk(
-                        grid, [poss_aux_blob_pt], start_moore,
+                        grid, {poss_aux_blob_pt}, start_moore,
                         cont_moore, seen))
         # find all of the terminals
         terminals: list[_utils.Terminal] = []
@@ -146,7 +146,7 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
         return f"component {self.rd.letter}"
 
     @classmethod
-    def process_nets(self, nets: list[_net.Net]):
+    def process_nets(self, nets: list[_net.Net]) -> None:
         """Hook method called to do stuff with the nets that this
         component type connects to. By default it does nothing.
 
@@ -165,7 +165,7 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
         found, or there were multiple terminals with the requested flag
         (ambiguous).
         """
-        out = []
+        out: list[_utils.Terminal] = []
         for flag in flags_names:
             matching_terminals = [t for t in self.terminals if t.flag == flag]
             if len(matching_terminals) > 1:

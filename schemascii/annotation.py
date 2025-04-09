@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import schemascii.data_consumer as _dc
 import schemascii.grid as _grid
-import schemascii.utils as _utils
+import schemascii.svg_utils as _svg
 
 ANNOTATION_RE = re.compile(r"\[([^\]]+)\]")
 
@@ -37,7 +37,7 @@ class Annotation(_dc.DataConsumer, namespaces=(":annotation",)):
         return out
 
     def render(self, scale, font, **options) -> str:
-        return _utils.XML.text(
+        return _svg.XML.text(
             html.escape(self.content),
             x=self.position.real * scale,
             y=self.position.imag * scale,
