@@ -1,7 +1,6 @@
-import typing
-
 strings = [
     """
+straight rectangle
 #########################
 #########################
 #########################
@@ -9,6 +8,7 @@ strings = [
 #########################
 #########################""",
     """
+rectangle with slot in it
 #########################
 #########################
             #############
@@ -16,6 +16,14 @@ strings = [
 #########################
 """,
     """
+rectangle with notch
+###########
+###########
+ ##########
+###########
+###########""",
+    """
+average triangle (op-amp)
 #
 ###
 #####
@@ -25,6 +33,7 @@ strings = [
 #
 """,
     """
+long triangle
 #
 ######
 ###########
@@ -34,6 +43,7 @@ strings = [
 #
 """,
     """
+stubby triangle
 #
 #
 #
@@ -49,6 +59,7 @@ strings = [
 #
 """,
     """
+half star (concave)
 #
 #
 #
@@ -68,6 +79,7 @@ strings = [
 #
 """,
     """
+back end of xor gate
 #
  #
   #
@@ -76,6 +88,7 @@ strings = [
  #
 #""",
     """
+or gate
 ######
  ########
   #########
@@ -84,6 +97,27 @@ strings = [
  ########
 ######""",
     """
+and gate
+#####
+#######
+#######
+########
+#######
+#######
+#####
+""",
+    """
+not gate
+#
+###
+#####   ##
+###########
+#####   ##
+###
+#
+""",
+    """
+big O
   ###########
  #############
 ###############
@@ -95,13 +129,16 @@ strings = [
  #############
   ###########""",
     """
+thin thing 1
 ###############
           ###################""",
     """
+thin thing 2
 ###############
           ###################
 ###############""",
     """
+zigzag rectangle 1
 ################
  ################
 ################
@@ -111,6 +148,7 @@ strings = [
 ################
  ################""",
     """
+zigzag rectangle 2
 # # # # # # # #
 ################
 ################
@@ -119,6 +157,7 @@ strings = [
 ################
  # # # # # # # #""",
     """
+tilted rhombus
                    #
                  ####
                #######
@@ -137,30 +176,39 @@ strings = [
           ####
            #""",
     """
-###########
-###########
- ##########
-###########
-###########"""]
-
+and just for the heck of it, a very big arrow
+               ##
+              ####
+             ######
+            ########
+           ##########
+          ############
+         ##############
+        ################
+       ##################
+      ####################
+     ######################
+    ########################
+   ##########################
+  ############################
+ ##############################
+################################
+           ##########
+           ##########
+           ##########
+           ##########
+           ##########
+           ##########
+           ##########
+           ##########
+           ##########
+           ##########
+           ##########
+           ##########
+           ##########
+           ##########
 """
-idea for new algorithm
-* find all of the edge points
-* sort them by clockwise order around the perimeter
-  * this is done not by sorting by angle around the centroid
-    (that would only work for convex shapes) but by forming a list
-    of edges between adjacent points and then walking the graph
-    using a direction vector that is rotated only clockwise
-    and starting from the rightmost point and starting down
-* handle the shapes that have holes in them by treating
-  each edge as a separate shape, then merging the svgs
-* find all of the points that are concave
-* find all of the straight line points
-* assign each straight line point a distance from the nearest
-  concave point
-* remove the concave points and straight line points that are closer
-  than a threshold and are not a local maximum of distance
-"""
+]
 
 VN_DIRECTIONS: list[complex] = [1, 1j, -1, -1j]
 DIRECTIONS: list[complex] = [1, 1+1j, 1j, -1+1j, -1, -1-1j, -1j, 1-1j]
@@ -182,21 +230,18 @@ def points_to_edges(
     return edges
 
 
-T = typing.TypeVar("T")
-
-
-def cir(list: list[T], is_forward: bool) -> list[T]:
+def cir[T](list: list[T], is_forward: bool) -> list[T]:
     if is_forward:
         return list[1:] + [list[0]]
     else:
         return [list[-1]] + list[:-1]
 
 
-def triples(v: list[T]) -> list[tuple[T, T, T]]:
+def triples[T](v: list[T]) -> list[tuple[T, T, T]]:
     return list(zip(cir(v, False), v, cir(v, True)))
 
 
-def fiveles(v: list[T]) -> list[tuple[T, T, T]]:
+def fiveles[T](v: list[T]) -> list[tuple[T, T, T, T, T]]:
     x, y, z = cir(v, False), v, cir(v, True)
     return list(zip(cir(x, False), x, y, z, cir(z, True)))
 
@@ -214,8 +259,7 @@ def cull_disallowed_edges(
             continue
         # if there are multiple directions out of here, find the gaps and
         # only keep the ones on the sides of the gaps
-        gaps = [p1 + d in all_points for d in DIRECTIONS]
-        tran_5 = fiveles(gaps)
+        tran_5 = fiveles([p1 + d in all_points for d in DIRECTIONS])
         # im not quite sure what this is doing
         fixed_edges[p1] = set(p1 + d for (d, (q, a, b, c, w))
                               in zip(DIRECTIONS, tran_5)
