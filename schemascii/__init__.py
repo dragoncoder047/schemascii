@@ -28,5 +28,8 @@ def render(filename: str, text: str | None = None,
 
 
 if __name__ == "__main__":
-    import schemascii.component as _comp
-    print(_comp.Component.all_components)
+    import schemascii.components.resistor as _r
+    import schemascii.refdes as _rd
+    import schemascii.utils as _u
+    print(_r.Resistor(_rd.RefDes("R", 0, "", 0, 0), [[]], [
+          _u.Terminal(0, "w", 0), _u.Terminal(0, "a", 0)]))

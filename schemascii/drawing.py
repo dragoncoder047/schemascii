@@ -12,7 +12,7 @@ import schemascii.errors as _errors
 import schemascii.grid as _grid
 import schemascii.net as _net
 import schemascii.refdes as _rd
-import schemascii.svg_utils as _svg
+import schemascii.svg as _svg
 
 
 @dataclass
@@ -97,7 +97,7 @@ class Drawing(_dc.DataConsumer, namespaces=(":root",)):
             *(line.to_xml_string(data) for line in self.annotation_lines),
             *(anno.to_xml_string(data) for anno in self.annotations),
             class_="annotations")
-        return _svg.group(
+        return _svg.whole_thing(
             content,
             width=self.grid.width * scale + padding * 2,
             height=self.grid.height * scale + padding * 2,

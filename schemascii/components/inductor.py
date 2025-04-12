@@ -3,7 +3,9 @@ from cmath import phase, rect
 import schemascii.components as _c
 import schemascii.data_consumer as _dc
 import schemascii.utils as _utils
-import schemascii.svg_utils as _svg
+import schemascii.svg as _svg
+
+# TODO: add dot on + end if inductor is polarized
 
 
 class Inductor(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,

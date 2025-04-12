@@ -6,10 +6,9 @@ import typing
 from cmath import phase, pi, rect
 from collections import defaultdict
 
-import schemascii.errors as _errors
 import schemascii.grid as _grid
 import schemascii.metric as _metric
-import schemascii.svg_utils as _svg
+import schemascii.svg as _svg
 
 LEFT_RIGHT = {-1+0j, 1+0j}
 UP_DOWN = {-1j, 1j}
@@ -20,24 +19,6 @@ EVERYWHERE: defaultdict[complex, set[complex]] = defaultdict(
 EVERYWHERE_MOORE: defaultdict[complex, set[complex]] = defaultdict(
     lambda: ORTHAGONAL + DIAGONAL)
 IDENTITY: dict[complex, set[complex]] = {x: set((x,)) for x in ORTHAGONAL}
-
-
-class Cbox(typing.NamedTuple):
-    """Component bounding box. Also holds the letter
-    and number of the reference designator.
-    """
-    # XXX is this still used?
-    p1: complex
-    p2: complex
-    type: str
-    id: str
-
-
-class BOMData(typing.NamedTuple):
-    """Data to link the BOM data entry with the reference designator."""
-    type: str
-    id: str
-    data: str
 
 
 class Flag(typing.NamedTuple):
@@ -255,19 +236,17 @@ def iterate_line(p1: complex, p2: complex, step: float = 1.0):
     yield point
 
 
-# __future__ annotations does no good here if we
-# don't have 3.12's type statement!!
-_DT_Struct = list["_DT_Struct"] | tuple["_DT_Struct"] | complex
+type DT_Struct = list[DT_Struct] | tuple[DT_Struct] | complex
 
 
 @typing.overload
-def deep_transform(data: list[_DT_Struct], origin: complex,
-                   theta: float) -> list[_DT_Struct]: ...
+def deep_transform(data: list[DT_Struct], origin: complex,
+                   theta: float) -> list[DT_Struct]: ...
 
 
 @typing.overload
-def deep_transform(data: tuple[_DT_Struct], origin: complex,
-                   theta: float) -> tuple[_DT_Struct]: ...
+def deep_transform(data: tuple[DT_Struct], origin: complex,
+                   theta: float) -> tuple[DT_Struct]: ...
 
 
 @typing.overload
@@ -275,7 +254,7 @@ def deep_transform(data: complex, origin: complex,
                    theta: float) -> complex: ...
 
 
-def deep_transform(data: _DT_Struct, origin: complex, theta: float):
+def deep_transform(data: DT_Struct, origin: complex, theta: float):
     """Transform the point or points first by translating by origin,
     then rotating by theta. Return an identical data structure,
     but with the transformed points substituted.
@@ -419,16 +398,18 @@ def id_text(
     else:
         textach = "middle" if terminals[0].side in (
             Side.TOP, Side.BOTTOM) else "start"
-    return _svg.XML.text(
-        _svg.XML.tspan(cname, class_="cmp-id") if "L" in label else "",
-        " " if data and "L" in label else "",
-        _svg.XML.tspan(data, class_=data_css_class) if "V" in label else "",
-        x=point.real,
-        y=point.imag,
-        text__anchor=textach,
-        font__size=scale,
-        fill=stroke,
-        style=f"font-family:{font}")
+    return _svg.xmltag("text",
+                       (_svg.xmltag("tspan", cname, class_="cmp-id")
+                        if "L" in label else ""),
+                       " " if data and "L" in label else "",
+                       (_svg.xmltag("tspan", data, class_=data_css_class)
+                        if "V" in label else ""),
+                       x=point.real,
+                       y=point.imag,
+                       text__anchor=textach,
+                       font__size=scale,
+                       fill=stroke,
+                       style=f"font-family:{font}")
 
 
 def make_text_point(t1: complex, t2: complex, **options) -> complex:
@@ -515,30 +496,6 @@ def is_clockwise(terminals: list[Terminal]) -> bool:
     return False
 
 
-def sort_for_flags(terminals: list[Terminal],
-                   box: Cbox, *flags: list[str]) -> list[Terminal]:
-    """Sorts out the terminals in the specified order using the flags.
-    Raises an error if the flags are absent.
-    """
-    out = []
-    for flag in flags:
-        matching_terminals = list(filter(lambda t: t.flag == flag, terminals))
-        if len(matching_terminals) > 1:
-            raise _errors.TerminalsError(
-                f"Multiple terminals with the same flag {flag} "
-                f"on component {box.type}{box.id}"
-            )
-        if len(matching_terminals) == 0:
-            raise _errors.TerminalsError(
-                f"Need a terminal with the flag {flag} "
-                f"on component {box.type}{box.id}"
-            )
-        out.append(matching_terminals[0])
-        # terminals.remove(matching_terminals[0])
-        # is this necessary with the checks above?
-    return out
-
-
 if __name__ == '__main__':
     import pprint
     pts = []
@@ -546,4 +503,4 @@ if __name__ == '__main__':
     for x in range(n):
         pts.append(force_int(rect(n, 2 * pi * x / n)))
     pprint.pprint(sort_counterclockwise(pts))
-    print(_DT_Struct)
+    print(DT_Struct)

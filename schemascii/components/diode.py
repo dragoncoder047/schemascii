@@ -1,3 +1,5 @@
+import typing
+
 import schemascii.components as _c
 import schemascii.data_consumer as _dc
 import schemascii.utils as _utils
@@ -5,6 +7,9 @@ import schemascii.utils as _utils
 
 class Diode(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
             ids=("D", "CR"), namespaces=(":diode",)):
+
+    always_polarized: typing.Final = True
+
     options = [
         "inherit",
         _dc.Option("voltage", str, "Maximum reverse voltage rating", None),

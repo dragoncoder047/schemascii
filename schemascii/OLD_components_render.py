@@ -7,7 +7,6 @@ from .utils import (
     Cbox,
     Terminal,
     BOMData,
-    XML,
     Side,
     arrow_points,
     polylinegon,
@@ -147,7 +146,7 @@ def integrated_circuit(
     sz = (box.p2 - box.p1) * scale
     mid = (box.p2 + box.p1) * scale / 2
     part_num, *pin_labels = map(str.strip, bom_data.data.split(","))
-    out = XML.rect(
+    out = xmltag("rect", 
         x=box.p1.real * scale,
         y=box.p1.imag * scale,
         width=sz.real,
@@ -162,8 +161,8 @@ def integrated_circuit(
               term.pt + rect(1, SIDE_TO_ANGLE_MAP[term.side]))],
             **options)
     if "V" in label_style and part_num:
-        out += XML.text(
-            XML.tspan(part_num, class_="part-num"),
+        out += xmltag("text", 
+            xmltag("tspan", part_num, class_="part-num"),
             x=mid.real,
             y=mid.imag,
             text__anchor="middle",
@@ -172,8 +171,8 @@ def integrated_circuit(
         )
         mid -= 1j * scale
     if "L" in label_style and not options["nolabels"]:
-        out += XML.text(
-            XML.tspan(f"{box.type}{box.id}", class_="cmp-id"),
+        out += xmltag("text", 
+            xmltag("tspan", f"{box.type}{box.id}", class_="cmp-id"),
             x=mid.real,
             y=mid.imag,
             text__anchor="middle",
@@ -183,7 +182,7 @@ def integrated_circuit(
     s_terminals = sort_terminals_counterclockwise(terminals)
     for terminal, label in zip(s_terminals, pin_labels):
         sc_text_pt = terminal.pt * scale
-        out += XML.text(
+        out += xmltag("text", 
             label,
             x=sc_text_pt.real,
             y=sc_text_pt.imag,
@@ -225,7 +224,7 @@ def jack(box: Cbox, terminals: list[Terminal], bom_data: BOMData, **options):
     if style == "circle":
         return (
             bunch_o_lines([(t1, t2)], **options)
-            + XML.circle(
+            + xmltag("circle", 
                 cx=sc_t2.real,
                 cy=sc_t2.imag,
                 r=scale / 4,
@@ -377,13 +376,13 @@ def switch(box: Cbox, terminals: list[Terminal], bom_data: BOMData, **options):
     mid = (t1 + t2) / 2
     angle = phase(t1 - t2)
     scale = options["scale"]
-    out = (XML.circle(cx=(rect(-scale, angle) + mid * scale).real,
+    out = (xmltag("circle", cx=(rect(-scale, angle) + mid * scale).real,
                       cy=(rect(-scale, angle) + mid * scale).imag,
                       r=scale / 4,
                       stroke="transparent",
                       fill=options["stroke"],
                       class_="filled")
-           + XML.circle(cx=(rect(scale, angle) + mid * scale).real,
+           + xmltag("circle", cx=(rect(scale, angle) + mid * scale).real,
                         cy=(rect(scale, angle) + mid * scale).imag,
                         r=scale / 4,
                         stroke="transparent",
@@ -448,7 +447,7 @@ def render_component(
     "Render the component into an SVG string."
     if box.type not in RENDERERS:
         raise UnsupportedComponentError(box.type)
-    return XML.g(
+    return xmltag("g", 
         RENDERERS[box.type](box, terminals, bom_data, **options),
         class_=f"component {box.type}",
     )

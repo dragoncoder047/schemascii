@@ -7,14 +7,13 @@ from dataclasses import dataclass
 
 import schemascii.data as _data
 import schemascii.errors as _errors
-import schemascii.svg_utils as _svg
+import schemascii.svg as _svg
 
-T = typing.TypeVar("T")
-_NOT_SET = object()
+_OPT_IS_REQUIRED = object()
 
 
 @dataclass
-class Option(typing.Generic[T]):
+class Option[T]:
     """Represents an allowed name used in Schemascii's internals
     somewhere. Normal users have no need for this class.
     """
@@ -22,9 +21,10 @@ class Option(typing.Generic[T]):
     name: str
     type: type[T] | list[T]
     help: str
-    default: T = _NOT_SET
+    default: T = _OPT_IS_REQUIRED
 
 
+@dataclass
 class DataConsumer(abc.ABC):
     """Base class for any Schemascii AST node that needs data
     to be rendered. This class registers the options that the class
@@ -107,7 +107,7 @@ class DataConsumer(abc.ABC):
         # validate the options
         for opt in self.options:
             if opt.name not in values:
-                if opt.default is _NOT_SET:
+                if opt.default is _OPT_IS_REQUIRED:
                     raise _errors.NoDataError(
                         f"missing value for {self.namespaces[0]}.{name}")
                 values[opt.name] = opt.default

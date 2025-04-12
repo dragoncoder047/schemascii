@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import types
 import typing
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import schemascii.data_consumer as _dc
 import schemascii.errors as _errors
@@ -31,6 +32,55 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
     rd: _rd.RefDes
     blobs: list[list[complex]]  # to support multiple parts.
     terminals: list[_utils.Terminal]
+
+    # Ellipsis can only appear at the end. this means like a wildcard meaning
+    # that any other flag is suitable
+    terminal_flag_opts: typing.ClassVar[
+        dict[str, tuple[str | None] | types.EllipsisType]] = (None,)
+
+    term_option: str = field(init=False)
+
+    def __post_init__(self):
+        has_any = False
+        # optimized check for number of terminals if they're all the same
+        available_lengths = sorted(set(map(
+            len, self.terminal_flag_opts.values())))
+        for optlen in available_lengths:
+            if len(self.terminals) == optlen:
+                break
+        else:
+            raise _errors.TerminalsError(
+                f"Wrong number of terminals on {self.rd.name}. "
+                f"Got {len(self.terminals)} but "
+                f"expected {" or ".join(available_lengths)}")
+        for fo_name, fo_opt in self.terminal_flag_opts.items():
+            if fo_opt is ...:
+                has_any = True
+                continue
+            t_copy = self.terminals.copy()
+            t_sorted: list[_utils.Terminal] = []
+            match = True
+            ellipsis = False
+            for opt in fo_opt:
+                if opt is ...:
+                    ellipsis = True
+                    break
+                found = [t for t in t_copy if t.flag == opt]
+                if not found:
+                    match = False
+                    break
+                t_copy.remove(found[0])
+                t_sorted.append(found[0])
+            if not ellipsis and t_copy:
+                match = False
+            if not match:
+                continue
+            self.terminals = t_sorted + t_copy
+            self.term_option = fo_name
+            return
+        if not has_any:
+            raise _errors.TerminalsError(
+                f"Illegal terminal flags around {self.rd.name}")
 
     @property
     def namespaces(self) -> tuple[str, ...]:

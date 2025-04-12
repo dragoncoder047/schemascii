@@ -32,7 +32,7 @@ class Capacitor(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
         ]
         return (_utils.bunch_o_lines(lines, **options)
                 + (_utils.make_plus(self.terminals, mid, angle, **options)
-                   if self.is_polarized else "")
+                   if self.term_option == "polarized" else "")
                 + self.format_id_text(
                     _utils.make_text_point(t1, t2, **options), **options))
 

@@ -7,7 +7,7 @@ from typing import ClassVar
 
 import schemascii.data_consumer as _dc
 import schemascii.grid as _grid
-import schemascii.svg_utils as _svg
+import schemascii.svg as _svg
 import schemascii.utils as _utils
 import schemascii.wire_tag as _wt
 

@@ -12,10 +12,10 @@ class DataFudgeAction(argparse.Action):
     def __call__(self, parser, namespace, values: str, option_string=None):
         scope, sep, pair = values.partition(".")
         if not sep:
-            parser.error("invalid -D format: missing .")
+            parser.error("invalid -D argument: missing .")
         key, sep, val = pair.partition("=")
         if not sep:
-            parser.error("invalid -D format: missing =")
+            parser.error("invalid -D argument: missing =")
         items = getattr(namespace, self.dest) or _d.Data([])
         items |= _d.Data(
             [_d.Section(scope, {key: _d.parse_simple_value(val)})])
@@ -24,15 +24,24 @@ class DataFudgeAction(argparse.Action):
 
 def cli_main():
     ap = argparse.ArgumentParser(
-        prog="schemascii", description="Render ASCII-art schematics into SVG.")
+        prog="schemascii",
+        description="Render ASCII-art schematics into SVG.")
     ap.add_argument(
-        "-V", "--version", action="version",
+        "-V",
+        "--version",
+        action="version",
         version="%(prog)s " + schemascii.__version__)
-    ap.add_argument("in_file", help="File to process. (default: stdin)",
-                    default="-")
+    ap.add_argument(
+        "-i",
+        "--in",
+        type=argparse.FileType("r"),
+        default=None,
+        dest="in_file",
+        help="File to process. (default: stdin)")
     ap.add_argument(
         "-o",
         "--out",
+        type=argparse.FileType("w"),
         default=None,
         dest="out_file",
         help="Output SVG file. (default input file plus .svg, or stdout "
@@ -54,31 +63,33 @@ def cli_main():
                     "so as to not conflict with your shell.\n\nThis option "
                     "can be repeated as many times as necessary.")
     args = ap.parse_args()
-    if args.out_file is None:
-        args.out_file = args.in_file + ".svg"
-    text = None
-    if args.in_file == "-":
-        text = sys.stdin.read()
-        args.in_file = "<stdin>"
     try:
-        with warnings.catch_warnings(record=True) as captured_warnings:
-            result_svg = schemascii.render(args.in_file, text, args.fudge)
-    except _errors.Error as err:
-        print(type(err).__name__ + ":", err, file=sys.stderr)
-        sys.exit(1)
-    if captured_warnings:
-        for warning in captured_warnings:
-            print("Warning:", warning.message, file=sys.stderr)
-        if args.warnings_are_errors:
-            print("Error: warnings were treated as errors", file=sys.stderr)
-            sys.exit(1)
-    if args.out_file == "-":
-        print(result_svg)
-    else:
-        with open(args.out_file, "w", encoding="utf-8") as out:
-            out.write(result_svg)
-        if args.verbose:
-            print("Wrote SVG to", args.out_file)
+        if args.in_file is None:
+            args.in_file = sys.stdin
+            if args.out_file is None:
+                args.out_file = sys.stdout
+        elif args.out_file is None:
+            args.out_file = open(args.in_file.name + ".svg")
+        try:
+            with warnings.catch_warnings(record=True) as captured_warnings:
+                result_svg = schemascii.render(args.in_file.name,
+                                               args.in_file.read(), args.fudge)
+        except _errors.Error as err:
+            ap.error(str(err))
+
+        if captured_warnings:
+            for warning in captured_warnings:
+                print("Warning:", warning.message, file=sys.stderr)
+            if args.warnings_are_errors:
+                print("Error: warnings were treated as errors",
+                      file=sys.stderr)
+                sys.exit(1)
+
+        args.out_file.write(result_svg)
+
+    finally:
+        args.in_file.close()
+        args.out_file.close()
 
 
 if __name__ == "__main__":

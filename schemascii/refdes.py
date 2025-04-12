@@ -45,7 +45,7 @@ class RefDes:
 
     @property
     def short_name(self) -> str:
-        return f"{self.letter}{self.number}{self.suffix}"
+        return f"{self.letter}{self.number}"
 
 
 if __name__ == '__main__':
