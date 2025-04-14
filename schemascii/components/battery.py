@@ -1,17 +1,17 @@
 from cmath import phase, rect
 
-import schemascii.components as _c
+import schemascii.component as _c
+import schemascii.components as _cs
 import schemascii.data_consumer as _dc
 import schemascii.utils as _utils
 
 
-class Battery(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
-              ids=("B", "BT", "BAT")):
-    options = [
-        ...,
+@_c.Component.define(("B", "BT", "BAT"))
+class Battery(_cs.PolarizedTwoTerminalComponent):
+    options = _dc.OptionsSet([
         _dc.Option("value", str, "Battery voltage"),
         _dc.Option("capacity", str, "Battery capacity in amp-hours", None)
-    ]
+    ])
 
     @property
     def value_format(self):

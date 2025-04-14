@@ -8,8 +8,9 @@ import schemascii.wire as _wire
 import schemascii.wire_tag as _wt
 
 
+@_dc.DataConsumer.register(":net")
 @dataclass
-class Net(_dc.DataConsumer, namespaces=(":net",)):
+class Net(_dc.DataConsumer):
     """Grouping of wires that are
     electrically connected.
     """

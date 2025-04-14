@@ -1,6 +1,7 @@
 from cmath import phase, pi, rect
 
-import schemascii.components as _c
+import schemascii.components as _cs
+import schemascii.component as _c
 import schemascii.data_consumer as _dc
 import schemascii.utils as _utils
 
@@ -21,13 +22,13 @@ def _ansi_resistor_squiggle(t1: complex, t2: complex) -> list[complex]:
     return points
 
 
-class Resistor(_c.TwoTerminalComponent, _c.SimpleComponent, ids=("R",)):
-    options = [
-        "inherit",
+@_c.Component.define(("R",))
+class Resistor(_cs.TwoTerminalComponent):
+    options = _dc.OptionsSet([
         _dc.Option("value", str, "Resistance in ohms"),
         _dc.Option("wattage", str, "Maximum power dissipation in watts "
                    "(i.e. size of the resistor)", None)
-    ]
+    ])
 
     @property
     def value_format(self):
@@ -42,7 +43,8 @@ class Resistor(_c.TwoTerminalComponent, _c.SimpleComponent, ids=("R",)):
                     _utils.make_text_point(t1, t2, **options), **options))
 
 
-class VariableResistor(Resistor, ids=("VR", "RV")):
+@_c.Component.define(("VR", "RV"))
+class VariableResistor(Resistor):
     is_variable = True
 
     def render(self, **options):

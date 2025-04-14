@@ -4,7 +4,6 @@ import re
 import typing
 from dataclasses import dataclass
 
-import schemascii.data_consumer as _dc
 import schemascii.errors as _errors
 
 T = typing.TypeVar("T")
@@ -64,20 +63,6 @@ class Data:
     """
 
     sections: list[Section]
-
-    # mapping of scope name to list of available options
-    available_options: typing.ClassVar[dict[str, list[_dc.Option]]] = {}
-
-    @classmethod
-    def define_option(cls, ns: str, opt: _dc.Option):
-        if ns in cls.available_options:
-            if any(eo.name == opt.name and eo != opt
-                   for eo in cls.available_options[ns]):
-                raise ValueError(f"duplicate option name {opt.name!r}")
-            if opt not in cls.available_options[ns]:
-                cls.available_options[ns].append(opt)
-        else:
-            cls.available_options[ns] = [opt]
 
     @classmethod
     def parse_from_string(cls, text: str, startline=1, filename="") -> Data:

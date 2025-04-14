@@ -1,17 +1,17 @@
 from cmath import phase, rect
 
-import schemascii.components as _c
+import schemascii.component as _c
+import schemascii.components as _cs
 import schemascii.data_consumer as _dc
 import schemascii.utils as _utils
 
 
-class Capacitor(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
-                ids=("C",)):
-    options = [
-        ...,
+@_c.Component.define(("C"))
+class Capacitor(_cs.PolarizedTwoTerminalComponent):
+    options = _dc.OptionsSet([
         _dc.Option("value", str, "Capacitance in farads"),
         _dc.Option("voltage", str, "Maximum voltage tolerance in volts", None)
-    ]
+    ])
 
     @property
     def value_format(self):
@@ -37,7 +37,8 @@ class Capacitor(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
                     _utils.make_text_point(t1, t2, **options), **options))
 
 
-class VariableCapacitor(Capacitor, ids=("VC", "CV")):
+@_c.Component.define(("VC", "CV"))
+class VariableCapacitor(Capacitor):
     is_variable = True
 
     def render(self, **options):

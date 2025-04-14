@@ -12,8 +12,9 @@ import schemascii.wire as _wire
 WIRE_TAG_PAT = re.compile(r"<([^\s=]+)=|=([^\s>]+)>")
 
 
+@_dc.DataConsumer.register(":wire-tag")
 @dataclass
-class WireTag(_dc.DataConsumer, namespaces=(":wire-tag",)):
+class WireTag(_dc.DataConsumer):
     """A wire tag is a named flag on the end of the
     wire, that gives it a name and also indicates what
     direction information flows.

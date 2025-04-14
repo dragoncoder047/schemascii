@@ -15,15 +15,15 @@ import schemascii.refdes as _rd
 import schemascii.svg as _svg
 
 
+@_dc.DataConsumer.register(":root")
 @dataclass
-class Drawing(_dc.DataConsumer, namespaces=(":root",)):
+class Drawing(_dc.DataConsumer):
     """A Schemascii drawing document."""
 
-    options = [
-        ("scale",),
+    options = _dc.OptionsSet([
         _dc.Option("padding", float,
                    "Margin around the border of the drawing", 10),
-    ]
+    ], {"scale"})
 
     nets: list[_net.Net]
     components: list[_component.Component]

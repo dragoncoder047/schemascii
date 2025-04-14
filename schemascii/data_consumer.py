@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import abc
-import types
 import typing
 import warnings
 from dataclasses import dataclass, field
@@ -9,6 +8,14 @@ from dataclasses import dataclass, field
 import schemascii.data as _data
 import schemascii.errors as _errors
 import schemascii.svg as _svg
+
+
+@dataclass
+class OptionsSet[T]:
+    self_opts: set[Option[T]]
+    inherit: set[str] | bool = True
+    inherit_from: list[type[DataConsumer]] | None = None
+
 
 _OPT_IS_REQUIRED = object()
 
@@ -34,74 +41,24 @@ class DataConsumer(abc.ABC):
     options to render() as keyword arguments.
     """
 
-    options: typing.ClassVar[list[Option
-                                  | types.EllipsisType
-                                  | tuple[str, ...]]] = [
+    options: typing.ClassVar[OptionsSet] = OptionsSet([
         Option("scale", float, "Scale by which to enlarge the "
                "entire diagram by", 15),
         Option("linewidth", float, "Width of drawn lines", 2),
         Option("color", str, "Default color for everything", "black"),
-    ]
+    ], False)
     css_class: typing.ClassVar[str] = ""
 
-    @property
-    def namespaces(self) -> tuple[str, ...]:
-        # base case to stop recursion
-        return ()
-
-    def __init_subclass__(cls, namespaces: tuple[str, ...] = None):
-
-        if not namespaces:
-            # allow anonymous helper subclasses
-            return
-
-        if not hasattr(cls, "namespaces"):
-            # don't clobber it if a subclass already overrides it!
-            @property
-            def __namespaces(self) -> tuple[str, ...]:
-                return super(type(self), self).namespaces + namespaces
-            cls.namepaces = __namespaces
-
-        for b in cls.mro():
-            if (b is not cls
-                    and issubclass(b, DataConsumer)
-                    and b.options is cls.options):
-                # if we literally just inherit the attribute,
-                # don't bother reprocessing it - just assign it in the
-                # namespaces
-                break
-        else:
-            def coalesce_options(cls: type[DataConsumer]) -> list[Option]:
-                if DataConsumer not in cls.mro():
-                    return []
-                seen_inherit = False
-                opts: list[Option] = []
-                for opt in cls.options:
-                    if opt is ...:
-                        if seen_inherit:
-                            raise ValueError("can't use 'inherit' twice")
-                        for base in cls.__bases__:
-                            opts.extend(coalesce_options(base))
-                        seen_inherit = True
-                    elif isinstance(opt, tuple):
-                        for base in cls.__bases__:
-                            opts.extend(o for o in coalesce_options(base)
-                                        if o.name in opt)
-                    elif isinstance(opt, Option):
-                        opts.append(opt)
-                    else:
-                        raise TypeError(f"unknown option definition: {opt!r}")
-                return opts
-
-            cls.options = coalesce_options(cls)
-
-        for ns in namespaces:
-            for option in cls.options:
-                _data.Data.define_option(ns, option)
+    registry: typing.ClassVar[dict[str, type[DataConsumer]]] = {}
 
     def to_xml_string(self, data: _data.Data) -> str:
         """Pull options relevant to this node from data, calls
         self.render(), and wraps the output in a <g>."""
+        # TODO: fix this with the new OptionsSet inheritance mode
+        # recurse to get all of the namespaces
+        # recurse to get all of the pulled values
+        # then the below
+        raise NotImplementedError
         values = {}
         for name in self.namespaces:
             values |= data.get_values_for(name)
@@ -132,8 +89,8 @@ class DataConsumer(abc.ABC):
             if any(opt.name == key for opt in self.options):
                 continue
             warnings.warn(
-                f"unknown data key {key!r} for styling {self.namespaces[0]}",
-                stacklevel=2)
+                f"unknown data key {key!r} for {self.namespaces[0]}",
+                stacklevel=3)
         # render
         result = self.render(**values, data=data)
         if self.css_class:
@@ -149,3 +106,17 @@ class DataConsumer(abc.ABC):
         Subclasses must implement this method.
         """
         raise NotImplementedError
+
+    @classmethod
+    def register[T: type[DataConsumer]](
+            cls, namespace: str | None = None) -> typing.Callable[[T], T]:
+        def register(cls2: type[DataConsumer]):
+            if namespace:
+                if namespace in cls.registry:
+                    raise ValueError(f"{namespace} already registered")
+                cls.registry[namespace] = cls2
+            if (cls2.options.inherit_from is None
+                    and DataConsumer in cls2.mro()):
+                cls2.options.inherit_from = cls2.__bases__
+            return cls2
+        return register

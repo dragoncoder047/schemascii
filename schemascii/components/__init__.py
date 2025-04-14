@@ -8,7 +8,7 @@ import schemascii.utils as _utils
 import schemascii.data_consumer as _dc
 
 
-class SimpleComponent:
+class SimpleComponent(_c.Component):
     """Component mixin class that simplifies the formatting
     of the various values and their units into the id_text.
     """
@@ -33,7 +33,7 @@ class SimpleComponent:
 
 
 @dataclass
-class TwoTerminalComponent(_c.Component):
+class TwoTerminalComponent(SimpleComponent):
     """Shortcut to define a component with two terminals."""
     terminal_flag_opts: typing.ClassVar = {"ok": (None, None)}
     is_variable: typing.ClassVar = False
@@ -61,8 +61,7 @@ class SiliconComponent(_c.Component):
     defines its behavior, but only a specific part number.
     """
 
-    options = [
-        ...,
+    options = _dc.OptionsSet([
         _dc.Option("part-number", str, "The manufacturer-specified part "
                    "number (e.g. NE555P, 2N7000, L293D, ATtiny85, etc.)")
-    ]
+    ])

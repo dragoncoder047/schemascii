@@ -1,6 +1,7 @@
 from cmath import phase, rect
 
-import schemascii.components as _c
+import schemascii.components as _cs
+import schemascii.component as _c
 import schemascii.data_consumer as _dc
 import schemascii.utils as _utils
 import schemascii.svg as _svg
@@ -8,13 +9,12 @@ import schemascii.svg as _svg
 # TODO: add dot on + end if inductor is polarized
 
 
-class Inductor(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
-               ids=("L",)):
-    options = [
-        ...,
+@_c.Component.define(("L",))
+class Inductor(_cs.PolarizedTwoTerminalComponent):
+    options = _dc.OptionsSet([
         _dc.Option("value", str, "Inductance in henries"),
         _dc.Option("current", str, "Maximum current rating in amps", None)
-    ]
+    ])
 
     @property
     def value_format(self):
@@ -38,7 +38,8 @@ class Inductor(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
                 _utils.make_text_point(t1, t2, **options), **options))
 
 
-class VariableInductor(Inductor, ids=("VL", "LV")):
+@_c.Component.define(("VL", "LV"))
+class VariableInductor(Inductor):
     is_variable = True
 
     def render(self, **options):

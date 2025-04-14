@@ -8,11 +8,12 @@ from dataclasses import dataclass
 import schemascii.data_consumer as _dc
 import schemascii.grid as _grid
 import schemascii.utils as _utils
+import schemascii.annotation as _at
 
 
+@_dc.DataConsumer.register(":annotation-line")
 @dataclass
-class AnnotationLine(_dc.DataConsumer,
-                     namespaces=(":annotation", ":annotation-line")):
+class AnnotationLine(_at.Annotation):
     """Class that implements the ability to
     draw annotation lines on the drawing
     without having to use a disconnected wire.

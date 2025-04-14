@@ -12,8 +12,9 @@ import schemascii.utils as _utils
 import schemascii.wire_tag as _wt
 
 
+@_dc.DataConsumer.register(":wire")
 @dataclass
-class Wire(_dc.DataConsumer, namespaces=(":wire",)):
+class Wire(_dc.DataConsumer):
     """List of grid points along a wire that are
     electrically connected.
     """

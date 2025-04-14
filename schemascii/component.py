@@ -14,20 +14,20 @@ import schemascii.utils as _utils
 import schemascii.wire as _wire
 
 
+@_dc.DataConsumer.register(":component")
 @dataclass
-class Component(_dc.DataConsumer, namespaces=(":component",)):
+class Component(_dc.DataConsumer):
     """An icon representing a single electronic component."""
 
     all_components: typing.ClassVar[dict[str, type[Component]]] = {}
 
-    options = [
+    options = _dc.OptionsSet([
         ...,
         _dc.Option("offset_scale", float,
                    "How far to offset the label from the center of the "
                    "component. Relative to the global scale option.", 1),
         _dc.Option("font", str, "Text font for labels", "monospace"),
-
-    ]
+    ])
 
     rd: _rd.RefDes
     blobs: list[list[complex]]  # to support multiple parts.
@@ -36,11 +36,16 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
     # Ellipsis can only appear at the end. this means like a wildcard meaning
     # that any other flag is suitable
     terminal_flag_opts: typing.ClassVar[
-        dict[str, tuple[str | None] | types.EllipsisType]] = (None,)
+        dict[str, tuple[str | None] | types.EllipsisType]] = {}
 
     term_option: str = field(init=False)
 
     def __post_init__(self):
+        if len(self.terminal_flag_opts) == 0:
+            raise RuntimeError(
+                f"no terminal flag configuration options defined for {
+                    self.__class__.__qualname__
+                }")
         has_any = False
         # optimized check for number of terminals if they're all the same
         available_lengths = sorted(set(map(
@@ -172,23 +177,27 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
         # done
         return cls(rd, blobs, terminals)
 
-    def __init_subclass__(cls, ids: tuple[str, ...] = None):
+    @classmethod
+    def define[T: type[Component]](
+            cls, ids: tuple[str, ...] = None) -> typing.Callable[[T], T]:
         """Register the component subclass in the component registry."""
-        super().__init_subclass__(ids)
-        if not ids:
-            # allow anonymous helper classes
-            return
-        for id_letters in ids:
-            if not (id_letters.isalpha() and id_letters.upper() == id_letters):
-                raise ValueError(
-                    f"invalid reference designator letters: {id_letters!r}")
-            if (id_letters in cls.all_components
-                    and cls.all_components[id_letters] is not cls):
-                raise ValueError(
-                    f"duplicate reference designator letters: {id_letters!r} "
-                    f"(trying to register {cls!r}, already "
-                    f"occupied by {cls.all_components[id_letters]!r})")
-            cls.all_components[id_letters] = cls
+        def doit(cls2: type[Component]):
+            if any(_dc.DataConsumer.registry.get(r, None) is cls2
+                   for r in ids):
+                raise RuntimeError("use either Component.define() or "
+                                   "DataConsumer.register(), not both")
+            for id in ids:
+                _dc.DataConsumer.register(id)(cls2)
+            for id_letters in ids:
+                if not (id_letters.isalpha()
+                        and id_letters.upper() == id_letters):
+                    raise ValueError(
+                        f"invalid reference designator letters: {
+                            id_letters!r
+                        }")
+                cls.all_components[id_letters] = cls
+            return cls2
+        return doit
 
     @property
     def css_class(self) -> str:
@@ -203,28 +212,3 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
         mutate the list in-place (the return value is ignored).
         """
         pass
-
-    def get_terminals(
-            self, *flags_names: str) -> list[_utils.Terminal]:
-        """Return the component's terminals sorted so that the terminals with
-        the specified flags appear first in the order specified and the
-        remaining terminals come after.
-
-        Raises an error if a terminal with the specified flag could not be
-        found, or there were multiple terminals with the requested flag
-        (ambiguous).
-        """
-        out: list[_utils.Terminal] = []
-        for flag in flags_names:
-            matching_terminals = [t for t in self.terminals if t.flag == flag]
-            if len(matching_terminals) > 1:
-                raise _errors.TerminalsError(
-                    f"{self.rd.name}: multiple terminals with the "
-                    f"same flag {flag!r}")
-            if len(matching_terminals) == 0:
-                raise _errors.TerminalsError(
-                    f"{self.rd.name}: need a terminal with flag {flag!r}")
-            out.append(matching_terminals[0])
-        out.extend(t for t in self.terminals if t.flag not in flags_names)
-        assert set(self.terminals) == set(out)
-        return out

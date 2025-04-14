@@ -11,14 +11,14 @@ import schemascii.svg as _svg
 ANNOTATION_RE = re.compile(r"\[([^\]]+)\]")
 
 
+@_dc.DataConsumer.register(":annotation")
 @dataclass
-class Annotation(_dc.DataConsumer, namespaces=(":annotation",)):
+class Annotation(_dc.DataConsumer):
     """A chunk of text that will be rendered verbatim in the output SVG."""
 
-    options = [
-        ("scale",),
+    options = _dc.OptionsSet([
         _dc.Option("font", str, "Text font", "sans-serif"),
-    ]
+    ], {"scale"})
 
     position: complex
     content: str
