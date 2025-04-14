@@ -9,9 +9,9 @@ import schemascii.svg as _svg
 
 
 class Inductor(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
-               ids=("L",), namespaces=(":inductor",)):
+               ids=("L",)):
     options = [
-        "inherit",
+        ...,
         _dc.Option("value", str, "Inductance in henries"),
         _dc.Option("current", str, "Maximum current rating in amps", None)
     ]

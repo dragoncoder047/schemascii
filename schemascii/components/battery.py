@@ -6,9 +6,9 @@ import schemascii.utils as _utils
 
 
 class Battery(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
-              ids=("B", "BT", "BAT"), namespaces=(":battery",)):
+              ids=("B", "BT", "BAT")):
     options = [
-        "inherit",
+        ...,
         _dc.Option("value", str, "Battery voltage"),
         _dc.Option("capacity", str, "Battery capacity in amp-hours", None)
     ]

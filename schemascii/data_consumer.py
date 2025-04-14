@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import abc
+import types
 import typing
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import schemascii.data as _data
 import schemascii.errors as _errors
@@ -20,7 +21,7 @@ class Option[T]:
 
     name: str
     type: type[T] | list[T]
-    help: str
+    help: str = field(repr=False)
     default: T = _OPT_IS_REQUIRED
 
 
@@ -34,7 +35,7 @@ class DataConsumer(abc.ABC):
     """
 
     options: typing.ClassVar[list[Option
-                                  | typing.Literal["inherit"]
+                                  | types.EllipsisType
                                   | tuple[str, ...]]] = [
         Option("scale", float, "Scale by which to enlarge the "
                "entire diagram by", 15),
@@ -74,9 +75,9 @@ class DataConsumer(abc.ABC):
                 if DataConsumer not in cls.mro():
                     return []
                 seen_inherit = False
-                opts = []
+                opts: list[Option] = []
                 for opt in cls.options:
-                    if opt == "inherit":
+                    if opt is ...:
                         if seen_inherit:
                             raise ValueError("can't use 'inherit' twice")
                         for base in cls.__bases__:

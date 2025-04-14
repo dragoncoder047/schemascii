@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import schemascii.component as _c
 import schemascii.errors as _errors
 import schemascii.utils as _utils
+import schemascii.data_consumer as _dc
 
 
 class SimpleComponent:
@@ -52,3 +53,16 @@ class PolarizedTwoTerminalComponent(TwoTerminalComponent):
         if self.always_polarized:
             return {"polarized": ("+", None)}
         return {"polarized": ("+", None), "unpolarized": (None, None)}
+
+
+@dataclass
+class SiliconComponent(_c.Component):
+    """Class for a part that doesn't have a traditional Metric value that
+    defines its behavior, but only a specific part number.
+    """
+
+    options = [
+        ...,
+        _dc.Option("part-number", str, "The manufacturer-specified part "
+                   "number (e.g. NE555P, 2N7000, L293D, ATtiny85, etc.)")
+    ]

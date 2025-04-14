@@ -21,7 +21,7 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
     all_components: typing.ClassVar[dict[str, type[Component]]] = {}
 
     options = [
-        "inherit",
+        ...,
         _dc.Option("offset_scale", float,
                    "How far to offset the label from the center of the "
                    "component. Relative to the global scale option.", 1),
@@ -172,10 +172,9 @@ class Component(_dc.DataConsumer, namespaces=(":component",)):
         # done
         return cls(rd, blobs, terminals)
 
-    def __init_subclass__(cls, ids: tuple[str, ...] = None,
-                          namespaces: tuple[str, ...] = None, **kwargs):
+    def __init_subclass__(cls, ids: tuple[str, ...] = None):
         """Register the component subclass in the component registry."""
-        super().__init_subclass__(namespaces=(namespaces or ()), **kwargs)
+        super().__init_subclass__(ids)
         if not ids:
             # allow anonymous helper classes
             return

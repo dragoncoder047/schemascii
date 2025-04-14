@@ -21,8 +21,7 @@ def _ansi_resistor_squiggle(t1: complex, t2: complex) -> list[complex]:
     return points
 
 
-class Resistor(_c.TwoTerminalComponent, _c.SimpleComponent,
-               ids=("R",), namespaces=(":resistor",)):
+class Resistor(_c.TwoTerminalComponent, _c.SimpleComponent, ids=("R",)):
     options = [
         "inherit",
         _dc.Option("value", str, "Resistance in ohms"),

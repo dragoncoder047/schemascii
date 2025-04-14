@@ -6,9 +6,9 @@ import schemascii.utils as _utils
 
 
 class Capacitor(_c.PolarizedTwoTerminalComponent, _c.SimpleComponent,
-                ids=("C",), namespaces=(":capacitor",)):
+                ids=("C",)):
     options = [
-        "inherit",
+        ...,
         _dc.Option("value", str, "Capacitance in farads"),
         _dc.Option("voltage", str, "Maximum voltage tolerance in volts", None)
     ]
