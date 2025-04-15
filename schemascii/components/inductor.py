@@ -9,7 +9,7 @@ import schemascii.svg as _svg
 # TODO: add dot on + end if inductor is polarized
 
 
-@_c.Component.define(("L",))
+@_c.Component.define(":inductor", ("L",))
 class Inductor(_cs.PolarizedTwoTerminalComponent):
     options = _dc.OptionsSet([
         _dc.Option("value", str, "Inductance in henries"),
@@ -32,16 +32,14 @@ class Inductor(_cs.PolarizedTwoTerminalComponent):
         for _ in range(int(length)):
             data += f"a1 1 0 01 {-d.real} {d.imag}"
         return (
-            _svg.path(data, "transparent", options["stroke_width"],
-                      options["stroke"])
+            _svg.path(data, "transparent", options["linewidth"],
+                      options["color"])
             + self.format_id_text(
                 _utils.make_text_point(t1, t2, **options), **options))
 
 
-@_c.Component.define(("VL", "LV"))
-class VariableInductor(Inductor):
-    is_variable = True
-
+@_c.Component.define(None, ("VL", "LV"))
+class VariableInductor(Inductor, _cs.VariableComponent):
     def render(self, **options):
         t1, t2 = self.terminals[0].pt, self.terminals[1].pt
         return (super().render(**options)

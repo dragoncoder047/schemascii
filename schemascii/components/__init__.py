@@ -39,6 +39,16 @@ class TwoTerminalComponent(SimpleComponent):
     is_variable: typing.ClassVar = False
 
 
+@_dc.DataConsumer.register(":variable")
+class VariableComponent(TwoTerminalComponent):
+    """Inherit from this class to get the variable scope
+    and is_variable: true.
+    """
+
+    is_variable: typing.Final = True
+    not_for_docs: typing.Final = True
+
+
 @dataclass
 class PolarizedTwoTerminalComponent(TwoTerminalComponent):
     """Helper class that ensures that a component has only two terminals,

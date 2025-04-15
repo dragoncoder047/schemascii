@@ -1,14 +1,11 @@
-import typing
-
 import schemascii.component as _c
 import schemascii.components as _cs
 import schemascii.utils as _utils
 
 
-@_c.Component.define(("D", "CR"))
+@_c.Component.define(":diode", ("D", "CR"))
 class Diode(_cs.PolarizedTwoTerminalComponent, _cs.SiliconComponent):
-
-    always_polarized: typing.Final = True
+    always_polarized = True
 
     def render(self, **options) -> str:
         raise NotImplementedError
@@ -19,7 +16,7 @@ class Diode(_cs.PolarizedTwoTerminalComponent, _cs.SiliconComponent):
                     _utils.make_text_point(t1, t2, **options), **options))
 
 
-@_c.Component.define(("LED", "IR"))
+@_c.Component.define(None, ("LED", "IR"))
 class LED(Diode):
     def render(self, **options):
         raise NotImplementedError

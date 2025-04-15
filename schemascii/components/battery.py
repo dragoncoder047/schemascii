@@ -6,7 +6,7 @@ import schemascii.data_consumer as _dc
 import schemascii.utils as _utils
 
 
-@_c.Component.define(("B", "BT", "BAT"))
+@_c.Component.define(":battery", ("B", "BT", "BAT"))
 class Battery(_cs.PolarizedTwoTerminalComponent):
     options = _dc.OptionsSet([
         _dc.Option("value", str, "Battery voltage"),

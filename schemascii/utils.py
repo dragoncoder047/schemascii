@@ -272,8 +272,8 @@ def deep_transform(data: DT_Struct, origin: complex, theta: float):
                         type(data).__name__) from err
 
 
-def _get_sss(options: dict) -> tuple[float, float, str]:
-    return options["scale"], options["stroke_width"], options["stroke"]
+def _get_slc(options: dict) -> tuple[float, float, str]:
+    return options["scale"], options["linewidth"], options["color"]
 
 
 def points2path(points: list[complex], close: bool = False) -> str:
@@ -315,13 +315,13 @@ def polylinegon(
     If is_polygon is true, stroke color is used as fill color instead
     and stroke width is ignored.
     """
-    scale, stroke_width, stroke = _get_sss(options)
+    scale, linewidth, stroke = _get_slc(options)
     scaled_pts = [x * scale for x in points]
     if is_polygon:
         return _svg.path(points2path(scaled_pts, True), stroke,
                          class_="filled")
     return _svg.path(points2path(scaled_pts, False), "transparent",
-                     stroke_width, stroke)
+                     linewidth, stroke)
 
 
 def find_dots(points: list[tuple[complex, complex]]) -> list[complex]:
@@ -341,7 +341,7 @@ def bunch_o_lines(pairs: list[tuple[complex, complex]], **options) -> str:
     """Combine the pairs (p1, p2) into a set of SVG <path> commands
     to draw all of the lines.
     """
-    scale, stroke_width, stroke = _get_sss(options)
+    scale, linewidth, stroke = _get_slc(options)
     lines = []
     while pairs:
         group = take_next_group(pairs)
@@ -352,7 +352,7 @@ def bunch_o_lines(pairs: list[tuple[complex, complex]], **options) -> str:
     data = ""
     for line in lines:
         data += points2path([x * scale for x in line], False)
-    return _svg.path(data, "transparent", stroke_width, stroke)
+    return _svg.path(data, "transparent", linewidth, stroke)
 
 
 def id_text(
@@ -365,7 +365,7 @@ def id_text(
         **options) -> str:
     """Format the component ID and value around the point."""
     nolabels, label = options["nolabels"], options["label"]
-    scale, stroke = options["scale"], options["stroke"]
+    scale, stroke = options["scale"], options["color"]
     font = options["font"]
     if nolabels:
         return ""

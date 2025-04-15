@@ -41,9 +41,9 @@ def group(*items: str, class_: OrFalse[str] = False) -> str:
 
 
 def path(data: str, fill: OrFalse[str] = False,
-         stroke_width: OrFalse[float] = False, stroke: OrFalse[str] = False,
+         linewidth: OrFalse[float] = False, stroke: OrFalse[str] = False,
          class_: OrFalse[str] = False) -> str:
-    return xmltag("path", d=data, fill=fill, stroke__width=stroke_width,
+    return xmltag("path", d=data, fill=fill, stroke__width=linewidth,
                   stroke=stroke, class_=class_)
 
 

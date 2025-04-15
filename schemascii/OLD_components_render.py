@@ -110,7 +110,7 @@ def diode(box: Cbox, terminals: list[Terminal], bom_data: BOMData, **options):
     ]
     triangle = deep_transform((-0.3j, 0.3 + 0.3j, -0.3 + 0.3j), mid, angle)
     light_emitting = box.type in ("LED", "IR")
-    fill_override = {"stroke": bom_data.data} if box.type == "LED" else {}
+    fill_override = {"color": bom_data.data} if box.type == "LED" else {}
     return (
         (light_arrows(mid, angle, True, **options) if light_emitting else "")
         + id_text(
@@ -151,8 +151,8 @@ def integrated_circuit(
         y=box.p1.imag * scale,
         width=sz.real,
         height=sz.imag,
-        stroke__width=options["stroke_width"],
-        stroke=options["stroke"],
+        stroke__width=options["linewidth"],
+        stroke=options["color"],
         fill="transparent",
     )
     for term in terminals:
@@ -167,7 +167,7 @@ def integrated_circuit(
             y=mid.imag,
             text__anchor="middle",
             font__size=options["scale"],
-            fill=options["stroke"],
+            fill=options["color"],
         )
         mid -= 1j * scale
     if "L" in label_style and not options["nolabels"]:
@@ -177,7 +177,7 @@ def integrated_circuit(
             y=mid.imag,
             text__anchor="middle",
             font__size=options["scale"],
-            fill=options["stroke"],
+            fill=options["color"],
         )
     s_terminals = sort_terminals_counterclockwise(terminals)
     for terminal, label in zip(s_terminals, pin_labels):
@@ -191,7 +191,7 @@ def integrated_circuit(
                     Side.TOP, Side.BOTTOM)) else "middle"
             ),
             font__size=options["scale"],
-            fill=options["stroke"],
+            fill=options["color"],
             class_="pin-label",
         )
     warn(
@@ -228,8 +228,8 @@ def jack(box: Cbox, terminals: list[Terminal], bom_data: BOMData, **options):
                 cx=sc_t2.real,
                 cy=sc_t2.imag,
                 r=scale / 4,
-                stroke__width=options["stroke_width"],
-                stroke=options["stroke"],
+                stroke__width=options["linewidth"],
+                stroke=options["color"],
                 fill="transparent",
             )
             + id_text(box, bom_data, terminals, None, sc_text_pt, **options)
@@ -380,13 +380,13 @@ def switch(box: Cbox, terminals: list[Terminal], bom_data: BOMData, **options):
                       cy=(rect(-scale, angle) + mid * scale).imag,
                       r=scale / 4,
                       stroke="transparent",
-                      fill=options["stroke"],
+                      fill=options["color"],
                       class_="filled")
            + xmltag("circle", cx=(rect(scale, angle) + mid * scale).real,
                         cy=(rect(scale, angle) + mid * scale).imag,
                         r=scale / 4,
                         stroke="transparent",
-                        fill=options["stroke"],
+                        fill=options["color"],
                         class_="filled")
            + bunch_o_lines([
                (t1, mid + rect(1, angle)),

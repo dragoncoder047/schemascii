@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import itertools
 import typing
 import warnings
 from dataclasses import dataclass, field
@@ -12,7 +13,7 @@ import schemascii.svg as _svg
 
 @dataclass
 class OptionsSet[T]:
-    self_opts: set[Option[T]]
+    self_opts: list[Option[T]]
     inherit: set[str] | bool = True
     inherit_from: list[type[DataConsumer]] | None = None
 
@@ -46,34 +47,66 @@ class DataConsumer(abc.ABC):
                "entire diagram by", 15),
         Option("linewidth", float, "Width of drawn lines", 2),
         Option("color", str, "Default color for everything", "black"),
-    ], False)
+    ], False)  # don't inherit, this is the base case
+
     css_class: typing.ClassVar[str] = ""
 
     registry: typing.ClassVar[dict[str, type[DataConsumer]]] = {}
 
+    def dynamic_namespaces() -> tuple[str, ...]:
+        return ()
+
+    @classmethod
+    @typing.final
+    def get_namespaces(cls) -> list[str]:
+        copt = cls.options
+        nss = [
+            k for k, v in cls.registry.items() if v is cls]
+        if copt.inherit:
+            nss.extend(itertools.chain.from_iterable(
+                p.get_namespaces() for p in copt.inherit_from))
+        return nss
+
+    @classmethod
+    @typing.final
+    def get_options(cls) -> list[Option]:
+        copt = cls.options
+        out = copt.self_opts.copy()
+        if copt.inherit:
+            paropts: itertools.chain[Option] = itertools.chain.from_iterable(
+                p.get_options() for p in copt.inherit_from)
+            if isinstance(copt.inherit, bool):
+                out.extend(paropts)
+            else:
+                out.extend(opt for opt in paropts
+                           if opt.name in copt.inherit)
+        return out
+
     def to_xml_string(self, data: _data.Data) -> str:
         """Pull options relevant to this node from data, calls
         self.render(), and wraps the output in a <g>."""
-        # TODO: fix this with the new OptionsSet inheritance mode
         # recurse to get all of the namespaces
+        namespaces = list(itertools.chain(
+            self.get_namespaces(), self.dynamic_namespaces()))
         # recurse to get all of the pulled values
+        options = self.get_options()
         # then the below
-        raise NotImplementedError
         values = {}
-        for name in self.namespaces:
+        for name in namespaces:
             values |= data.get_values_for(name)
         # validate the options
-        for opt in self.options:
+        print("***", options)
+        for opt in options:
             if opt.name not in values:
                 if opt.default is _OPT_IS_REQUIRED:
                     raise _errors.NoDataError(
-                        f"missing value for {self.namespaces[0]}.{name}")
+                        f"missing value for {namespaces[-1]}.{opt.name}")
                 values[opt.name] = opt.default
                 continue
             if isinstance(opt.type, list):
                 if values[opt.name] not in opt.type:
                     raise _errors.BOMError(
-                        f"{self.namespaces[0]}.{opt.name}: "
+                        f"{namespaces[-1]}.{opt.name}: "
                         f"invalid choice: {values[opt.name]!r} "
                         f"(valid options are "
                         f"{', '.join(map(repr, opt.type))})")
@@ -82,14 +115,14 @@ class DataConsumer(abc.ABC):
                 values[opt.name] = opt.type(values[opt.name])
             except ValueError as err:
                 raise _errors.DataTypeError(
-                    f"option {self.namespaces[0]}.{opt.name}: "
+                    f"option {namespaces[-1]}.{opt.name}: "
                     f"invalid {opt.type.__name__} value: "
                     f"{values[opt.name]!r}") from err
         for key in values:
-            if any(opt.name == key for opt in self.options):
+            if any(opt.name == key for opt in options):
                 continue
             warnings.warn(
-                f"unknown data key {key!r} for {self.namespaces[0]}",
+                f"unknown data key {key!r} for {namespaces[-1]}",
                 stacklevel=3)
         # render
         result = self.render(**values, data=data)
@@ -105,15 +138,17 @@ class DataConsumer(abc.ABC):
 
         Subclasses must implement this method.
         """
-        raise NotImplementedError
 
     @classmethod
+    @typing.final
     def register[T: type[DataConsumer]](
             cls, namespace: str | None = None) -> typing.Callable[[T], T]:
         def register(cls2: type[DataConsumer]):
             if namespace:
                 if namespace in cls.registry:
-                    raise ValueError(f"{namespace} already registered")
+                    raise ValueError(f"{namespace} already registered as {
+                        cls.registry[namespace]
+                    }")
                 cls.registry[namespace] = cls2
             if (cls2.options.inherit_from is None
                     and DataConsumer in cls2.mro()):

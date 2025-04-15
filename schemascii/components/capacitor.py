@@ -6,7 +6,7 @@ import schemascii.data_consumer as _dc
 import schemascii.utils as _utils
 
 
-@_c.Component.define(("C"))
+@_c.Component.define(":capacitor", ("C"))
 class Capacitor(_cs.PolarizedTwoTerminalComponent):
     options = _dc.OptionsSet([
         _dc.Option("value", str, "Capacitance in farads"),
@@ -37,10 +37,8 @@ class Capacitor(_cs.PolarizedTwoTerminalComponent):
                     _utils.make_text_point(t1, t2, **options), **options))
 
 
-@_c.Component.define(("VC", "CV"))
-class VariableCapacitor(Capacitor):
-    is_variable = True
-
+@_c.Component.define(None, ("VC", "CV"))
+class VariableCapacitor(Capacitor, _cs.VariableComponent):
     def render(self, **options):
         t1, t2 = self.terminals[0].pt, self.terminals[1].pt
         return (super().render(**options)

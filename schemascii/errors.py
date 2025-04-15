@@ -18,7 +18,7 @@ class UnsupportedComponentError(NameError, Error):
     """Component type is not supported."""
 
 
-class NoDataError(KeyError, Error):
+class NoDataError(ValueError, Error):
     """Data item is required, but not present."""
 
 

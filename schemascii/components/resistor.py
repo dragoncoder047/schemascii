@@ -22,7 +22,7 @@ def _ansi_resistor_squiggle(t1: complex, t2: complex) -> list[complex]:
     return points
 
 
-@_c.Component.define(("R",))
+@_c.Component.define(":resistor", ("R",))
 class Resistor(_cs.TwoTerminalComponent):
     options = _dc.OptionsSet([
         _dc.Option("value", str, "Resistance in ohms"),
@@ -43,10 +43,8 @@ class Resistor(_cs.TwoTerminalComponent):
                     _utils.make_text_point(t1, t2, **options), **options))
 
 
-@_c.Component.define(("VR", "RV"))
-class VariableResistor(Resistor):
-    is_variable = True
-
+@_c.Component.define(None, ("VR", "RV"))
+class VariableResistor(Resistor, _cs.VariableComponent):
     def render(self, **options):
         t1, t2 = self.terminals[0].pt, self.terminals[1].pt
         return (super().render(**options)

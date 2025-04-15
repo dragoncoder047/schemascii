@@ -22,7 +22,6 @@ class Component(_dc.DataConsumer):
     all_components: typing.ClassVar[dict[str, type[Component]]] = {}
 
     options = _dc.OptionsSet([
-        ...,
         _dc.Option("offset_scale", float,
                    "How far to offset the label from the center of the "
                    "component. Relative to the global scale option.", 1),
@@ -57,7 +56,7 @@ class Component(_dc.DataConsumer):
             raise _errors.TerminalsError(
                 f"Wrong number of terminals on {self.rd.name}. "
                 f"Got {len(self.terminals)} but "
-                f"expected {" or ".join(available_lengths)}")
+                f"expected {" or ".join(map(str, available_lengths))}")
         for fo_name, fo_opt in self.terminal_flag_opts.items():
             if fo_opt is ...:
                 has_any = True
@@ -87,9 +86,8 @@ class Component(_dc.DataConsumer):
             raise _errors.TerminalsError(
                 f"Illegal terminal flags around {self.rd.name}")
 
-    @property
-    def namespaces(self) -> tuple[str, ...]:
-        return self.rd.name, self.rd.short_name, self.rd.letter, ":component"
+    def dynamic_namespaces(self):
+        return self.rd.letter, self.rd.short_name, self.rd.name
 
     @classmethod
     def from_rd(cls, rd: _rd.RefDes, grid: _grid.Grid) -> Component:
@@ -179,13 +177,12 @@ class Component(_dc.DataConsumer):
 
     @classmethod
     def define[T: type[Component]](
-            cls, ids: tuple[str, ...] = None) -> typing.Callable[[T], T]:
+            cls, scope: str | None,
+            ids: tuple[str, ...]) -> typing.Callable[[T], T]:
         """Register the component subclass in the component registry."""
         def doit(cls2: type[Component]):
-            if any(_dc.DataConsumer.registry.get(r, None) is cls2
-                   for r in ids):
-                raise RuntimeError("use either Component.define() or "
-                                   "DataConsumer.register(), not both")
+            if scope:
+                _dc.DataConsumer.register(scope)(cls2)
             for id in ids:
                 _dc.DataConsumer.register(id)(cls2)
             for id_letters in ids:
@@ -195,7 +192,7 @@ class Component(_dc.DataConsumer):
                         f"invalid reference designator letters: {
                             id_letters!r
                         }")
-                cls.all_components[id_letters] = cls
+                cls.all_components[id_letters] = cls2
             return cls2
         return doit
 

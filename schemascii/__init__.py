@@ -1,5 +1,6 @@
 import importlib
 import os
+import re
 from typing import Any
 
 import schemascii.components as _cs
@@ -12,7 +13,10 @@ __version__ = "0.3.2"
 def import_all_components():
     for root, _, files in os.walk(os.path.dirname(_cs.__file__)):
         for f in files:
-            if f.endswith(".py"):
+            # ignore dunder __init__ file
+            # if we try to import that it gets run twice
+            # which tries to double-register stuff and causes problems
+            if re.match(r"(?!__)\w+(?<!__)\.py", f):
                 importlib.import_module("." + f.removesuffix(".py"),
                                         _cs.__package__)
 
@@ -28,5 +32,13 @@ def render(filename: str, text: str | None = None,
 
 
 if __name__ == "__main__":
+    import schemascii.data as _da
     import schemascii.data_consumer as _d
-    print(_d.DataConsumer.registry)
+    import schemascii.refdes as _rd
+    import schemascii.utils as _u
+    print(_d.DataConsumer.registry["BAT"](
+        _rd.RefDes("BAT", 0, "", 0, 0), [], [
+            _u.Terminal(0, None, None),
+            _u.Terminal(0, None, None)
+        ]).to_xml_string(_da.Data([_da.Section(
+            "BAT", {"foo": "bar", "value": 10})])))
