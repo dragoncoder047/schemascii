@@ -4,17 +4,27 @@ from __future__ import annotations
 import datetime
 import os
 import sys
+from pprint import pprint
+
+# TODO: this is an awful mess
+# need to clean it up so it actually produces useful documentation
 
 from scriptutils import spit
 
 try:
-    sys.path.append(os.path.pardir)
+    sys.path.append(os.path.realpath(os.path.pardir))
     import schemascii  # noqa: F401
     from schemascii.component import Component
-    from schemascii.data_consumer import (
-        _OPT_IS_REQUIRED, DataConsumer, Option, OptionsSet)
+    from schemascii.data_consumer import (_OPT_IS_REQUIRED, DataConsumer,
+                                          Option, OptionsSet)
 except ModuleNotFoundError:
+    # dummy to prevent isort from putting the
+    # imports above the sys.path.append
     raise
+
+
+def uniq_sameorder[T](xs: list[T]) -> list[T]:
+    return sorted(set(xs), key=lambda x: xs.index(x))
 
 
 def output_file(filename: os.PathLike, heading: str, content: str):
@@ -68,7 +78,13 @@ def get_RDs_for_cls(cls: type[Component]) -> list[str]:
     return [k for k, v in Component.all_components.items() if v is cls]
 
 
+def classes_inorder():
+    return uniq_sameorder(sorted(DataConsumer.registry.values(),
+                                 key=lambda cls: len(cls.mro())))
+
+
 def main():
+    pprint(("in order", classes_inorder()))
     content: str = ""
     classes: list[type[DataConsumer]] = sorted(
         set(DataConsumer.registry.values()),
