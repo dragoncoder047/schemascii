@@ -4,10 +4,6 @@ from __future__ import annotations
 import datetime
 import os
 import sys
-from pprint import pprint
-
-# TODO: this is an awful mess
-# need to clean it up so it actually produces useful documentation
 
 from scriptutils import spit
 
@@ -25,6 +21,10 @@ except ModuleNotFoundError:
 
 def uniq_sameorder[T](xs: list[T]) -> list[T]:
     return sorted(set(xs), key=lambda x: xs.index(x))
+
+
+def reverse_dict[K, V](d: dict[K, V]) -> dict[V, K]:
+    return {v: k for k, v in d.items()}
 
 
 def output_file(filename: os.PathLike, heading: str, content: str):
@@ -55,22 +55,13 @@ def format_option(opt: Option) -> str:
 def format_scope(scopename: str, options: OptionsSet,
                  interj: str, head: str) -> str:
     scope_text = f"""
-## {head} `{scopename.upper()}`{"\n\n" + interj if interj else ""}
+## {head} `{scopename}`{"\n\n" + interj if interj else ""}
 
 | Option | Value | Description | Default |
 |:------:|:-----:|:------------|:-------:|
 """
     for option in options.self_opts:
         scope_text += format_option(option)
-    if options.inherit:
-        classes = [p.__name__ for p in options.inherit_from]
-        if isinstance(options.inherit, bool):
-            vt = "values"
-        else:
-            vt = ", ".join(f"`{x}`" for x in sorted(options.inherit))
-        scope_text += f"""
-Inherits {vt} from: {", ".join(classes)}
-"""
     return scope_text
 
 
@@ -83,29 +74,69 @@ def classes_inorder():
                                  key=lambda cls: len(cls.mro())))
 
 
-def main():
-    pprint(("in order", classes_inorder()))
-    content: str = ""
-    classes: list[type[DataConsumer]] = sorted(
-        set(DataConsumer.registry.values()),
-        key=lambda cls: cls.__name__)
-    print("all classes: ", classes)
-    for d in classes:
-        if "not_for_docs" in d.__dict__ and d.not_for_docs:
-            continue
-        scopes = get_scopes_for_cls(d)
-        s = "` or `".join(scopes)
-        rds_line = ""
-        heading = "Scope"
-        if issubclass(d, Component) and d is not Component:
-            rds = get_RDs_for_cls(d)
-            s = "` or `".join(sc for sc in scopes if sc not in rds)
-            heading = "Component"
-            rds_line = "Reference Designators: "
-            rds_line += ", ".join(f"`{x}`" for x in rds)
-        content += format_scope(s, d.options, rds_line, heading)
+def format_inherited_options(
+        inherited_options: dict[str, list[Option]]) -> str:
+    out: list[str] = []
+    for namespace, options in inherited_options.items():
+        option_names = ", ".join(f"`{opt.name}`" for opt in options)
+        out.append(f"* copies {option_names} from `{namespace}`")
+    return "\n".join(out)
 
-    output_file("options.md", "Data Section Options", content)
+
+def generate_class_docs() -> str:
+    """
+    Generate documentation for all classes in DataConsumer.registry.
+    """
+    content = ""
+    class_to_namespace = reverse_dict(DataConsumer.registry)
+    defined_options = {}  # Track defined options to avoid redefinition
+
+    for cls in classes_inorder():
+        if getattr(cls, "not_for_docs", False):
+            continue
+
+        # Collect unique options
+        unique_options = [
+            opt for opt in cls.options.self_opts
+            if opt.name not in defined_options]
+        for opt in unique_options:
+            defined_options[opt.name] = class_to_namespace.get(
+                cls, cls.__name__)
+
+        # Collect inherited options
+        inherited_options = {}
+        base_cls: type[DataConsumer]
+        for base_cls in cls.mro()[1:]:
+            if base_cls in DataConsumer.registry.values():
+                namespace = class_to_namespace.get(base_cls, base_cls.__name__)
+                inherited = cls.options.inherit if isinstance(
+                    cls.options.inherit, set) else None
+                base_options = [
+                    opt for opt in base_cls.options.self_opts
+                    if opt.name not in defined_options and (
+                        inherited is None or opt.name in inherited)]
+                if base_options:
+                    inherited_options[namespace] = base_options
+                    for opt in base_options:
+                        defined_options[opt.name] = namespace
+
+        # Format the scope for the class
+        scopes = "` or `".join(get_scopes_for_cls(cls))
+        heading = "Component" if issubclass(
+            cls, Component) and cls is not Component else "Scope"
+        content += format_scope(
+            scopes,
+            cls.options,
+            format_inherited_options(inherited_options),
+            heading,
+        )
+        content += "".join(format_option(opt) for opt in unique_options)
+
+    return content
+
+
+def main():
+    output_file("options.md", "Data Section Options", generate_class_docs())
 
 
 if __name__ == '__main__':
