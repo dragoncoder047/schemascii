@@ -1,4 +1,2 @@
 from setuptools import setup
-setup(
-    packages=["schemascii"]
-)
+setup(packages=["schemascii"])

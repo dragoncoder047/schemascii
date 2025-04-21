@@ -1,0 +1,51 @@
+J2-------C1--------*
+J1--|||---C2+------*
+J999999999999------
+[this is a comment]
+
+    [xor gate]               [op amp]
+
+    # ######                   #
+     # ########                ###
+  ----# #########         ----+#####
+      # #U1G1#####----         #U2A###-----
+  ----# #########         -----#####
+     # ########                ###
+    # ######                   #
+
+
+  [wires and lines test]
+
+           |          |
+    -----------   .~~~|~~~~~~.
+           |      :   |      :
+    -------*------:---*---*  :
+                  :   |   |  :
+    *-------------:---*---*  '~~~~.
+    |             :               :
+                  '~~~~~~~~~~~~~~~'
+
+
+---
+@ {
+    stroke-width = 2
+}
+C1 {
+    value = 100u
+}
+
+@ {
+    %% these are global config options
+    color = black
+    width = 2; padding = 20;
+    format = symbol
+    mystring = "hello\nworld"
+}
+
+
+R@ {tolerance = .05; wattage = 0.25}
+
+R1 {
+    resistance = 0 - 10k;
+    %% trailing comment
+}

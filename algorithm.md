@@ -1,5 +1,7 @@
 # Schemascii algorithm
 
+(THIS DOCUMENT IS HORRIBLY OUT-OF-DATE, I NEED TO RE-WRITE THE UPDATED ALGORITHM...)
+
 Everything is based on a `Grid` that contains all the data for the document. This `Grid` can be masked to show something else instead of the original, and restored to the original.
 
 The algorithm first starts by finding all the "large component" boxes in the grid. After that, it finds all the "small component" reference designators. Then it picks out the BOM notes so component values, etc. can be included.
