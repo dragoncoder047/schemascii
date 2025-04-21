@@ -1,10 +1,7 @@
 import os
 import sys
-import typing
 
 # pylint: disable=missing-function-docstring
-
-T = typing.TypeVar("T")
 
 
 def cmd(sh_line: str, say: bool = True):
@@ -25,6 +22,6 @@ def spit(file: os.PathLike, text: str):
         f.write(text)
 
 
-def spy(value: T) -> T:
+def spy[T](value: T) -> T:
     print(value)
     return value

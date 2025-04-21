@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 import warnings
 
@@ -69,13 +70,15 @@ def cli_main():
             if args.out_file is None:
                 args.out_file = sys.stdout
         elif args.out_file is None:
-            args.out_file = open(args.in_file.name + ".svg")
+            args.out_file = open(args.in_file.name + ".svg", "w")
         try:
             with warnings.catch_warnings(record=True) as captured_warnings:
                 result_svg = schemascii.render(args.in_file.name,
                                                args.in_file.read(), args.fudge)
         except _errors.Error as err:
-            ap.error(str(err))
+            if args.out_file is not sys.stdout:
+                os.unlink(args.out_file.name)
+            ap.error(err.nice_message())
 
         if captured_warnings:
             for warning in captured_warnings:
@@ -86,7 +89,6 @@ def cli_main():
                 sys.exit(1)
 
         args.out_file.write(result_svg)
-
     finally:
         args.in_file.close()
         args.out_file.close()
