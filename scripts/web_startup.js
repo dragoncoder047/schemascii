@@ -78,7 +78,7 @@ function catched(fun) {
     };
 }
 async function acatched(fun) {
-    return async function() {
+    return async function () {
         try {
             await fun.call(this, arguments);
         } catch (e) {
@@ -109,7 +109,7 @@ async function switch_version() {
 function download() {
     if (!output.innerHTML) return;
     var a = document.createElement("a");
-    a.setAttribute("href", URL.createObjectURL(new Blob([output.innerHTML], {"type": "application/svg+xml"})));
+    a.setAttribute("href", URL.createObjectURL(new Blob([output.innerHTML], { "type": "application/svg+xml" })));
     a.setAttribute("download", `schemascii_playground_${new Date().toISOString()}_no_css.svg`);
     a.click();
 }
