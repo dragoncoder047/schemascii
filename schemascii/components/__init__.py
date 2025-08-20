@@ -1,4 +1,5 @@
 from __future__ import annotations
+from cmath import phase
 import typing
 from dataclasses import dataclass
 
@@ -18,8 +19,11 @@ class SimpleComponent(_c.Component):
                                        | tuple[str, str, bool, bool]]]
 
     def format_id_text(self: _c.Component | SimpleComponent,
-                       textpoint: complex, **options):
+                       textpoint: complex | None, **options):
         val_fmt = []
+        if textpoint is None:
+            t1, t2 = self.terminals[0].pt, self.terminals[1].pt
+            textpoint = _utils.make_text_point(t1, t2, **options)
         for valsch in self.value_format:
             val_fmt.append((options[valsch[0]], *valsch[1:]))
         try:
@@ -37,6 +41,12 @@ class TwoTerminalComponent(SimpleComponent):
     """Shortcut to define a component with two terminals."""
     terminal_flag_opts: typing.ClassVar = {"ok": (None, None)}
     is_variable: typing.ClassVar = False
+
+    def _t4(self) -> tuple[complex, complex, complex, float]:
+        t1, t2 = self.terminals[0].pt, self.terminals[1].pt
+        mid = (t1 + t2) / 2
+        angle = phase(t1 - t2)
+        return t1, t2, mid, angle
 
 
 @_dc.DataConsumer.register(":variable")

@@ -36,5 +36,4 @@ class Battery(_cs.PolarizedTwoTerminalComponent):
                 angle)
         ]
         return (_utils.bunch_o_lines(lines, **options)
-                + self.format_id_text(
-                    _utils.make_text_point(t1, t2, **options), **options))
+                + self.format_id_text(None, **options))

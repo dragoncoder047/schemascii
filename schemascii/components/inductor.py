@@ -22,7 +22,7 @@ class Inductor(_cs.PolarizedTwoTerminalComponent):
                 ("current", "A", False)]
 
     def render(self, **options) -> str:
-        t1, t2 = self.terminals[0].pt, self.terminals[1].pt
+        t1, t2, _, _ = self._t4()
         vec = t1 - t2
         length = abs(vec)
         angle = phase(vec)
@@ -34,14 +34,12 @@ class Inductor(_cs.PolarizedTwoTerminalComponent):
         return (
             _svg.path(data, "transparent", options["linewidth"],
                       options["color"])
-            + self.format_id_text(
-                _utils.make_text_point(t1, t2, **options), **options))
+            + self.format_id_text(None, **options))
 
 
 @_c.Component.define(None, ("VL", "LV"))
 class VariableInductor(Inductor, _cs.VariableComponent):
     def render(self, **options):
-        t1, t2 = self.terminals[0].pt, self.terminals[1].pt
+        _, _, mid, angle = self._t4()
         return (super().render(**options)
-                + _utils.make_variable(
-                    (t1 + t2) / 2, phase(t1 - t2), **options))
+                + _utils.make_variable(mid, angle, **options))

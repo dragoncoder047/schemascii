@@ -23,8 +23,8 @@ class Capacitor(_cs.PolarizedTwoTerminalComponent):
         mid = (t1 + t2) / 2
         angle = phase(t1 - t2)
         lines = [
-            (t1, mid + rect(1/4, angle)),
-            (t2, mid + rect(-1/4, angle)),
+            (t1, mid + rect(.25, angle)),
+            (t2, mid + rect(-.25, angle)),
             *_utils.deep_transform([
                 (.4+.25j, -.4+.25j),
                 (.4-.25j, -.4-.25j)
@@ -33,8 +33,7 @@ class Capacitor(_cs.PolarizedTwoTerminalComponent):
         return (_utils.bunch_o_lines(lines, **options)
                 + (_utils.make_plus(self.terminals, mid, angle, **options)
                    if self.term_option == "polarized" else "")
-                + self.format_id_text(
-                    _utils.make_text_point(t1, t2, **options), **options))
+                + self.format_id_text(None, **options))
 
 
 @_c.Component.define(None, ("VC", "CV"))
