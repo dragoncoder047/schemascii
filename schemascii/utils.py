@@ -240,13 +240,13 @@ type DT_Struct = list[DT_Struct] | tuple[DT_Struct] | complex
 
 
 @typing.overload
-def deep_transform(data: list[DT_Struct], origin: complex,
-                   theta: float) -> list[DT_Struct]: ...
+def deep_transform[D: DT_Struct](data: list[D], origin: complex,
+                                 theta: float) -> list[D]: ...
 
 
 @typing.overload
-def deep_transform(data: tuple[DT_Struct], origin: complex,
-                   theta: float) -> tuple[DT_Struct]: ...
+def deep_transform[D: DT_Struct](data: tuple[D, ...], origin: complex,
+                                 theta: float) -> list[D]: ...
 
 
 @typing.overload
