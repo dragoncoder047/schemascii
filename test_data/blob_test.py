@@ -267,7 +267,6 @@ def cull_disallowed_edges(
     # ensure there are no one way "trap" edges
     # (the above algorithm has some weird edge cases where it may produce
     # one-way edges on accident)
-    # XXX This causes issues when it is enabled, why?
     for p, c in fixed_edges.items():
         for q in c:
             fixed_edges.setdefault(q, set()).add(p)
@@ -314,7 +313,7 @@ def walk_graph_to_loop(
     return out
 
 
-def is_mid_maxima(a: int | None, b: int | None, c: int | None) -> bool:
+def is_mountain(a: int | None, b: int | None, c: int | None) -> bool:
     return all(x is not None for x in (a, b, c)) and a < b and c < b
 
 
@@ -323,18 +322,20 @@ def remove_unnecessary(pts: list[complex],
                        maxslope=2) -> list[complex]:
     triples_pts = list(triples(pts))
     dirs = [(b-a, c-b) for a, b, c in triples_pts]
-    signos = [a.real * b.imag - a.imag * b.real
-              + (abs(b - a) if a == b or a == -b else 0) for a, b in dirs]
-    # signos: 0 if straightline, negative if concave, positive if convex
-    dotnos = [a.real * b.real + a.imag * b.imag for a, b in dirs]
-    # dotnos: a measure of pointedness - 0 = right angle, positive = pointy,
+    dir_crosses = [a.real * b.imag - a.imag * b.real
+                   + (abs(b - a) if a == b or a == -b else 0) for a, b in dirs]
+    # crosses: 0 if straightline, negative if concave, positive if convex
+    dir_dots = [a.real * b.real + a.imag * b.imag for a, b in dirs]
+    # dots: a measure of pointedness - 0 = right angle, positive = pointy,
     # negative = blunt
-    distances = [None if s >= 0 else 0 for s in signos]
+    distances = [None if s >= 0 else 0 for s in dir_crosses]
     # distances: None if it's a convex or straight un-analyzed,
     # number if it's a concave or counted straight
+    # The number is the distance to the nearest concave
 
     # there ought to be a better way to do this
     changing = True
+    # this looks a lot like the Bellmam-Ford algorithm?
     while changing:
         changing = False
         for j in range(len(distances)):
@@ -343,7 +344,7 @@ def remove_unnecessary(pts: list[complex],
             iNone = distances[i] is None
             jNone = distances[j] is None
             kNone = distances[k] is None
-            if jNone and signos[j] == 0:
+            if jNone and dir_crosses[j] == 0:
                 if kNone and iNone:
                     continue
                 changing = True
@@ -356,9 +357,10 @@ def remove_unnecessary(pts: list[complex],
     # at this point, distances should contain:
     # None for the convex points
     # numbers for all others
-    maxima = [is_mid_maxima(a, b, c) for (a, b, c) in triples(distances)]
+    maxima = [is_mountain(a, b, c) for (a, b, c) in triples(distances)]
     points_to_maybe_discard = set(
-        pt for pt, dist, maxima, pointy in zip(pts, distances, maxima, dotnos)
+        pt for pt, dist, maxima, pointy in zip(
+            pts, distances, maxima, dir_dots)
         # keep all the local maxima
         # keep ones that are flat enough
         # --> remove the ones that are not sloped enough
@@ -369,25 +371,25 @@ def remove_unnecessary(pts: list[complex],
     # the ones to definitely keep are the convex ones
     # as well as concave ones that are adjacent to only straight ones that
     # are being deleted
-    points_to_def_keep = set(p for p, s in zip(pts, signos)
+    points_to_def_keep = set(p for p, s in zip(pts, dir_crosses)
                              if s > 0
                              or (s < 0 and all(
-                                 signos[z := pts.index(q)] == 0
+                                 dir_crosses[z := pts.index(q)] == 0
                                  and q in points_to_maybe_discard
                                  for q in edges[p])))
     # special case: keep concave ones that are 2-near at
     # least one convex pointy point (where pointy additionally means that
     # it isn't a 180)
-    points_to_def_keep.update(set(
+    points_to_def_keep.update(
         p for (
             p,
             (dot_2l, _, _, _, dot_2r),
-            (sig_2l, _, sig_m, _, sig_2r),
+            (crs_2l, _, crs_m, _, crs_2r),
             ((dd1_2l, dd2_2l), _, _, _, (dd1_2r, dd2_2r))
-        ) in zip(pts, fiveles(dotnos), fiveles(signos), fiveles(dirs))
-        if sig_m < 0 and (
-            (sig_2l > 0 and dot_2l < 0 and dd1_2l != -dd2_2l)
-            or (sig_2r > 0 and dot_2r < 0 and dd1_2r != -dd2_2r))))
+        ) in zip(pts, fiveles(dir_dots), fiveles(dir_crosses), fiveles(dirs))
+        if crs_m < 0 and (
+            (crs_2l > 0 and dot_2l < 0 and dd1_2l != -dd2_2l)
+            or (crs_2r > 0 and dot_2r < 0 and dd1_2r != -dd2_2r)))
     # for debugging
     a = dots([], edges)
     i = a.replace("</svg>", "".join(f"""<circle cx="{
@@ -403,7 +405,7 @@ def remove_unnecessary(pts: list[complex],
         else "blue" if sharp < 0
         else "black"
     }" opacity="50%"></circle>"""
-        for pt, sharp, conc in zip(pts, dotnos, signos)) + "</svg>")
+        for pt, sharp, conc in zip(pts, dir_dots, dir_crosses)) + "</svg>")
     z = a.replace("</svg>", "".join(f"""<circle cx="{
         p.real
     }" cy="{
