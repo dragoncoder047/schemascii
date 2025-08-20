@@ -28,6 +28,8 @@ class Component(_dc.DataConsumer):
         _dc.Option("font", str, "Text font for labels", "monospace"),
     ])
 
+    css_class = "component"
+
     rd: _rd.RefDes
     blobs: list[list[complex]]  # to support multiple parts.
     terminals: list[_utils.Terminal]
@@ -35,7 +37,8 @@ class Component(_dc.DataConsumer):
     # Ellipsis can only appear at the end. this means like a wildcard meaning
     # that any other flag is suitable
     terminal_flag_opts: typing.ClassVar[
-        dict[str, tuple[str | None] | types.EllipsisType]] = {}
+        dict[str, tuple[str | None | types.EllipsisType]
+             | types.EllipsisType]] = {}
 
     term_option: str = field(init=False)
 
@@ -48,9 +51,12 @@ class Component(_dc.DataConsumer):
         has_any = False
         # optimized check for number of terminals if they're all the same
         available_lengths = sorted(set(map(
-            len, self.terminal_flag_opts.values())))
+            lambda opt: None if opt is ...
+            else 1-len(opt) if opt[-1] is ...
+            else len(opt), self.terminal_flag_opts.values())))
         for optlen in available_lengths:
-            if len(self.terminals) == optlen:
+            if (optlen is None or len(self.terminals) == optlen
+                    or (optlen < 0 and len(self.terminals) >= -optlen)):
                 break
         else:
             raise _errors.TerminalsError(
@@ -120,7 +126,7 @@ class Component(_dc.DataConsumer):
         blobs.append(_utils.flood_walk(
             grid, set(_utils.iterate_line(rd.left, rd.right)),
             start_orth, cont_orth, seen))
-        # now find all of the auxillary blobs
+        # now find all of the auxiliary blobs
         for perimeter_pt in _utils.perimeter(blobs[0]):
             for d in _utils.DIAGONAL:
                 poss_aux_blob_pt = perimeter_pt + d
@@ -196,10 +202,6 @@ class Component(_dc.DataConsumer):
             return cls2
         return doit
 
-    @property
-    def css_class(self) -> str:
-        return f"component {self.rd.letter}"
-
     @classmethod
     def process_nets(self, nets: list[_net.Net]) -> None:
         """Hook method called to do stuff with the nets that this
@@ -208,4 +210,5 @@ class Component(_dc.DataConsumer):
         If a subclass implements this method to do something, it should
         mutate the list in-place (the return value is ignored).
         """
+        # TODO: this is never called
         pass
