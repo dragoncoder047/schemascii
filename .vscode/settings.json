@@ -1,15 +1,15 @@
 {
     "cSpell.words": [
         "Cbox",
+        "clrall",
+        "clrmask",
         "MOSFET",
+        "nanofarads",
         "NFET",
         "PFET",
         "polylinegon",
         "rendec",
         "schemascii",
         "tspan"
-    ],
-    "python.linting.pylintEnabled": false,
-    "python.linting.flake8Enabled": false,
-    "python.linting.enabled": true
+    ]
 }

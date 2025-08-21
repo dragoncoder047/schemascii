@@ -2,7 +2,7 @@
 
 (copied from <https://en.wikipedia.org/wiki/Reference_designator> and edited lightly)
 
-This is a list of all components that Schemascii *might* support. For a complete list of all supported components, (generated from the implementation file), please see [supported-components.md](./supported-components.md). If a component you want is not supported, have a look at [#3](https://github.com/dragoncoder047/schemascii/issues/3) or fork and implement it yourself.
+This is a list of all components that Schemascii *might* support. For a complete list of all supported components, (generated from the implementation file), please see [options.md][options]. If a component you want is not supported, post a request on [issue #3][todo_components] or fork and implement it yourself.
 
 | Designator | Component type |
 |:--:|:--|
@@ -73,3 +73,6 @@ This is a list of all components that Schemascii *might* support. For a complete
 | VT | Voltage transformer |
 | W | Wire |
 | X, XTAL, Y | Crystal oscillator, ceramic resonator |
+
+[options]: options.md
+[todo_components]: https://github.com/dragoncoder047/schemascii/issues/3
