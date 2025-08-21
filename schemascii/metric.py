@@ -16,6 +16,15 @@ def exponent_to_multiplier(exponent: int) -> str | None:
     * -6 --> "u" (micro)
 
     If it is not a multiple of 3, return None.
+
+    >>> exponent_to_multiplier(3)
+    'k'
+    >>> exponent_to_multiplier(0)
+    ''
+    >>> exponent_to_multiplier(-6)
+    'u'
+    >>> print(exponent_to_multiplier(4))
+    None
     """
     if exponent % 3 != 0:
         return None
@@ -27,11 +36,20 @@ def exponent_to_multiplier(exponent: int) -> str | None:
 def multiplier_to_exponent(multiplier: str) -> int:
     """Turn the Metric multiplier into its 10^exponent.
 
-    * "k" -->  3 (kilo)
-    * " " -->  0 (no multiplier)
-    * "u" --> -6 (micro)
-
     If it is not a valid Metric multiplier, raises an error.
+
+    >>> multiplier_to_exponent("k")  # kilo
+    3
+    >>> multiplier_to_exponent(" ")  # no multiplier
+    0
+    >>> multiplier_to_exponent("u")  # micro
+    -6
+    >>> multiplier_to_exponent("K")  # same as 'k'
+    3
+    >>> multiplier_to_exponent("x")  # invalid
+    Traceback (most recent call last):
+      ...
+    ValueError: unknown metric multiplier: 'x'
     """
     if multiplier in (" ", ""):
         return 0
@@ -42,7 +60,7 @@ def multiplier_to_exponent(multiplier: str) -> int:
         # special case (preferred is lowercase)
     try:
         return 3 * ("pnum kMGT".index(multiplier) - 4)
-    except IndexError as e:
+    except ValueError as e:
         raise ValueError(
             f"unknown metric multiplier: {multiplier!r}") from e
 
@@ -81,6 +99,17 @@ def best_exponent(num: Decimal, six: bool) -> tuple[str, int]:
 def normalize_metric(num: str, six: bool, unicode: bool) -> tuple[str, str]:
     """Parses the metric number, normalizes the unit, and returns
     a tuple (normalized_digits, metric_multiplier).
+
+    >>> normalize_metric("123000", False, False)
+    ('123', 'k')
+    >>> normalize_metric("123000", True, False)
+    ('0.123', 'M')
+    >>> normalize_metric("123000000", True, False)
+    ('123', 'M')
+    >>> normalize_metric("0.000123", False, False)
+    ('123', 'u')
+    >>> normalize_metric("0.000123", False, True)
+    ('123', 'µ')
     """
     match = METRIC_NUMBER.match(num)
     if not match:
@@ -110,6 +139,33 @@ def format_metric_unit(
       and adds the unit afterwards.
     * If there is no number in num, returns num unchanged.
     * If unicode is True, uses 'µ' for micro instead of 'u'.
+
+    >>> format_metric_unit("2.5-3500", "V")
+    '2.5 V - 3.5 kV'
+    >>> format_metric_unit("0.33m", "H", True)
+    '330 µH'
+    >>> format_metric_unit("50M-100000000000000000000p", "Hz")
+    '50-100 MHz'
+    >>> format_metric_unit(".1", "Ω")
+    '0.1 Ω'
+    >>> format_metric_unit("2200u", "F", True)
+    '2200 µF'
+    >>> format_metric_unit("2200uF", "F", True)
+    '2200 µF'
+    >>> format_metric_unit("2200u F", "F", True)
+    '2200 µF'
+    >>> format_metric_unit("2200 uF", "F", True)
+    '2200 µF'
+    >>> format_metric_unit("2200 uF", "F", True, unicode=False)
+    '2200 uF'
+    >>> format_metric_unit("0-100k", "V")
+    '0-100 kV'
+    >>> format_metric_unit("Gain", "Ω")
+    'Gain'
+    >>> format_metric_unit("10-100k", "Ω", allow_range=False)
+    Traceback (most recent call last):
+      ...
+    ValueError: range not allowed
     """
     num = num.strip()
     match = METRIC_RANGE.match(num)
@@ -135,16 +191,5 @@ def format_metric_unit(
 
 
 if __name__ == "__main__":
-    def test(*args):
-        print(">>> format_metric_unit", args, sep="")
-        print(repr(format_metric_unit(*args)))
-    test("2.5-3500", "V")
-    test("0.33m", "H", True)
-    test("50M-100000000000000000000p", "Hz")
-    test(".1", "Ω")
-    test("2200u", "F", True)
-    test("2200uF", "F", True)
-    test("2200u F", "F", True)
-    test("2200 uF", "F", True)
-    test("0-100k", "V")
-    test("Gain", "Ω")
+    import doctest
+    doctest.testmod()
